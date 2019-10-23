@@ -1,0 +1,15 @@
+logging = 'info'
+debug = False
+
+bind = 'localhost'
+port = '9061'
+base_url = 'vpn.example.com'
+
+gluu_url= 'https://gluu.example.com'
+
+anyconnect_host = 'asa.example.com'
+anyconnect_group = 'SSLVPN'
+wwpass_connector_link = '/downloads/WWPass%20Connector%20for%20Cisco%20AnyConnect.msi'
+
+oauth2_id = ''
+oauth2_secret = ''
