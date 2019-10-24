@@ -1,11 +1,14 @@
 logging = 'info'
 debug = False
 
-bind = 'localhost'
-port = '9061'
-base_url = 'vpn.example.com'
+#user = 'www-data'
+#group = 'www-data'
 
-gluu_url= 'https://gluu.example.com'
+bind = 'localhost'
+port = 9061
+base_url = 'https://vpn.example.com/'
+
+gluu_url= 'https://gluu.example.com/'
 
 anyconnect_host = 'asa.example.com'
 anyconnect_group = 'SSLVPN'
