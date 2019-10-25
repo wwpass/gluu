@@ -66,13 +66,20 @@ class AnyConnectHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ign
             self.render('error.html',reason=self.get_argument('error'))
             return
         if self.get_argument('code', False):
-            access = await self.get_authenticated_user(
-                redirect_uri=f'{self.settings["options"].base_url}anyconnect/',
-                code=self.get_argument('code'))
-            user = await self.oauth2_request(  #pylint: disable=no-value-for-parameter
-                self._OAUTH_USERINFO_URL,
-                access_token=access["access_token"])
-            print(f"User: {user}")
+            try:
+                access = await self.get_authenticated_user(
+                    redirect_uri=f'{self.settings["options"].base_url}anyconnect/',
+                    code=self.get_argument('code'))
+                user = await self.oauth2_request(  #pylint: disable=no-value-for-parameter
+                    self._OAUTH_USERINFO_URL,
+                    access_token=access["access_token"])
+            except Exception:
+                self.render('error.html',reason="Access denied")
+                return
+            if 'ro_nonce' not in user:
+                self.render('error.html',reason="Access denied")
+                return
+
             self.render('anyconnect.html',
                 ticket='redirect',
                 wwpass_connector_link = self.settings['options'].wwpass_connector_link,
