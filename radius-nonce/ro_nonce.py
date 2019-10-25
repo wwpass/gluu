@@ -1,7 +1,7 @@
 from com.google.common.io import BaseEncoding
 from org.gluu.model.custom.script.type.scope import DynamicScopeType
 from org.gluu.service.cdi.util import CdiUtil
-from org.gluu.oxauth.service import UserService
+from org.gluu.oxauth.service import UserService, UserGroupService
 from java.security import SecureRandom
 
 import jarray
@@ -18,6 +18,7 @@ class DynamicScope(DynamicScopeType):
 
     def init(self, configurationAttributes):
         print("RO Dynamic scope. Initialization")
+        self.groupDN = configurationAttributes.get("groupDN").getValue2() if configurationAttributes.containsKey("groupDN") else None
 
         return True
 
@@ -37,10 +38,16 @@ class DynamicScope(DynamicScopeType):
         dynamicScopes = dynamicScopeContext.getDynamicScopes()
         authorizationGrant = dynamicScopeContext.getAuthorizationGrant()
         user = dynamicScopeContext.getUser()
+        userService = CdiUtil.bean(UserService)
+        userGroupService = CdiUtil.bean(UserGroupService)
+        if self.groupDN:
+            print("Checking user to be in group: %s" % self.groupDN)
+            if not userGroupService.isUserInGroup(self.groupDN, user.getDn()):
+                print("User %s is not in group: %s" % (user.getDn(), self.groupDN))
+                return False
         jsonWebResponse = dynamicScopeContext.getJsonWebResponse()
         claims = jsonWebResponse.getClaims()
         nonce = self.generateNonce(self.NONCE_LENGTH)
-        userService = CdiUtil.bean(UserService)
         claims.setClaim("ro_nonce", nonce)
         userService.setCustomAttribute(user, "RadiusNonce", "%s:%f"%(nonce, time.time() + self.NONCE_TTL))
         userService.updateUser(user)

@@ -20,7 +20,8 @@ Edit line containing `MAY (...)` add `$ radiusNonce` to the list of attributes t
 systemctl restart opendj
 ```
 
-3. In web admin panel open `Configuration -> Manage Custom scripts -> Dynamic Scopes`. Add new script that is called `ro_nonce`, enabled and contains code from `ro_nonce.py`. Set level to `100` and save it.
+3. In web admin panel open `Configuration -> Manage Custom scripts -> Dynamic Scopes`. Add new script that is called `ro_nonce`, enabled and contains code from `ro_nonce.py`. Set level to `100` and save it. If you need to limit the use of AnyConnect to certain group, add new property, named `groupDN`. It's value should be the DN of group that will have access.
+
 
 4. Open `Configuration -> Manage Custom scripts -> Resource Owner Password Credentials`.  Add new script that is called `ro_check`, enabled and contains code from `ro_nonce.py`. Set level to `100` and save it.
 
