@@ -35,13 +35,6 @@
                                     </h:panelGroup>
                                 </h:form>
                             </div>
-                            <!--h:panelGroup layout="block" rendered="#{external_registration_uri != Null}">
-                                    <div class="reg_link">
-                                        <a href="#{external_registration_uri}">
-                                            <h:outputText value="Register Now   "/>
-                                        </a>
-                                    </div>
-                                </h:panelGroup-->
                         </div>
                     </div>
                 </div>
@@ -54,7 +47,7 @@
                 WWPass.authInit({
                     qrcode:'#qrcode',
                     passkey:'#passkey',
-                    callbackURL: '#{request.contextPath}/postlogin.htm',
+                    callbackURL: window.location.protocol + '//' + window.location.hostname + '#{request.contextPath}/postlogin.htm',
                     ticketURL: '/wwpass/ticket.json'
                 });
             };

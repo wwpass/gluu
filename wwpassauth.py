@@ -19,13 +19,12 @@ class PersonAuthentication(PersonAuthenticationType):
     def init(self, configurationAttributes):
         print "WWPASS. Initialization"
         self.wwc = WWPassConnection(
-            '/opt/wwpass_glue/gluu_client.key', '/opt/wwpass_glue/gluu_client.crt')
+            '/opt/wwpass/gluu_client.key', '/opt/wwpass/gluu_client.crt')
         print "WWPASS. Initialized successfully"
         return True
 
     def destroy(self, configurationAttributes):
         print "WWPASS. Destroy"
-        print "WWPASS. Destroyed successfully"
         return True
 
     def getApiVersion(self):
