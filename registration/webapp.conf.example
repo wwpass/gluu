@@ -1,0 +1,17 @@
+logging = 'info'
+debug = False
+
+#user = 'www-data'
+#group = 'www-data'
+
+bind = 'localhost'
+port = 9061
+
+gluu_url= 'https://gluu.example.com/'
+
+uma2_id = 'xxxx-xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+uma2_kid = 'xxxx-xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx_sig_rs256'
+uma2_secret = '''-----BEGIN PRIVATE KEY-----
+...
+-----END PRIVATE KEY-----
+'''
