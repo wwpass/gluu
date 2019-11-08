@@ -18,8 +18,11 @@ class PersonAuthentication(PersonAuthenticationType):
 
     def init(self, configurationAttributes):
         print "WWPASS. Initialization"
+        self.allow_password_bind = configurationAttributes.get("allow_password_bind").getValue2() if configurationAttributes.containsKey("allow_password_bind") else None
+        self.registration_url = configurationAttributes.get("registration_url").getValue2() if configurationAttributes.containsKey("registration_url") else None
         self.wwc = WWPassConnection(
-            '/opt/wwpass/gluu_client.key', '/opt/wwpass/gluu_client.crt')
+            configurationAttributes.get("wwpass_key_file").getValue2(),
+            configurationAttributes.get("wwpass_crt_file").getValue2())
         print "WWPASS. Initialized successfully"
         return True
 
@@ -50,6 +53,7 @@ class PersonAuthentication(PersonAuthenticationType):
                     return True
             else:
                 identity.setWorkingParameter("puid", puid)
+                identity.setWorkingParameter("ticket", requestParameters.get('wwp_ticket')[0])
                 return True
             return False
         elif (step == 2):
@@ -80,13 +84,16 @@ class PersonAuthentication(PersonAuthenticationType):
             print "WWPASS. Prepare for Step 1"
             return True
         elif (step == 2):
+            identity = CdiUtil.bean(Identity)
+            identity.setWorkingParameter("registration_url", self.registration_url)
+            identity.setWorkingParameter("allow_password_bind", self.allow_password_bind)
             print "WWPASS. Prepare for Step 2"
             return True
         else:
             return False
 
     def getExtraParametersForStep(self, configurationAttributes, step):
-        return Arrays.asList("puid")
+        return Arrays.asList("puid", "ticket")
 
     def getCountAuthenticationSteps(self, configurationAttributes):
         identity = CdiUtil.bean(Identity)

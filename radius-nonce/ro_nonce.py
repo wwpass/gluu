@@ -8,6 +8,7 @@ import jarray
 import time
 
 import java
+from java.util import Arrays
 
 class DynamicScope(DynamicScopeType):
     NONCE_LENGTH=32
