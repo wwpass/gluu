@@ -43,131 +43,60 @@
 		<!-- end header-->
 	<div class="bs-docs-section">
 		<div class="container">
-			<h:panelGroup  rendered="false">
-			<div class="login_bx">
-				<div class="row">
-					<div class="col-md-6 col-sm-5 ">
-					   <div class="left_form_bx">
-
-						<h:form id="loginForm"  class="form-horizontal">
-						<h:panelGroup
-									rendered="#{sessionIdService.notSessionIdAuthenticated}">
-
-						<h:messages style="color:red;" />
-
-						  <div class="form-group">
-							<h:outputLabel styleClass="col-sm-3 control-label"	for="username" value="#{msgs['login.username']}" />
-							<div class="col-sm-9">
-							  <h:inputText id="username" value="#{credentials.username}" styleClass="form-control"
-												autocomplete="off" />
-							</div>
-						  </div>
-						  <div class="form-group">
-							<h:outputLabel styleClass="col-sm-3 control-label" for="password" value="#{msgs['login.password']}" />
-							<div class="col-sm-9">
-							  <h:inputSecret id="password" value="#{credentials.password}"  styleClass="form-control"
-												autocomplete="off" />
-							</div>
-						  </div>
-
-						  <div class="form-group">
-							<div class="col-sm-offset-3 col-sm-9">
-							  <h:commandButton id="loginButton" styleClass="btn btn-primary"
-													value="#{msgs['login.login']}"
-													action="#{authenticator.authenticate}" />
-							</div>
-						  </div>
-
-						  <div class="form-group">
-							<div class="col-sm-offset-3 col-sm-9">
-							  <div class="forgot_link">
-								<a href="/identity/person/passwordReminder.htm">
-								  <h:outputText value="Forgot your Password?" />
-								</a>
-							  </div>
-							</div>
-						  </div>
-						  </h:panelGroup>
-						</h:form>
-						</div>
-						<h:panelGroup layout="block" rendered="#{external_registration_uri != Null}">
-						 <div class="reg_link">
-								<a href="#{external_registration_uri}">
-								 <h:outputText value="Register Now   " />
-								</a>
-						</div>
-						</h:panelGroup>
-					</div>
-					<div class="col-md-1 col-sm-7 hidden-xs"><div class="bar"><div class="circle">or</div></div></div>
-				</div>
-			</div>
-			</h:panelGroup>
-
 			<h:panelGroup  rendered="true">
 			<div class="login_bx_1">
 				<div class="row">
 					<div class="col-md-6_1 col-sm-5_1 ">
 					   <div class="left_form_bx">
+							<h:form id="loginForm"  class="form-horizontal" rendered="#{!(''.equals(identity.getWorkingParameter('allow_password_bind')))}">
+							<h:panelGroup
+										rendered="#{sessionIdService.notSessionIdAuthenticated}">
 
-						<h:form id="loginForm"  class="form-horizontal">
-						<h:panelGroup
-									rendered="#{sessionIdService.notSessionIdAuthenticated}">
-
-						<h:messages style="color:red;" />
-                        <div class="form-group" align="center">
-                            <h3>Enter your credentials to bind PassKey to your account.</h3>
-                        </div>
-
-						  <div class="form-group">
-							<h:outputLabel styleClass="col-sm-4 control-label"	for="username" value="#{msgs['login.username']}" />
-							<div class="col-sm-8">
-							  <h:inputText id="username" value="#{credentials.username}" styleClass="form-control"
-												autocomplete="off" />
+							<h:messages style="color:red;" />
+							<div class="form-group" align="center">
+								<h3>Enter your credentials to bind PassKey to your account</h3>
 							</div>
-						  </div>
-						  <div class="form-group">
-							<h:outputLabel styleClass="col-sm-4 control-label" for="password" value="#{msgs['login.password']}" />
-							<div class="col-sm-8">
-							  <h:inputSecret id="password" value="#{credentials.password}"  styleClass="form-control"
-												autocomplete="off" />
-							</div>
-						  </div>
 
-						  <div class="form-group">
-							<div class="col-sm-offset-3 col-sm-9">
-							  <h:commandButton id="loginButton" styleClass="btn btn-primary"
-													value="#{msgs['login.login']}"
-													action="#{authenticator.authenticate}" />
+							<div class="form-group">
+								<h:outputLabel styleClass="col-sm-4 control-label"	for="username" value="#{msgs['login.username']}" />
+								<div class="col-sm-8">
+								<h:inputText id="username" value="#{credentials.username}" styleClass="form-control"
+													autocomplete="off" />
+								</div>
 							</div>
-						  </div>
-
-						  <div class="form-group">
-							<div class="col-sm-offset-3 col-sm-9">
-							  <div class="forgot_link">
-								<a href="/identity/person/passwordReminder.htm">
-								  <h:outputText value="Forgot your Password?" />
-								</a>
-							  </div>
+							<div class="form-group">
+								<h:outputLabel styleClass="col-sm-4 control-label" for="password" value="#{msgs['login.password']}" />
+								<div class="col-sm-8">
+								<h:inputSecret id="password" value="#{credentials.password}"  styleClass="form-control"
+													autocomplete="off" />
+								</div>
 							</div>
-						  </div>
-						  </h:panelGroup>
-						</h:form>
-						<div align="center">
-                                                    <ui:repeat value="#{identity.getWorkingParameter('download_url').entrySet().toArray()}" var="_entry">
-                                                        <ui:param name="app_name" value="#{_entry.key}"/>
-                                                        <ui:param name="app_link" value="#{_entry.value}"/>
-                                                        <h:outputLink value="#{app_link}" title="#{app_name}"><h:graphicImage value="img/#{app_name}.png" /></h:outputLink>
-                                                    </ui:repeat>
-                                                </div>
 
+							<div class="form-group">
+								<div class="col-sm-offset-3 col-sm-9">
+								<h:commandButton id="loginButton" styleClass="btn btn-primary"
+														value="#{msgs['login.login']}"
+														action="#{authenticator.authenticate}" />
+								</div>
+						  	</div>
+						  	</h:panelGroup>
+							</h:form>
+							<h:panelGroup rendered="#{identity.getWorkingParameter('registration_url') != null}">
+								<div class="form-group" align="center">
+									<h3>Register a new user</h3>
+								</div>
+									<form id="registerForm"  class="form-horizontal" action="#{identity.getWorkingParameter('registration_url')}" method="POST">
+									<div class="form-group">
+										<div class="col-sm-offset-3 col-sm-9">
+											<h:commandButton id="loginButton" styleClass="btn btn-primary"
+																	value="Register" />
+										</div>
+									</div>
+									<h:inputHidden id="ticket" value="#{identity.getWorkingParameter('ticket')}" />
+									<h:inputHidden id="puid" value="#{identity.getWorkingParameter('puid')}" />
+								</form>
+							</h:panelGroup>
 						</div>
-						<h:panelGroup layout="block" rendered="#{external_registration_uri != Null}">
-						 <div class="reg_link">
-								<a href="#{external_registration_uri}">
-								 <h:outputText value="Register Now   " />
-								</a>
-						</div>
-						</h:panelGroup>
 					</div>
 				</div>
 			</div>
@@ -194,28 +123,5 @@
 			</div>
 		</div>
 	</div>
-
-		<script type="text/javascript">
-
-            window.onload = function () {
-                var userNameField = document.getElementById("loginForm:username");
-                var passwordField = document.getElementById("loginForm:password");
-                var userName = '#{!empty loginAction.loginHint ? loginAction.loginHint : ""}';
-                if (userName) {
-                    userNameField.value = userName;
-                    passwordField.focus();
-                } else {
-                    userNameField.focus();
-                }
-
-                var displayRegister = #{display_register_action or identity.sessionId.sessionAttributes['display_register_action']};
-                if (displayRegister) {
-                    var registerButton = document.getElementById("loginForm:registerId");
-                    if (registerButton != null) {
-                        registerButton.style.display = 'inline';
-                    }
-                }
-            };
-        </script>
 	</ui:define>
 </ui:composition>

@@ -4,13 +4,16 @@ WWPass integration with GLUU IAM service
 
 ## TODO
  - Make location for client cert/key configurable
- - If at all possible intergate getPUID in the oxAuth
+ - If at all possible intergate getTicket in the oxAuth
  - Secure SP key file with better permissions/ownership
  - Properly fix WWPass SDK for it to work with Jython 2.7.1
  - Maybe use https client service form inside Gluu
  - Revise texts for WWPass pages
- - Discover and implement deploy method for xhtml pages
  - Fix logo on binding page
+ - Assert that registering the same user in parallel won't introduce vulnerability
+ - Bind additional keys using existing key
+ - Make anyconnect OAuth2client use more secure authentication method
+ - Recover an account using email
 
 ## Instuctions
 
@@ -23,13 +26,19 @@ WWPass integration with GLUU IAM service
 
 `ticket.json` to `/opt/gluu-server/opt/wwpass_gluu/cgi`. Make the file executable.
 
-SP certificate and key to: `/opt/wwpass_gluu/gluu_client.crt` and `/opt/wwpass_gluu/gluu_client.crt`.
+SP certificate and key to: `/opt/wwpass_gluu/gluu_client.crt` and `/opt/wwpass_gluu/gluu_client.key`.
 
 ### Configuration
 
 #### Configuration -> Manage Custom scripts
 
 Create custom script `wwpass` with "File" storage and path to `wwpassauth.py` from above (excluding `/opt/gluu/`)
+
+Add the following parameters to the script:
+ - `wwpass_crt_file`: location of SP certificate file: `/opt/wwpass_gluu/gluu_client.crt`
+ - `wwpass_key_file`: location of SP private key file: `/opt/wwpass_gluu/gluu_client.key`
+ - `registration_url`: URL of registration web application: `https://connect.warca.net/newuser` (see: [Registration](registration//README.md))
+ - `allow_password_bind`: Add this parameter with any non-empty value if you would like to enable binding WWPass PassKey to an account using username and password
 
 Don't forget to enable it.
 

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="/favicon.ico" />
+<title>Warca User Registration</title>
+</head>
+<body>
+<h1>
+    Warca User Registration
+</h1>
+<div id="content">
+    <p>This form is valid for a limited time: <span id="countdown"></span>.</p>
+    <p style="color: red;">{{ errors }}</p>
+    <form method="POST" action="" id="registration_form">
+        <input type="text" name="callsign" placeholder="Call sign">
+        <input type="text" name="fullname" placeholder="Full name">
+        <input type="email" name="email" placeholder="email">
+        <input type="hidden" name = "ticket" value="{{ ticket }}">
+        <input type="hidden" name = "puid" value="{{ puid }}">
+        <button type="submit" value="register">Register in Warca</button>
+    </form>
+</div>
+<script type="text/javascript">
+            window.onload = function () {
+                const socket = new WebSocket("wss://spfews.wwpass.com/");
+                socket.onopen = () => {
+                    console.log("Connected wss://spfews.wwpass.com/");
+                    const message = JSON.stringify({ ticket: "{{ticket}}" });
+                    console.log(`Sent message to server: ${message}`);
+                    socket.send(message);
+                };
+
+                socket.onclose = () => {
+                    console.log('Disconnected');
+                };
+
+                socket.onmessage = (message) => {
+                    console.log(`Message received from server: ${message.data}`);
+                    const response = JSON.parse(message.data);
+                    const status = response.code;
+                    if (status === 100) { return; }
+                    if (response.ttl) {
+                        const expires = Date.now()/1000 + response.ttl;
+                        const intervalID = setInterval( function(){
+                            const ttl = Math.floor(expires - Date.now()/1000);
+                            if (ttl < 1) {
+                                document.getElementById('registration_form').style.display= 'none';
+                                clearInterval(intervalID);
+                                return;
+                            }
+                            const hours = (1e15 + Math.floor(ttl / 3600) + "").slice(-2); // Trick to get fixed number of digits
+                            const minutes = (1e15 + Math.floor((ttl - hours * 3600)/60) + "").slice(-2);
+                            const seconds = (1e15 + Math.floor(ttl - hours * 3600 - minutes * 60) + "").slice(-2);
+                            document.getElementById('countdown').innerHTML = `${hours}:${minutes}:${seconds}`;
+                        }, 1000);
+                    }
+                    socket.close();
+                };
+            };
+</script>
+</body>
+</html>
