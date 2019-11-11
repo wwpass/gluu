@@ -43,9 +43,10 @@ Save the secret and clientID values.
 ### Helper webapp
 1. Deploy `webapp.py` and `templates/` to a directory on a web server.
 2. Copy `webapp.conf.example` to the web server and rename it to `webapp.conf`
-3. Edit `webapp.conf` by filling values relevan to your system. Don't forget to deploy WWPass Connector application and put a link for downloading it in the config.
+3. Edit `webapp.conf`, filling values relevan to your system. Don't forget to deploy WWPass Connector application and put a link for downloading it in the config.
 4. Configure your web server to run `webapp.py --config=webapp.conf` as a demon.
-5. Configure your web server software to proxy requests for relevant virtual host to this helper webapp.
+5. Install python modules for the webapp: "python3-tornado", "python3-jwt
+6. Configure your web server software to proxy requests for relevant virtual host to this helper webapp.
 
 
 
