@@ -4,13 +4,15 @@ WWPass integration with GLUU IAM service
 
 ## TODO
  - Make location for client cert/key configurable
- - If at all possible intergate getPUID in the oxAuth
+ - If at all possible intergate getTicket in the oxAuth
  - Secure SP key file with better permissions/ownership
  - Properly fix WWPass SDK for it to work with Jython 2.7.1
  - Maybe use https client service form inside Gluu
  - Revise texts for WWPass pages
- - Discover and implement deploy method for xhtml pages
  - Fix logo on binding page
+ - Assert that registering the same user in parallel won't introduce vulnerability
+ - Bind additional keys using existing key
+ - Make anyconnect OAuth2client use more secure authentication method
 
 ## Instuctions
 

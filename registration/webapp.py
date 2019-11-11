@@ -4,12 +4,11 @@ import pwd
 import grp
 import urllib
 import urllib.parse
-import time
 import json
+import ssl
+from email.utils import parseaddr
 from typing import cast, Any, Dict, List, Optional
 
-from secrets import token_urlsafe
-import jwt
 
 import tornado.httpserver
 import tornado.ioloop
@@ -18,93 +17,144 @@ import tornado.auth
 import tornado.httpclient
 from tornado.options import define, options, parse_config_file, parse_command_line
 import tornado.escape
+
+from SCIM import SCIMClient
+
 base_path = os.path.abspath(os.path.dirname(__file__))
 os.chdir(base_path)
 
-class SCIMClient():
-    @staticmethod
-    def http() -> tornado.httpclient.AsyncHTTPClient:
-        return tornado.httpclient.AsyncHTTPClient()
-
-    def __init__(self, gluu_api_base:str, key: str, secret: str, kid: str):
-        self.gluu_api_base = gluu_api_base
-        self.token_url = f"{gluu_api_base}/oxauth/restv1/token"
-        self.scim_users_url = f"{gluu_api_base}/identity/restv1/scim/v2/Users/"
-        self.client_id = key
-        self.oauth_key = secret
-        self.oauth_kid = kid
-        self.rpt: Optional[str] = None
-        self.pct: Optional[str] = None
-
-    async def renewAuthorization(self, response: tornado.httpclient.HTTPResponse) -> None:
-        auth_header  = dict((k.strip(), v.strip()) for k,v in (h.split('=', 1) for h in response.headers["WWW-Authenticate"].split(',')))
-        ticket = auth_header['ticket']
-        assert self.gluu_api_base.startswith(f'https://{auth_header["host_id"]}')
-        request = {
-                "grant_type": 'urn:ietf:params:oauth:grant-type:uma-ticket',
-                "ticket": ticket,
-                "scope": 'uma_protection',
-                "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-                "client_assertion": jwt.encode({
-                    'iss': self.client_id,
-                    'sub': self.client_id,
-                    'aud': self.token_url,
-                    'jti': token_urlsafe(16),
-                    'exp': int(time.time()) + 300, #seconds
-                    'iat': int(time.time())
-                }, key=self.oauth_key, algorithm='RS256', headers={'kid':self.oauth_kid})
-        }
-        if self.pct:
-            request['pct'] = self.pct
-        if self.rpt:
-            request['rpt'] = self.rpt
-        body = urllib.parse.urlencode(request)
-        response = await self.http().fetch(
-            self.token_url,
-            method="POST",
-            headers={
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body=body
-        )
-        response_body = json.loads(response.body)
-        logging.info(f"Response auth: {response_body}")
-        self.rpt = response_body['access_token']
-        self.pct = response_body['pct']
-        assert response_body['token_type'] == 'Bearer'
-
-    @property
-    def authorization_header(self) -> str:
-        return f'Bearer {self.rpt}' if self.rpt else ''
-
-    # Wrapper around tornado.httpclient.AsyncHTTPClient.fetch()
-    async def _callScimApi(self, *args: Any, **kwargs: Any) -> tornado.httpclient.HTTPResponse:
-        if 'headers' not in kwargs:
-            kwargs['headers'] = {}
-        if self.rpt:
-            kwargs['headers']['Authorization'] = self.authorization_header
-        kwargs['raise_error'] = False
-        response = await self.http().fetch(*args, **kwargs)
-        if response.code == 401 and 'WWW-Authenticate' in response.headers:
-            await self.renewAuthorization(response)
-            kwargs['headers']['Authorization'] = self.authorization_header
-            response = await self.http().fetch(*args, **kwargs)
-        return response
-
-    async def getUsersList(self) -> List[Dict[str, Any]]:
-        response = await self._callScimApi(self.scim_users_url)
-        if response.code != 200:
-            raise tornado.httpclient.HTTPError(response.code, response.body)
-        return cast(List[Dict[str, Any]], json.loads(response.body)['Resources'])
-
+WWPASS_CA_CERT = u'''-----BEGIN CERTIFICATE-----
+MIIGATCCA+mgAwIBAgIJAN7JZUlglGn4MA0GCSqGSIb3DQEBCwUAMFcxCzAJBgNV
+BAYTAlVTMRswGQYDVQQKExJXV1Bhc3MgQ29ycG9yYXRpb24xKzApBgNVBAMTIldX
+UGFzcyBDb3Jwb3JhdGlvbiBQcmltYXJ5IFJvb3QgQ0EwIhgPMjAxMjExMjgwOTAw
+MDBaGA8yMDUyMTEyODA4NTk1OVowVzELMAkGA1UEBhMCVVMxGzAZBgNVBAoTEldX
+UGFzcyBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiV1dQYXNzIENvcnBvcmF0aW9uIFBy
+aW1hcnkgUm9vdCBDQTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMmF
+pl1WX80osygWx4ZX8xGyYfHx8cpz29l5s/7mgQIYCrmUSLK9KtSryA0pmzrOFkyN
+BuT0OU5ucCuv2WNgUriJZ78b8sekW1oXy2QXndZSs+CA+UoHFw0YqTEDO659/Tjk
+NqlE5HMXdYvIb7jhcOAxC8gwAJFgAkQboaMIkuWsAnpOtKzrnkWHGz45qoyICjqz
+feDcN0dh3ITMHXrYiwkVq5fGXHPbuJPbuBN+unnakbL3Ogk3yPnEcm6YV+HrxQ7S
+Ky83q60Abdy8ft0RpSJeUkBjJVwiHu4y4j5iKC1tNgtV8qE9Zf2g5vAHzL3obqnu
+IMr8JpmWp0MrrUa9jYOtKXk2LnZnfxurJ74NVk2RmuN5I/H0a/tUrHWtCE5pcVNk
+b3vmoqeFsbTs2KDCMq/gzUhHU31l4Zrlz+9DfBUxlb5fNYB5lF4FnR+5/hKgo75+
+OaNjiSfp9gTH6YfFCpS0OlHmKhsRJlR2aIKpTUEG9hjSg3Oh7XlpJHhWolQQ2BeL
+++3UOyRMTDSTZ1bGa92oz5nS+UUsE5noUZSjLM+KbaJjZGCxzO9y2wiFBbRSbhL2
+zXpUD2dMB1G30jZwytjn15VAMEOYizBoHEp2Nf9PNhsDGa32AcpJ2a0n89pbSOlu
+yr/vEzYjJ2DZ/TWQQb7upi0G2kRX17UIZ5ZfhjmBAgMBAAGjgcswgcgwHQYDVR0O
+BBYEFGu/H4b/gn8RzL7XKHBT6K4BQcl7MIGIBgNVHSMEgYAwfoAUa78fhv+CfxHM
+vtcocFPorgFByXuhW6RZMFcxCzAJBgNVBAYTAlVTMRswGQYDVQQKExJXV1Bhc3Mg
+Q29ycG9yYXRpb24xKzApBgNVBAMTIldXUGFzcyBDb3Jwb3JhdGlvbiBQcmltYXJ5
+IFJvb3QgQ0GCCQDeyWVJYJRp+DAPBgNVHRMBAf8EBTADAQH/MAsGA1UdDwQEAwIB
+BjANBgkqhkiG9w0BAQsFAAOCAgEAE46CMikI7378mkC3qZyKcVxkNfLRe3eD4h04
+OO27rmfZj/cMrDDCt0Bn2t9LBUGBdXfZEn13gqn598F6lmLoObtN4QYqlyXrFcPz
+FiwQarba+xq8togxjMkZ2y70MlV3/PbkKkwv4bBjOcLZQ1DsYehPdsr57C6Id4Ee
+kEQs/aMtKcMzZaSipkTuXFxfxW4uBifkH++tUASD44OD2r7m1UlSQ5viiv3l0qvA
+B89dPifVnIeAvPcd7+GY2RXTZCw36ZipnFiOWT9TkyTDpB/wjWQNFrgmmQvxQLeW
+BWIUSaXJwlVzMztdtThnt/bNZNGPMRfaZ76OljYB9BKC7WUmss2f8toHiys+ERHz
+0xfCTVhowlz8XtwWfb3A17jzJBm+KAlQsHPgeBEqtocxvBJcqhOiKDOpsKHHz+ng
+exIO3elr1TCVutPTE+UczYTBRsL+jIdoIxm6aA9rrN3qDVwMnuHThSrsiwyqOXCz
+zjCaCf4l5+KG5VNiYPytiGicv8PCBjwFkzIr+LRSyUiYzAZuiyRchpdT+yRAfL7q
+qHBuIHYhG3E47a3GguwUwUGcXR+NjrSmteHRDONOUYUCH41hw6240Mo1lL4F+rpr
+LEBB84k3+v+AtbXePEwvp+o1nu/+1sRkhqlNFHN67vakqC4xTxiuPxu6Pb/uDeNI
+ip0+E9I=
+-----END CERTIFICATE----- '''
 
 class SCIMHandler(tornado.web.RequestHandler, tornado.auth.OAuth2Mixin): #type: ignore #pylint: disable=abstract-method
 
     async def get(self) -> None: #pylint: disable=arguments-differ
-        users = await self.settings['scim'].getUsersList()
         import pprint
-        self.write(pprint.pformat(users).replace('\n', '<br>'))
+        #users = await self.settings['scim'].getUsersList()
+        users = await self.settings['scim'].getDevicesList()
+#        users = await self.settings['scim'].findUsersByAttr('emails.value','d.kondratenko@wwpass.com')
+        self.write(f"<pre>{pprint.pformat(users)}</pre>")
         self.finish()
+
+class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable=abstract-method
+    _wwpass_ssl_context: Optional[ssl.SSLContext] = None
+    @staticmethod
+    def http() -> tornado.httpclient.AsyncHTTPClient:
+        return tornado.httpclient.AsyncHTTPClient()
+
+    def wwpass_ssl_context(self) -> ssl.SSLContext:
+        if NewUserHandler._wwpass_ssl_context:
+            return NewUserHandler._wwpass_ssl_context
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        ctx.load_verify_locations(cadata = WWPASS_CA_CERT)
+        ctx.load_cert_chain(
+            certfile = self.settings['options'].wwpass_client_cert,
+            keyfile = self.settings['options'].wwpass_client_key)
+        NewUserHandler._wwpass_ssl_context = ctx
+        return NewUserHandler._wwpass_ssl_context
+
+    async def post(self):  #pylint: disable=arguments-differ
+        logging.debug(self.request.body)
+        ticket = self.get_body_argument('ticket', None)
+        puid = self.get_body_argument('puid', None)
+        if not ticket or not puid:
+            self.render('error.html', reason="Bad registration request")
+            return
+        request = {
+            'ticket': ticket,
+            'finalize': 1
+        }
+        response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/put.json?{urllib.parse.urlencode(request)}', ssl_options=self. wwpass_ssl_context())).body)
+        logging.debug(f"Put ticket response: {response}")
+        if 'result' not in response or not response['result']:
+            self.render('error.html', reason="Bad registration request")
+            return
+        ticket = response['data']
+        request = {
+            'ticket': ticket
+        }
+        response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/puid.json?{urllib.parse.urlencode(request)}', ssl_options=self. wwpass_ssl_context())).body)
+        logging.debug(f"PUID response: {response}")
+        if 'result' not in response or not response['result'] or puid != response['data']:
+            self.render('error.html', reason="Bad registration request")
+            return
+        callsign = self.get_body_argument('callsign', None)
+        fullname = self.get_body_argument('fullname', None)
+        email = self.get_argument('email', None)
+        errors: List[str] = []
+        if callsign is None and email is None and fullname is None:
+            self.render('registration_form.html', errors='', ticket=ticket, puid=puid)
+            return
+        if not callsign:
+            errors.append("Call sign is a required field")
+        elif await self.settings['scim'].findUsersByAttr('nickName',callsign):
+            errors.append("This call sign is already claimed")
+        if not fullname:
+            errors.append("Full name is a required field")
+        if not email:
+            errors.append("Email is a required field")
+        elif parseaddr(email) == ('',''):
+            errors.append("Wrong email format")
+        elif await self.settings['scim'].findUsersByAttr('emails.value',email):
+            #TODO: check for emails with '.' and '+' as identical
+            errors.append("This email is already claimed")
+        if errors:
+            self.render('registration_form.html', errors='<br>'.join(errors), ticket=ticket, puid=puid)
+            return
+
+        response = await self.settings['scim'].createUser(
+            externalId=f'wwpass:{puid}',
+            emails=[{'primary':True, 'value': email}],
+            displayName=f'{fullname} ({callsign})',
+            name={'formatted': fullname},
+            nickName=callsign,
+            userName=f'wwpass-{puid}',
+            active=True
+        )
+        logging.debug(f"CreateUser response: {response}")
+
+        #Redirecting the user to login as if they just authenticated with WWPass
+        request = {
+            'wwp_version': 2,
+            'wwp_status': 200,
+            'wwp_reason': 'OK',
+            'wwp_ticket': ticket
+        }
+        loginform_url = f'{self.settings["options"].gluu_url}/oxauth/postlogin.htm?{urllib.parse.urlencode(request)}'
+        self.redirect(loginform_url)
 
 def define_options() -> None:
     define("config",default="/etc/wwpass/oauth2.conf")
@@ -115,9 +165,12 @@ def define_options() -> None:
 
     define("debug", type=bool, default=False)
     define("bind", default="0.0.0.0")
-    define("port", type=int, default=9061)
+    define("port", type=int, default=9062)
 
     define("gluu_url", type=str)
+
+    define("wwpass_client_cert", type=str)
+    define("wwpass_client_key", type=str)
 
     define("uma2_id", type=str)
     define("uma2_secret", type=str)
@@ -125,8 +178,8 @@ def define_options() -> None:
 
 
 urls = [
-    (r"/", tornado.web.RedirectHandler, {"url": "/anyconnect"}),
-    (r"/scim/?", SCIMHandler),
+    (r"/newuser/?", NewUserHandler),
+    #(r"/scim/?", SCIMHandler),
 ]
 
 

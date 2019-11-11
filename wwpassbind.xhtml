@@ -54,7 +54,7 @@
 
 							<h:messages style="color:red;" />
 							<div class="form-group" align="center">
-								<h3>Enter your credentials to bind PassKey to your account.</h3>
+								<h3>Enter your credentials to bind PassKey to your account</h3>
 							</div>
 
 							<div class="form-group">
@@ -82,7 +82,10 @@
 						  	</h:panelGroup>
 							</h:form>
 							<h:panelGroup rendered="#{identity.getWorkingParameter('registration_url') != null}">
-								<form id="registerForm"  class="form-horizontal" action="#{identity.getWorkingParameter('registration_url')}" method="POST">
+								<div class="form-group" align="center">
+									<h3>Register a new user</h3>
+								</div>
+									<form id="registerForm"  class="form-horizontal" action="#{identity.getWorkingParameter('registration_url')}" method="POST">
 									<div class="form-group">
 										<div class="col-sm-offset-3 col-sm-9">
 											<h:commandButton id="loginButton" styleClass="btn btn-primary"
@@ -91,8 +94,7 @@
 									</div>
 									<h:inputHidden id="ticket" value="#{identity.getWorkingParameter('ticket')}" />
 									<h:inputHidden id="puid" value="#{identity.getWorkingParameter('puid')}" />
-								</form>		  
-								
+								</form>
 							</h:panelGroup>
 						</div>
 					</div>
