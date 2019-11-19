@@ -76,6 +76,15 @@ class PersonAuthentication(PersonAuthenticationType):
                 return False
 
             if 'wwp_ticket' in requestParameters:
+                if 'bind' in requestParameters:
+                    # Binding with existing PassKey
+                    puid_new = self.wwc.getPUID(requestParameters.get('wwp_ticket')[0], self.auth_type)['puid']
+                    user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid_new)
+                    if user:
+                        if authenticationService.authenticate(user.getUserId()):
+                            userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%puid)
+                            return True
+                    return False
                 # Registering via external web service
                 if not self.registration_url:
                     return False
