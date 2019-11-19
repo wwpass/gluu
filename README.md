@@ -18,7 +18,7 @@ WWPass integration with GLUU IAM service
 ## Instuctions
 
 ### File deployment
-`wwpass-frontend.js`, `wwpass.xhtml` and `wwpassbind.xhtml` to `/opt/gluu-server/opt/jetty-9.4/temp/jetty-localhost-8081-oxauth.war-_oxauth-any-<instance_number>.dir/webapp/auth/wwpass/` . Don't forget to `mkdir` first.
+`wwpass-frontend.js`, `wwpass.xhtml` and `wwpassbind.xhtml` to `auth/wwpass/` inside `/opt/gluu/jetty/oxauth/webapps/oxauth.war` (it's just a zip file, use `zip -ur auth` command).
 
 `wwpass.py` to `/opt/gluu-server/opt/gluu/python/libs/`
 
