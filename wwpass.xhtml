@@ -48,7 +48,7 @@
                     qrcode:'#qrcode',
                     passkey:'#passkey',
                     callbackURL: window.location.protocol + '//' + window.location.hostname + '#{request.contextPath}/postlogin.htm',
-                    ticketURL: '/wwpass/ticket.json'
+                    ticketURL: '/wwpass/ticket.json?' + (#{identity.getWorkingParameter('use_pin')}?'p=1':'')
                 });
             };
         </script>
