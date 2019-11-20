@@ -49,14 +49,18 @@ class PersonAuthentication(PersonAuthenticationType):
                 return True
         return False
 
+    def getPuid(self, ticket):
+        return self.wwc.getPUID(ticket, self.auth_type)['puid']
+
     def authenticate(self, configurationAttributes, requestParameters, step):
         authenticationService = CdiUtil.bean(AuthenticationService)
         userService = CdiUtil.bean(UserService)
+        ticket = requestParameters.get('wwp_ticket')[0] if 'wwp_ticket' in requestParameters else None
 
         if (step == 1):
             identity = CdiUtil.bean(Identity)
             print "WWPASS. Authenticate for step 1"
-            puid = self.wwc.getPUID(requestParameters.get('wwp_ticket')[0], self.auth_type)['puid']
+            puid = self.getPuid(ticket)
             user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid)
             if user:
                 if authenticationService.authenticate(user.getUserId()):
@@ -75,10 +79,10 @@ class PersonAuthentication(PersonAuthenticationType):
             if not puid:
                 return False
 
-            if 'wwp_ticket' in requestParameters:
+            if ticket:
                 if 'bind' in requestParameters:
                     # Binding with existing PassKey
-                    puid_new = self.wwc.getPUID(requestParameters.get('wwp_ticket')[0], self.auth_type)['puid']
+                    puid_new = self.getPuid(ticket)
                     user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid_new)
                     if user:
                         if authenticationService.authenticate(user.getUserId()):
@@ -88,7 +92,7 @@ class PersonAuthentication(PersonAuthenticationType):
                 # Registering via external web service
                 if not self.registration_url:
                     return False
-                puid_new = self.wwc.getPUID(requestParameters.get('wwp_ticket')[0], self.auth_type)['puid']
+                puid_new = self.getPuid(ticket)
                 if puid != puid_new:
                     return False
                 return self.tryFirstLogin(puid, userService, authenticationService)
