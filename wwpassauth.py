@@ -23,6 +23,8 @@ class PersonAuthentication(PersonAuthenticationType):
         self.wwc = WWPassConnection(
             configurationAttributes.get("wwpass_key_file").getValue2(),
             configurationAttributes.get("wwpass_crt_file").getValue2())
+        self.use_pin = configurationAttributes.get("use_pin").getValue2() if configurationAttributes.containsKey("use_pin") else None
+        self.auth_type = ('p',) if self.use_pin else ()
         print "WWPASS. Initialized successfully"
         return True
 
@@ -47,14 +49,20 @@ class PersonAuthentication(PersonAuthenticationType):
                 return True
         return False
 
+    def getPuid(self, ticket):
+        puid = self.wwc.getPUID(ticket, self.auth_type)['puid']
+        assert puid #Just in case it's empty or None
+        return puid
+
     def authenticate(self, configurationAttributes, requestParameters, step):
         authenticationService = CdiUtil.bean(AuthenticationService)
         userService = CdiUtil.bean(UserService)
+        ticket = requestParameters.get('wwp_ticket')[0] if 'wwp_ticket' in requestParameters else None
 
         if (step == 1):
             identity = CdiUtil.bean(Identity)
             print "WWPASS. Authenticate for step 1"
-            puid = self.wwc.getPUID(requestParameters.get('wwp_ticket')[0])['puid']
+            puid = self.getPuid(ticket)
             user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid)
             if user:
                 if authenticationService.authenticate(user.getUserId()):
@@ -63,7 +71,7 @@ class PersonAuthentication(PersonAuthenticationType):
                 if self.registration_url and self.tryFirstLogin(puid, userService, authenticationService):
                     return True
                 identity.setWorkingParameter("puid", puid)
-                identity.setWorkingParameter("ticket", requestParameters.get('wwp_ticket')[0])
+                identity.setWorkingParameter("ticket", ticket)
                 return True
             return False
         elif (step == 2):
@@ -73,11 +81,20 @@ class PersonAuthentication(PersonAuthenticationType):
             if not puid:
                 return False
 
-            if 'wwp_ticket' in requestParameters:
+            if ticket:
+                if 'bind' in requestParameters:
+                    # Binding with existing PassKey
+                    puid_new = self.getPuid(ticket)
+                    user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid_new)
+                    if user:
+                        if authenticationService.authenticate(user.getUserId()):
+                            userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%puid)
+                            return True
+                    return False
                 # Registering via external web service
                 if not self.registration_url:
                     return False
-                puid_new = self.wwc.getPUID(requestParameters.get('wwp_ticket')[0])['puid']
+                puid_new = self.getPuid(ticket)
                 if puid != puid_new:
                     return False
                 return self.tryFirstLogin(puid, userService, authenticationService)
@@ -102,11 +119,12 @@ class PersonAuthentication(PersonAuthenticationType):
             return False
 
     def prepareForStep(self, configurationAttributes, requestParameters, step):
+        identity = CdiUtil.bean(Identity)
+        identity.setWorkingParameter("use_pin", self.use_pin)
         if (step == 1):
             print "WWPASS. Prepare for Step 1"
             return True
         elif (step == 2):
-            identity = CdiUtil.bean(Identity)
             identity.setWorkingParameter("registration_url", self.registration_url)
             identity.setWorkingParameter("allow_password_bind", self.allow_password_bind)
             print "WWPASS. Prepare for Step 2"
@@ -114,7 +132,7 @@ class PersonAuthentication(PersonAuthenticationType):
         return False
 
     def getExtraParametersForStep(self, configurationAttributes, step):
-        return Arrays.asList("puid", "ticket")
+        return Arrays.asList("puid", "ticket", "use_pin")
 
     def getCountAuthenticationSteps(self, configurationAttributes):
         identity = CdiUtil.bean(Identity)

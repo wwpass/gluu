@@ -10,8 +10,8 @@ It's assumed that Gluu is running with Gluu RADIUS and Cisco ASA is configured t
 1. Edit `/opt/opendj/config/schema/77-customAttributes.ldif`. Add section:
 ```
   attributeTypes: ( 1.3.6.1.4.1.39481.1.3.1400 NAME 'radiusNonce'
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.44
-  X-ORIGIN 'WWPass - RADIUS Nonce' )
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.44
+    X-ORIGIN 'WWPass - RADIUS Nonce' )
 ```
 Edit line containing `MAY (...)` add `$ radiusNonce` to the list of attributes there.
 
@@ -45,7 +45,7 @@ Save the secret and clientID values.
 2. Copy `webapp.conf.example` to the web server and rename it to `webapp.conf`
 3. Edit `webapp.conf`, filling values relevan to your system. Don't forget to deploy WWPass Connector application and put a link for downloading it in the config.
 4. Configure your web server to run `webapp.py --config=webapp.conf` as a demon.
-5. Install python modules for the webapp: "python3-tornado", "python3-jwt
+5. Install python modules for the webapp: "python3-tornado", "python3-jwt"
 6. Configure your web server software to proxy requests for relevant virtual host to this helper webapp.
 
 
