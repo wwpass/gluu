@@ -50,7 +50,9 @@ class PersonAuthentication(PersonAuthenticationType):
         return False
 
     def getPuid(self, ticket):
-        return self.wwc.getPUID(ticket, self.auth_type)['puid']
+        puid = self.wwc.getPUID(ticket, self.auth_type)['puid']
+        assert puid #Just in case it's empty or None
+        return puid
 
     def authenticate(self, configurationAttributes, requestParameters, step):
         authenticationService = CdiUtil.bean(AuthenticationService)
@@ -69,7 +71,7 @@ class PersonAuthentication(PersonAuthenticationType):
                 if self.registration_url and self.tryFirstLogin(puid, userService, authenticationService):
                     return True
                 identity.setWorkingParameter("puid", puid)
-                identity.setWorkingParameter("ticket", requestParameters.get('wwp_ticket')[0])
+                identity.setWorkingParameter("ticket", ticket)
                 return True
             return False
         elif (step == 2):
