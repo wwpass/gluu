@@ -28,7 +28,7 @@ It's assumed that Gluu is running and WWPass authentication is configured (see [
 3. From there go to `Encryption/Signing settings` tab, and in `JWKS` field find a key that has `kid` field ending in "_sig_rs256". Note that `kid` value.
 4. Extract the corresponding private key:
     1. Login to gluu server console
-    2. Extract the key to pkcs12 format: `keytool -importkeystore -srckeystore /install/community-edition-setup/output/scim-rp.jks -srcstorepass secret -srcalias &lt;kid&gt; -destalias &lt;kid&gt; -deststoretype PKCS12 -deststorepass password -destkeypass password`
+    2. Extract the key to pkcs12 format: `keytool -importkeystore -srckeystore /install/community-edition-setup/output/scim-rp.jks -srcstorepass secret -srcalias &lt;kid&gt; -destalias &lt;kid&gt; -deststoretype PKCS12 -deststorepass password -destkeypass password -destkeystore identity.p12`
     3. Convert the private key to PEM fromat: `openssl pkcs12 -in identity.p12 -nodes -nocerts -out private_key.pem`
     4. Keep the contents of `private_key.pem`, delete the file and `identity.p12` file.
 5. Go to `Configuration -> Manage Custom Scripts`, and in the tab for `Person Authentication` in `wwpass` script add `registration_url` parameter with value "https://&lt;registration_webapp_root&gt;/newuser"
