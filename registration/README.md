@@ -39,9 +39,10 @@ It's assumed that Gluu is running and WWPass authentication is configured (see [
 3. Edit `webapp.conf`, filling values relevant to your system:
     1. `gluu_url`: URL of the Gluu installation
     2. `wwpass_client_cert` and `wwpass_client_key`: a client certificate and a private key file for WWPass API
-    3. `uma2_id`: Client ID from step 2 in [Gluu configuration](#Gluu-configuration)
-    4. `uma2_kid`: `kid` from step 3 in [Gluu configuration](#Gluu-configuration)
-    5. `uma2_secret`: Contents of `private_key.pem` from step 4.4 in [Gluu configuration](#Gluu-configuration)
+    3. `use_pin`: thist setting should be True if and only if the PIN is used for WWPass authentiation in Gluu
+    4. `uma2_id`: Client ID from step 2 in [Gluu configuration](#Gluu-configuration)
+    5. `uma2_kid`: `kid` from step 3 in [Gluu configuration](#Gluu-configuration)
+    6. `uma2_secret`: Contents of `private_key.pem` from step 4.4 in [Gluu configuration](#Gluu-configuration)
 4. Configure your web server to run `webapp.py --config=webapp.conf` as a demon
 5. Install python modules for the webapp: "python3-tornado", "python3-jwt"
 6. Configure your web server software to proxy requests for relevant virtual host to this helper webapp
