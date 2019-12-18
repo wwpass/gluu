@@ -7,7 +7,9 @@ debug = False
 bind = 'localhost'
 port = 9061
 
-gluu_url= 'https://gluu.example.com/'
+gluu_url = 'https://gluu.example.com/'
+
+api_key = '<base64_of_api_key>'
 
 wwpass_client_cert = '/opt/gluu-server/opt/wwpass/gluu_client.crt'
 wwpass_client_key = '/opt/gluu-server/opt/wwpass/gluu_client.key'

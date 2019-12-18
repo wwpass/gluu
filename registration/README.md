@@ -6,7 +6,7 @@ This web application allows user self-registration in Gluu with WWPass PassKey a
 1. The user authenticates with a PassKey that is not bound to any account in Gluu.
 2. A WWPass custom authentication script displays a registration/binding page. If `registration_url` is configured in script parameters, a registration button is displayed. It's part of a form that has WWPass ticket and PUID of the user in hidden fields.
 3. The user clicks on the button and is sent to the registration web application with POST request.
-4. The registration application requests new ticket form the one it received, finalizing th received ticket.
+4. The registration application requests new ticket form the one it received, finalizing the received ticket.
 5. The registration application requests PUID with the new ticket and asserts that it's equal to the PUID received from the request.
 6. The registration application displays a web form to the user with the new ticket and PUID in hidden fields. The form has additional JavaScript snipped that displays countdown timer for the ticket expiration.
 7. The user fills in the from and submits it.

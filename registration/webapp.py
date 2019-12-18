@@ -18,7 +18,10 @@ import tornado.httpclient
 from tornado.options import define, options, parse_config_file, parse_command_line
 import tornado.escape
 
+from jwt import encode as jwt_encode, decode as jwt_decode, DecodeError
+from base64 import decodebytes as base64_decode
 from SCIM import SCIMClient
+
 
 base_path = os.path.abspath(os.path.dirname(__file__))
 os.chdir(base_path)
@@ -87,21 +90,26 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
         return NewUserHandler._wwpass_ssl_context
 
     async def post(self):  #pylint: disable=arguments-differ
-        logging.debug(self.request.body)
-        ticket = self.get_body_argument('ticket', None)
-        puid = self.get_body_argument('puid', None)
-        if not ticket or not puid:
-            self.render('error.html', reason="Bad registration request")
-            return
-        request = {
+        request = self.get_body_argument('request', None)
+        if not request:
+            raise tornado.web.HTTPError(400, "Bad request")
+        try:
+            decoded_request = jwt_decode(request, key=self.settings['api_key'])
+        except DecodeError:
+            raise tornado.web.HTTPError(403, "Invalid request")
+        logging.debug(f"Request: {decoded_request}")
+        if not all(param in decoded_request for param in ('ticket', 'puid', 'email', 'name')):
+            raise tornado.web.HTTPError(400, "Too few request parameters")
+        ticket = decoded_request['ticket']
+        puid = decoded_request['puid']
+        wwpass_request = {
             'ticket': ticket,
             'finalize': 1
         }
         response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/put.json?{urllib.parse.urlencode(request)}', ssl_options=self. wwpass_ssl_context())).body)
         logging.debug(f"Put ticket response: {response}")
         if 'result' not in response or not response['result']:
-            self.render('error.html', reason="Bad registration request")
-            return
+            raise tornado.web.HTTPError(403, "Invalid request")
         ticket = response['data']
         request = {
             'ticket': ticket
@@ -109,43 +117,39 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
         response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/puid.json?{urllib.parse.urlencode(request)}', ssl_options=self. wwpass_ssl_context())).body)
         logging.debug(f"PUID response: {response}")
         if 'result' not in response or not response['result'] or puid != response['data']:
-            self.render('error.html', reason="Bad registration request")
-            return
-        callsign = self.get_body_argument('callsign', None)
-        fullname = self.get_body_argument('fullname', None)
-        email = self.get_argument('email', None)
+            raise tornado.web.HTTPError(403, "Invalid request")
+        fullname = decoded_request['name']
+        email = decoded_request['email']
         errors: List[str] = []
-        if callsign is None and email is None and fullname is None:
-            self.render('registration_form.html', errors='', ticket=ticket, puid=puid)
-            return
-        if not callsign:
-            errors.append("Call sign is a required field")
-        elif await self.settings['scim'].findUsersByAttr('nickName',callsign):
-            errors.append("This call sign is already claimed")
         if not fullname:
-            errors.append("Full name is a required field")
+            errors.append("Full name is a required parameter")
         if not email:
-            errors.append("Email is a required field")
+            errors.append("Email is a required parameter")
         elif parseaddr(email) == ('',''):
             errors.append("Wrong email format")
         elif await self.settings['scim'].findUsersByAttr('emails.value',email):
             #TODO: check for emails with '.' and '+' as identical
             errors.append("This email is already claimed")
         if errors:
-            self.render('registration_form.html', errors='<br>'.join(errors), ticket=ticket, puid=puid)
+            self.write(jwt_encode({
+                    'status': 400,
+                    'reason': ". ".join(errors),
+                    'ticket': ticket},
+                algorithm='HS256',
+                key=self.settings['api_key']))
+            self.finish()
             return
 
         response = await self.settings['scim'].createUser(
             externalId=f'wwpass:{puid}',
             emails=[{'primary':True, 'value': email}],
-            displayName=f'{fullname} ({callsign})',
+            displayName=fullname,
             name={'formatted': fullname},
-            nickName=callsign,
             userName=f'wwpass-{puid}',
             active=True
         )
         logging.debug(f"CreateUser response: {response}")
-
+        userID = response['id']
         #Redirecting the user to login as if they just authenticated with WWPass
         request = {
             'wwp_version': 2,
@@ -154,7 +158,13 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
             'wwp_ticket': ticket
         }
         loginform_url = f'{self.settings["options"].gluu_url}/oxauth/postlogin.htm?{urllib.parse.urlencode(request)}'
-        self.redirect(loginform_url)
+        self.write(jwt_encode({
+                'redirect_to': loginform_url,
+                'uid': userID},
+            algorithm='HS256',
+            key=self.settings['api_key']))
+        self.finish()
+
 
 def define_options() -> None:
     define("config",default="/etc/wwpass/oauth2.conf")
@@ -168,6 +178,8 @@ def define_options() -> None:
     define("port", type=int, default=9062)
 
     define("gluu_url", type=str)
+
+    define("api_key", type=str)
 
     define("wwpass_client_cert", type=str)
     define("wwpass_client_key", type=str)
@@ -196,6 +208,7 @@ if __name__ == "__main__":
         'autoescape': None,
         'options': options,
         'xheaders': True,
+        'api_key': base64_decode(options.api_key.encode('ascii')),
         'scim': SCIMClient(options['gluu_url'], options['uma2_id'], options['uma2_secret'], options['uma2_kid'])
     }
 
