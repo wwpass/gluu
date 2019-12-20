@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html">
+<f:view transient="true" locale="#{language.localeCode}">
+
+	<h:head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <title><ui:insert name="pageTitle" /></title>
+    
+		<!-- <link rel="icon" href="#{request.contextPath}/servlet/favicon"
+			type='image/x-icon' /> -->
+		<link type="text/css" rel="stylesheet"
+			href="#{oxAuthConfigurationService.getCssLocation()}/style.min.css" />
+
+    <ui:insert name="head" />
+
+  </h:head>
+  
+	<h:body class="pageBody">
+    
+    <main class="pageMain loginMain">
+      <div class="content">
+        <div class="content__element content__element--first content--center  content--narrow">
+          <div class="logo">
+  
+          </div>
+          <div class="hr"></div>
+  
+          <h:panelGroup rendered="#{sessionIdService.notSessionIdAuthenticated}">
+
+            <ui:insert name="content-major" />
+
+          </h:panelGroup>
+
+        </div>
+
+        <div class="content__element">
+          <ui:insert name="content-additional" />
+        </div>
+        
+        
+      </div>
+  
+    </main>
+  
+    <footer class="pageFooter">
+      <ul class="pageFooter__nav">
+        <li class="pageFooter__item"><span class="text text--sm">© Gluu, Inc</span></li>
+        <li class="pageFooter__item"><a href="#{client.policyUri}" class="text text--sm text--link">Privacy Policy</a></li>
+        <li class="pageFooter__item"><a href="#{client.tosUri}" class="text text--sm text--link">Terms of Service</a></li>
+      </ul>
+    </footer>
+
+    <script type="text/javascript" src="wwpass-frontend.js"></script>
+    <script type="text/javascript">
+        window.onload = function () {
+            const binds = document.querySelectorAll(`.bind_option`);
+              if (binds) {
+                binds.forEach((bind) => {
+                bind.addEventListener(`click`, (evt) => {
+                  evt.target.parentElement.nextElementSibling.style.display='';
+                  binds.forEach((bind) => {
+                    bind.style.display = `none`;
+                  });
+                });
+              });
+            }
+
+            WWPass.authInit({
+                qrcode:'#qrcode',
+                passkey:'#passkey',
+                callbackURL: window.location.protocol + '//' + window.location.hostname + '#{request.contextPath}/postlogin.htm',
+                ticketURL: '/wwpass/ticket.json?' + (#{identity.getWorkingParameter('use_pin')}?'p=1':'')
+            });
+        };
+    </script>
+
+  </h:body>
+
+</f:view>
+</html>
