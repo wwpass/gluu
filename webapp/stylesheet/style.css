@@ -168,7 +168,7 @@ body {
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
   background-image: url("../img/WARCA_Logo_RGB.svg");
-  background-size: 80%;
+  background-size: 250px;
   background-repeat: no-repeat;
   background-position: center; }
 
@@ -192,6 +192,7 @@ body {
 
 .content__element {
   width: 100%;
+  max-width: 690px;
   background-color: #ffffff;
   border: 1px solid #dddddd;
   border-radius: 15px;
@@ -390,6 +391,9 @@ body {
 .button--store-ios:active {
   background-image: url("../img/gluu-button-ios-action.svg"); }
 
+.button--wrapper {
+  margin: auto; }
+
 .form {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -429,6 +433,37 @@ body {
           padding-inline-end: 10px;
   font-size: 14px;
   line-height: 17px; }
+
+.list {
+  text-align: left;
+  overflow: auto;
+  -webkit-margin-start: 15px;
+          margin-inline-start: 15px;
+  -webkit-margin-end: 15px;
+          margin-inline-end: 15px;
+  -webkit-padding-start: 20px;
+          padding-inline-start: 20px;
+  word-wrap: break-word; }
+
+.list--error {
+  font-size: 13px;
+  line-height: 18px; }
+
+.list__item {
+  -webkit-margin-after: 15px;
+          margin-block-end: 15px; }
+
+.list__item--error {
+  -webkit-margin-after: 7px;
+          margin-block-end: 7px; }
+
+.list__item--info {
+  -webkit-margin-after: 7px;
+          margin-block-end: 7px; }
+
+.list__item--warning {
+  -webkit-margin-after: 7px;
+          margin-block-end: 7px; }
 
 .pageFooter__nav {
   list-style: none;

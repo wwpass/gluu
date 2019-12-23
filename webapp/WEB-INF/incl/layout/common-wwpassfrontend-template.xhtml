@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	template="/WEB-INF/incl/layout/common-template.xhtml">
+
+	<ui:define name="wwpass-frontend">
+      <script type="text/javascript" src="wwpass-frontend.js"></script>
+      <script type="text/javascript">
+          window.onload = function () {
+              const binds = document.querySelectorAll(`.bind_option`);
+                if (binds) {
+                  binds.forEach((bind) => {
+                  bind.addEventListener(`click`, (evt) => {
+                    evt.target.parentElement.nextElementSibling.style.display='';
+                    binds.forEach((bind) => {
+                      bind.style.display = `none`;
+                    });
+                  });
+                });
+              }
+  
+              WWPass.authInit({
+                  qrcode:'#qrcode',
+                  passkey:'#passkey',
+                  callbackURL: window.location.protocol + '//' + window.location.hostname + '#{request.contextPath}/postlogin.htm',
+                  ticketURL: '/wwpass/ticket.json?' + (#{identity.getWorkingParameter('use_pin')}?'p=1':'')
+              });
+          };
+      </script>
+    </ui:define>
+
+</ui:composition>

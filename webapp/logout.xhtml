@@ -7,7 +7,7 @@
     <ui:param name="showGlobalMessages" value="false" />
 
     <ui:define name="head">
-        <meta name="description" content="Error page description" />
+        <meta name="description" content="Logout page description" />
     </ui:define>
 
     <ui:define name="pageTitle">
@@ -15,19 +15,21 @@
     </ui:define>
 
     <ui:define name="content-major">
-      <h2 class="heading heading--h2 heading--light">Oops</h2>
-        <p class="text">
-          <h:outputFormat value="#{msgs['error.unexpectedError']}">
-            <f:param value="#{pageService.currentDateTime}" />
-          </h:outputFormat>
-        </p>
-        <p class="text">
-          <h:messages id="globalMessage" styleClass="list list--error"
-                                        errorClass="list__item list__item--error"
-                                        infoClass="list__item list__item--info"
-                                        warnClass="list__item list__item--warning"
-                                        globalOnly="true" />
-        </p >
+      <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Logged Out</h2>
+      <p class="text text--marginTop-0">
+        Thank you for using <b>GLUU</b>
+      </p>
+      <button class="button button--action" id="passkey">Sign in again</button>
+
+      <f:view contentType="text/html" locale="#{language.localeCode}">
+        <f:metadata>
+          <f:viewAction action="#{identity.logout}" />
+          <f:viewAction action="#{logoutAction.redirect}" />
+
+          <f:viewParam name="id_token_hint" value="#{logoutAction.idTokenHint}" />
+          <f:viewParam name="post_logout_redirect_uri" value="#{logoutAction.postLogoutRedirectUri}" />
+        </f:metadata>
+        </f:view>
     </ui:define>
 
     <ui:define name="content-additional">
@@ -39,4 +41,3 @@
     </ui:define>
 
 </ui:composition>
-
