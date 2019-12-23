@@ -334,6 +334,17 @@ body {
           margin-block-end: 30px;
   cursor: pointer; }
 
+.button--common {
+  background-color: #ffffff;
+  color: #0077ff;
+  border-color: #0077ff; }
+
+.button--common:hover,
+.button--common:focus,
+.button--common:active {
+  color: #0055cc;
+  border-color: #0055cc; }
+
 .button--action {
   color: #ffffff;
   background-color: #0077ff; }
@@ -392,7 +403,14 @@ body {
   background-image: url("../img/gluu-button-ios-action.svg"); }
 
 .button--wrapper {
-  margin: auto; }
+  margin: auto;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column; }
 
 .form {
   display: -webkit-box;
@@ -487,7 +505,18 @@ body {
     .content--narrow {
       max-width: none; }
     .heading--narrow {
-      max-width: 570px; } }
+      max-width: 570px; }
+    .button--wrapper {
+      -webkit-margin-start: 15px;
+              margin-inline-start: 15px;
+      -webkit-margin-end: 15px;
+              margin-inline-end: 15px;
+      -webkit-box-orient: horizontal;
+      -webkit-box-direction: normal;
+          -ms-flex-direction: row;
+              flex-direction: row;
+      -ms-flex-pack: distribute;
+          justify-content: space-around; } }
 
 @media (min-width: 720px) {
     .pageMain {

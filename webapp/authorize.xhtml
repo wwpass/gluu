@@ -68,7 +68,10 @@
           <div class="hr"></div>
 
           <h:form id="authorizeForm" class="form">
-            <h3 class="heading heading--h3 heading--light">
+            <h:inputHidden id="session_id" value="#{authorizeAction.sessionId}" />
+            <ui:param name="client" value='#{_client}' />
+
+            <h3 class="heading heading--h3 heading--light heading--center">
               <h:outputText value="#{msgs['authorize.requestForPermission']}" />
             </h3>
             
@@ -78,7 +81,7 @@
                 height="65px" />
             </h:panelGroup>
             
-            <h3 class="heading heading--h3 heading--light">
+            <h3 class="heading heading--h3 heading--light heading--center">
               <h:outputFormat
                 value="#{msgs['authorize.requestingPermissionForScopes']}">
                 <f:param
