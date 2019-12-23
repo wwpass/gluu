@@ -63,3 +63,7 @@ Options +ExecCGI
 ```
 
 Reload apache2 after that.
+
+#### Layouts, styles, images origin repo
+
+You can find all originals and implementation instructions in this repo https://gitlab.wwpass.net/Igor.Vladimirskiy/gluulego
