@@ -45,8 +45,6 @@ class SCIMClient():
         }
         if self.pct:
             request['pct'] = self.pct
-        if self.rpt:
-            request['rpt'] = self.rpt
         body = urllib.parse.urlencode(request)
         response = await self.http().fetch(
             self.token_url,
@@ -57,7 +55,6 @@ class SCIMClient():
             body=body
         )
         response_body = json.loads(response.body)
-        logging.info(f"Response auth: {response_body}")
         self.rpt = response_body['access_token']
         self.pct = response_body['pct']
         assert response_body['token_type'] == 'Bearer'

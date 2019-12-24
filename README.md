@@ -6,8 +6,6 @@ WWPass integration with GLUU IAM service
  - If at all possible intergate getTicket in the oxAuth
  - Secure SP key file with better permissions/ownership
  - Properly fix WWPass SDK for it to work with Jython 2.7.1
- - Revise texts for WWPass pages
- - Fix logo on binding page
  - Assert that registering the same user in parallel won't introduce vulnerability
  - Make anyconnect OAuth2client use more secure authentication method
  - Recover an account using email
@@ -15,7 +13,7 @@ WWPass integration with GLUU IAM service
 ## Instuctions
 
 ### File deployment
-`wwpass-frontend.js`, `wwpass.xhtml` and `wwpassbind.xhtml` to `auth/wwpass/` inside `/opt/gluu/jetty/oxauth/webapps/oxauth.war` (it's just a zip file, use `zip -ur oxauth.war auth/` command).
+Files in `oxauth` directory should be deployed to `/opt/gluu/jetty/oxauth/webapps/oxauth.war` (it's just a zip file, use `cd oxauth; zip -ur /path/to/oxauth.war ./*` command).
 
 `wwpass.py` to `/opt/gluu-server/opt/gluu/python/libs/`
 
@@ -29,7 +27,7 @@ SP certificate and key to: `/opt/wwpass_gluu/gluu_client.crt` and `/opt/wwpass_g
 
 #### Configuration -> Manage Custom scripts
 
-Create custom script `wwpass` with "File" storage and path to `wwpassauth.py` from above (excluding `/opt/gluu/`)
+Create custom script `wwpass` with "File" storage and path to `wwpassauth.py` from above (excluding `/opt/gluu-server/`)
 
 Add the following parameters to the script:
  - `wwpass_crt_file`: location of SP certificate file: `/opt/wwpass_gluu/gluu_client.crt`
@@ -54,16 +52,16 @@ Add the following to site configuration:
 
 ScriptAlias "/wwpass/" "/opt/wwpass_glue/cgi/"
 
-<Directory /opt/wwpass_glue/cgi/>
-SetHandler cgi-script
-Options +ExecCGI
-        Order deny,allow
-        Allow from all
+<Directory /opt/wwpass_gluu/cgi/>
+  SetHandler cgi-script
+  Options +ExecCGI
+  Order deny,allow
+  Allow from all
 </Directory>
 ```
 
 Reload apache2 after that.
 
 #### Layouts, styles, images origin repo
-
-You can find all originals and implementation instructions in this repo https://gitlab.wwpass.net/Igor.Vladimirskiy/gluulego
+You can find all originals and implementation instructions for the xhtml, images and css in this repo:
+https://gitlab.wwpass.net/Igor.Vladimirskiy/gluulego
