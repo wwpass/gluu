@@ -1,0 +1,113 @@
+<!DOCTYPE composition
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    template="/WEB-INF/incl/layout/common-wwpassfrontend-template.xhtml">
+    <f:metadata>
+      <f:viewAction action="#{authenticator.prepareAuthenticationForStep}"
+      if="#{sessionIdService.notSessionIdAuthenticated}" />
+
+      <f:viewParam name="login_hint" value="#{loginAction.loginHint}" />
+    </f:metadata>
+
+    <ui:define name="head">
+        <meta name="description" content="WWPass Bind page description" />
+    </ui:define>
+
+    <ui:define name="pageTitle">
+        <h:outputText value="#{msgs['login.pageTitle']}" />
+    </ui:define>
+
+    <ui:define name="content-major">
+      <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('allow_password_bind')))}">
+        <div class="bind_option">
+          <input type="submit" value="Bind with a password" class="button button--action" />
+
+          <div class="or">or</div>
+        </div>
+
+        <div id="password_bind" style="display: none;">
+          <h:messages style="color:red;" />
+          <form id="loginForm" name="loginForm" method="post" class="form from--bind" enctype="application/x-www-form-urlencoded">
+            <input type="hidden" name="loginForm" value="loginForm" />
+            <p class="text">Enter your credentials to bind PassKey to your account</p>
+            
+            <label for="loginForm:username" class="form__label"
+            value="#{msgs['login.username']}">
+              Username
+            </label>
+            <input id="loginForm:username" type="text" name="loginForm:username" autocomplete="off" class="form__input" value="#{credentials.username}" />
+  
+            <label for="loginForm:password" class="form__label" value="#{msgs['login.password']}">Password</label>
+            <input id="loginForm:password" type="password" name="loginForm:password" autocomplete="off" value="#{credentials.password}" class="form__input" />
+  
+            <h:commandButton id="loginButton" styleClass="button button--action"
+                  value="Bind" action="#{authenticator.authenticate}" />
+  
+            
+          </form>
+
+          <div class="or">or</div>
+        </div>
+      </h:panelGroup>
+
+      <h:panelGroup rendered="true">
+        <div class="bind_option">
+          <input type="submit" value="Bind with another PassKey" class="button button--action" />
+
+          <div class="or">or</div>
+        </div>
+
+        <div id="bind" style="display: none;">
+          <div class="" align="center">
+            <p class="text">Scan QRCode to bind the previous PassKey to your account</p>
+          </div>
+          <div class="" align="center">
+            <div id="qrcode" style="width: 196px; height: 196px; display: flex"></div>
+            <div id="passkey"></div>
+          </div>
+
+          <div class="or marginTop-20">or</div>
+        </div>
+      </h:panelGroup>
+
+      <h:panelGroup rendered="#{identity.getWorkingParameter('registration_url') != null}">
+        <div id="register">
+          <form id="registerForm" class=""
+            action="#{identity.getWorkingParameter('registration_url')}" method="POST">
+            <div class="">
+              <div class="">
+                <h:commandButton id="registerUser" styleClass="button button--action" value="Register a new user" />
+              </div>
+            </div>
+            <h:inputHidden id="ticket" value="#{identity.getWorkingParameter('ticket')}" />
+            <h:inputHidden id="puid" value="#{identity.getWorkingParameter('puid')}" />
+          </form>
+        </div>
+      </h:panelGroup>
+    </ui:define>
+
+    <ui:define name="content-additional">
+      
+        <!-- <div class="content__element">
+        Anything you like here
+      </div> -->
+
+    </ui:define>
+
+    <ui:define name="bind-function">
+        const binds = document.querySelectorAll(`.bind_option`);
+          if (binds) {
+            binds.forEach((bind) => {
+            bind.addEventListener(`click`, (evt) => {
+              evt.target.parentElement.nextElementSibling.style.display='';
+              binds.forEach((bind) => {
+                bind.style.display = `none`;
+              });
+            });
+          });
+        }
+    </ui:define>
+
+</ui:composition>
+

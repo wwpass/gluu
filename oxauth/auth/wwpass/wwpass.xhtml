@@ -1,0 +1,48 @@
+<!DOCTYPE composition
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    template="/WEB-INF/incl/layout/common-wwpassfrontend-template.xhtml">
+    <f:metadata>
+        <f:viewAction action="#{authenticator.prepareAuthenticationForStep}" if="#{not identity.loggedIn}" />
+    </f:metadata>
+
+    <ui:define name="head">
+        <meta name="description" content="WWPass page description" />
+        <link rel="preload" href="img/gluu-button-ios-action.svg" as="image" />
+        <link rel="preload" href="img/gluu-button-google-action.svg" as="image" />
+    </ui:define>
+
+    <ui:define name="pageTitle">
+        <h:outputText value="#{msgs['login.pageTitle']}" />
+    </ui:define>
+
+    <ui:define name="content-major">
+      <h:panelGroup rendered="#{sessionIdService.notSessionIdAuthenticated}">
+        <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Scan the QR code</h2>
+        <p class="text text--marginTop-0">
+           with WWPass<sup class="text__sup">TM</sup><h:outputText value="&#160;" />PassKey<h:outputText value="&#160;" />App to<h:outputText value="&#160;" />login<h:outputText value="&#160;" />
+        </p>
+        <div class="loginMain__code-qr qrtap" id="qrcode" style="height: 196px; width: 196px; margin: auto">
+          <canvas width="256" height="256"></canvas>
+        </div>
+        <div id="passkey" style="margin-block-end: 20px;"></div>
+
+        <div class="hr"></div>
+        <p class="text text--sm">Download WWPass<sup class="text__sup">TM</sup><h:outputText value="&#160;" />PassKey<h:outputText value="&#160;" />App from
+        </p>
+        <a class="button button--store button--store-ios" href="#TODO">AppStore</a>
+        <a class="button button--store button--store-google" href="#TODO">Google Play</a>
+      </h:panelGroup>
+    </ui:define>
+
+    <ui:define name="content-additional">
+      
+        <!-- <div class="content__element">
+        Anything you like here
+      </div> -->
+
+    </ui:define>
+
+</ui:composition>
+
