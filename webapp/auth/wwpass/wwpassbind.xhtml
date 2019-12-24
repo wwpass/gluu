@@ -96,21 +96,17 @@
     </ui:define>
 
     <ui:define name="bind-function">
-      <script type="text/javascript">
-          
-              const binds = document.querySelectorAll(`.bind_option`);
-                if (binds) {
-                  binds.forEach((bind) => {
-                  bind.addEventListener(`click`, (evt) => {
-                    evt.target.parentElement.nextElementSibling.style.display='';
-                    binds.forEach((bind) => {
-                      bind.style.display = `none`;
-                    });
-                  });
-                });
-              }
-          
-      </script>
+        const binds = document.querySelectorAll(`.bind_option`);
+          if (binds) {
+            binds.forEach((bind) => {
+            bind.addEventListener(`click`, (evt) => {
+              evt.target.parentElement.nextElementSibling.style.display='';
+              binds.forEach((bind) => {
+                bind.style.display = `none`;
+              });
+            });
+          });
+        }
     </ui:define>
 
 </ui:composition>
