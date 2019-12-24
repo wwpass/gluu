@@ -8,7 +8,6 @@
 	template="/WEB-INF/incl/layout/common-template.xhtml">
 
 	<ui:define name="wwpass-frontend">
-<<<<<<< HEAD:webapp/WEB-INF/incl/layout/common-wwpassfrontend-template.xhtml
     <script type="text/javascript"
             src="#{oxAuthConfigurationService.getJsLocation()}/wwpass-frontend.js" />
     <script type="text/javascript">
@@ -24,34 +23,5 @@
         };
     </script>
   </ui:define>
-
-  
-=======
-      <script type="text/javascript"
-        src="#{oxAuthConfigurationService.getJsLocation()}/wwpass-frontend.js" />
-      <script type="text/javascript">
-          window.onload = function () {
-              const binds = document.querySelectorAll(`.bind_option`);
-                if (binds) {
-                  binds.forEach((bind) => {
-                  bind.addEventListener(`click`, (evt) => {
-                    evt.target.parentElement.nextElementSibling.style.display='';
-                    binds.forEach((bind) => {
-                      bind.style.display = `none`;
-                    });
-                  });
-                });
-              }
-
-              WWPass.authInit({
-                  qrcode:'#qrcode',
-                  passkey:'#passkey',
-                  callbackURL: window.location.protocol + '//' + window.location.hostname + '#{request.contextPath}/postlogin.htm',
-                  ticketURL: '/wwpass/ticket.json?' + (#{identity.getWorkingParameter('use_pin')}?'p=1':'')
-              });
-          };
-      </script>
-    </ui:define>
->>>>>>> cf1ea6cbbcc8b2438d23afda89af6f078017a61e:oxauth/WEB-INF/incl/layout/common-wwpassfrontend-template.xhtml
 
 </ui:composition>
