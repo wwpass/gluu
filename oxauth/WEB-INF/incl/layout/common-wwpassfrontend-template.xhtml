@@ -8,7 +8,8 @@
 	template="/WEB-INF/incl/layout/common-template.xhtml">
 
 	<ui:define name="wwpass-frontend">
-      <script type="text/javascript" src="wwpass-frontend.js"></script>
+      <script type="text/javascript"
+        src="#{oxAuthConfigurationService.getJsLocation()}/wwpass-frontend.js" />
       <script type="text/javascript">
           window.onload = function () {
               const binds = document.querySelectorAll(`.bind_option`);
@@ -22,7 +23,7 @@
                   });
                 });
               }
-  
+
               WWPass.authInit({
                   qrcode:'#qrcode',
                   passkey:'#passkey',
