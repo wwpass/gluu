@@ -29,7 +29,7 @@ SP certificate and key to: `/opt/wwpass_gluu/gluu_client.crt` and `/opt/wwpass_g
 
 #### Configuration -> Manage Custom scripts
 
-Create custom script `wwpass` with "File" storage and path to `wwpassauth.py` from above (excluding `/opt/gluu/`)
+Create custom script `wwpass` with "File" storage and path to `wwpassauth.py` from above (excluding `/opt/gluu-server/`)
 
 Add the following parameters to the script:
  - `wwpass_crt_file`: location of SP certificate file: `/opt/wwpass_gluu/gluu_client.crt`
@@ -54,11 +54,11 @@ Add the following to site configuration:
 
 ScriptAlias "/wwpass/" "/opt/wwpass_glue/cgi/"
 
-<Directory /opt/wwpass_glue/cgi/>
-SetHandler cgi-script
-Options +ExecCGI
-        Order deny,allow
-        Allow from all
+<Directory /opt/wwpass_gluu/cgi/>
+  SetHandler cgi-script
+  Options +ExecCGI
+  Order deny,allow
+  Allow from all
 </Directory>
 ```
 
