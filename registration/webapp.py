@@ -93,8 +93,10 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
         if not ticket or not puid:
             self.render('error.html', reason="Bad registration request")
             return
+        auth_type = 'p' if self.settings['options'].use_pin else ''
         request = {
             'ticket': ticket,
+            'auth_type': auth_type,
             'finalize': 1
         }
         response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/put.json?{urllib.parse.urlencode(request)}', ssl_options=self. wwpass_ssl_context())).body)
@@ -104,7 +106,8 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
             return
         ticket = response['data']
         request = {
-            'ticket': ticket
+            'ticket': ticket,
+            'auth_type': auth_type
         }
         response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/puid.json?{urllib.parse.urlencode(request)}', ssl_options=self. wwpass_ssl_context())).body)
         logging.debug(f"PUID response: {response}")
@@ -171,6 +174,7 @@ def define_options() -> None:
 
     define("wwpass_client_cert", type=str)
     define("wwpass_client_key", type=str)
+    define("use_pin", type=bool, default=False)
 
     define("uma2_id", type=str)
     define("uma2_secret", type=str)
