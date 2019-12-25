@@ -15,6 +15,7 @@ import tornado.auth
 from tornado.options import define, options, parse_config_file, parse_command_line
 import tornado.escape
 base_path = os.path.abspath(os.path.dirname(__file__))
+static_path = os.path.realpath(os.path.join(base_path, './static'))
 os.chdir(base_path)
 
 class GluuOAuth2MixIn(tornado.auth.OAuth2Mixin): #type: ignore
@@ -120,6 +121,7 @@ def define_options() -> None:
 urls = [
     (r"/", tornado.web.RedirectHandler, {"url": "/anyconnect"}),
     (r"/anyconnect/?", AnyConnectHandler),
+    (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static_path})
 ]
 
 
@@ -136,6 +138,7 @@ if __name__ == "__main__":
         'autoescape': None,
         'options': options,
         'xheaders': True,
+        'static_path': static_path,
     }
 
     application = tornado.web.Application(urls, **settings)

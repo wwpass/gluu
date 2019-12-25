@@ -317,7 +317,7 @@ body {
   margin: 0 auto;
   color: #0077ff;
   font-size: 14px;
-  line-height: 17px;
+  line-height: 32px;
   font-weight: 400;
   text-decoration: none;
   text-align: center;
@@ -332,7 +332,9 @@ body {
           margin-block-start: 20px;
   -webkit-margin-after: 30px;
           margin-block-end: 30px;
-  cursor: pointer; }
+  cursor: pointer;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box; }
 
 .button--common {
   background-color: #ffffff;
