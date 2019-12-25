@@ -132,11 +132,11 @@
             </h:panelGroup>
   
             <div class="btn_rw button--wrapper">
-              <h:button id="doNotAllowButton"
+              <h:commandLink id="doNotAllowButton"
                           class="button button--common"
                           value="#{msgs['authorize.doNotAllow']}"
                           action="#{authorizeAction.permissionDenied}" />
-              <h:button id="allowButton"
+              <h:commandLink id="allowButton"
                           class="button button--action"
                           value="#{msgs['authorize.allow']}"
                           action="#{authorizeAction.permissionGranted}" />

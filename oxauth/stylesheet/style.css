@@ -317,7 +317,7 @@ body {
   margin: 0 auto;
   color: #0077ff;
   font-size: 14px;
-  line-height: 32px;
+  line-height: 34px;
   font-weight: 400;
   text-decoration: none;
   text-align: center;
@@ -497,6 +497,9 @@ body {
           justify-content: space-between;
   max-width: 290px;
   margin: 15px auto; }
+
+.pageFooter__item {
+  margin: 0 auto; }
 
 .pageFooter__item * {
   margin: 0; }
