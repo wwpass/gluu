@@ -16,14 +16,17 @@
 
         </div>
         <div class="hr"></div>
-        <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Connecting VPN</h2>
-        <p class="text text--marginTop-0">
+        <p class="text">
            <b>Authentication successful</b>
         </p>
-        <p class="text">
-          Cisco AnyConnect will start automatically.
-         </p>
-        <a class="button button--action" href="">Reconnect VPN</a>
+        <a class="button button--action" href="#" id="connect">Connect VPN</a>
+        <div id="connect_text" style="display: none;">
+          <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Connecting VPN</h2>
+          <p class="text" id="connect_text">
+            Cisco AnyConnect will start automatically.
+          </p>
+          <a class="button button--action" href="">Reconnect VPN</a>
+        </div>
         <div class="hr"></div>
         <p class="text text--sm">
           Make sure that AnyConnect application is installed.
@@ -47,7 +50,7 @@
         Anything you like here
       </div> -->
     </div>
-    
+
   </main>
   <footer class="pageFooter">
     <ul class="pageFooter__nav">
@@ -71,8 +74,13 @@
       } else {
         desktop.style.display = `block`;
       }
+    });
+    document.querySelector(`#connect`).addEventListener('click', () => {
       console.log('Redirect to: {{anyconnect_url}}');
-      document.location.href = "{{anyconnect_url}}";
+        window.open("{{anyconnect_url}}","_blank");
+        document.querySelector(`#connect`).style.display = 'none';
+        document.querySelector(`#connect_text`).style.display = '';
+        return false;
     });
   </script>
 </body>
