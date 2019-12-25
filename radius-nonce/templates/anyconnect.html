@@ -1,4 +1,5 @@
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
   <link rel="preload" href={{ static_url("img/gluu-button-android-action.svg") }} as="image">
   <title>Warca VPN</title>
 </head>
+
 <body class="pageBody">
   <main class="pageMain">
     <div class="content">
@@ -17,7 +19,7 @@
         </div>
         <div class="hr"></div>
         <p class="text">
-           <b>Authentication successful</b>
+          <b>Authentication successful</b>
         </p>
         <a class="button button--action" href="#" id="connect">Connect VPN</a>
         <div id="connect_text" style="display: none;">
@@ -28,20 +30,24 @@
           <a class="button button--action" href="">Reconnect VPN</a>
         </div>
         <div class="hr"></div>
-        <p class="text text--sm">
-          Make sure that AnyConnect application is installed.
-        </p>
-        <a class="button button--store button--store-ios" href="https://apps.apple.com/ru/app/cisco-anyconnect/id1135064690">AppStore</a>
-        <a class="button button--store button--store-google" href="https://play.google.com/store/apps/details?id=com.cisco.anyconnect.vpn.android.avf">Google Play</a>
-        <p id="mobile_advice" class="text text--sm" style="display: none;">
-          If Cisco AnyConnect does not start, make sure that "External Control" is enabled in AnyConnect settings.
-        </p>
-        <p id="desktop_advice" class="text text--sm" style="display: none;">
-          If Cisco AnyConnect does not start, make sure WWPass Connector app is installed.
-        </p>
-        <p class="text text--sm">
-          <a class="text text--sm text--link" href="{{wwpass_connector_link}}">WWPass connector application for Windows</a>
-        </p>
+        <div id="mobile_advice" class="text text--sm" style="display: none;">
+          <p class="text text--sm">Make sure that AnyConnect application is installed.</p>
+          <a class="button button--store button--store-ios"
+            href="https://apps.apple.com/ru/app/cisco-anyconnect/id1135064690">AppStore</a>
+          <a class="button button--store button--store-google"
+            href="https://play.google.com/store/apps/details?id=com.cisco.anyconnect.vpn.android.avf">Google Play</a>
+          <p class="text text--sm">If Cisco AnyConnect does not start, make sure that "External Control" is enabled in
+            AnyConnect settings.</p>
+        </div>
+        <div id="desktop_advice" class="text text--sm" style="display: none;">
+          <p class="text text--sm">
+            If Cisco AnyConnect does not start, make sure WWPass Connector app is installed.
+          </p>
+          <p class="text text--sm">
+            <a class="text text--sm text--link" href="{{wwpass_connector_link}}">WWPass connector application for
+              Windows</a>
+          </p>
+        </div>
         <p class="text text--sm">
           <a class="text text--sm text--link" href="{{cisco_link}}">Cisco WebVPN</a>
         </p>
@@ -62,8 +68,8 @@
     window.history.replaceState({}, document.title, document.location.pathname);
 
     const isMobile = () => navigator &&
-        'userAgent' in navigator &&
-        navigator.userAgent.match(/iPhone|iPod|iPad|Android/i);
+      'userAgent' in navigator &&
+      navigator.userAgent.match(/iPhone|iPod|iPad|Android/i);
 
     const mobile = document.querySelector(`#mobile_advice`);
     const desktop = document.querySelector(`#desktop_advice`);
@@ -77,11 +83,12 @@
     });
     document.querySelector(`#connect`).addEventListener('click', () => {
       console.log('Redirect to: {{anyconnect_url}}');
-        window.open("{{anyconnect_url}}","_blank");
-        document.querySelector(`#connect`).style.display = 'none';
-        document.querySelector(`#connect_text`).style.display = '';
-        return false;
+      window.open("{{anyconnect_url}}", "_blank");
+      document.querySelector(`#connect`).style.display = 'none';
+      document.querySelector(`#connect_text`).style.display = '';
+      return false;
     });
   </script>
 </body>
+
 </html>
