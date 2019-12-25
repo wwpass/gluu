@@ -30,10 +30,10 @@
         </p>
         <a class="button button--store button--store-ios" href="https://apps.apple.com/ru/app/cisco-anyconnect/id1135064690">AppStore</a>
         <a class="button button--store button--store-google" href="https://play.google.com/store/apps/details?id=com.cisco.anyconnect.vpn.android.avf">Google Play</a>
-        <p id="mobile_advice" class="text text--sm">
+        <p id="mobile_advice" class="text text--sm" style="display: none;">
           If Cisco AnyConnect does not start, make sure that "External Control" is enabled in AnyConnect settings.
         </p>
-        <p id="desktop_advice" class="text text--sm">
+        <p id="desktop_advice" class="text text--sm" style="display: none;">
           If Cisco AnyConnect does not start, make sure WWPass Connector app is installed.
         </p>
         <p class="text text--sm">
@@ -69,9 +69,9 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       if (isMobile()) {
-        desktop.style.display = `none`;
+        mobile.style.display = `block`;
       } else {
-        mobile.style.display = `none`;
+        desktop.style.display = `block`;
       }
       console.log('Redirect to: {{anyconnect_url}}');
       document.location.href = "{{anyconnect_url}}";
