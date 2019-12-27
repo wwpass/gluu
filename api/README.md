@@ -6,15 +6,16 @@ This web application allows user self-registration in Gluu with WWPass PassKey a
 1. The user authenticates with a PassKey that is not bound to any account in Gluu.
 2. A WWPass custom authentication script displays a registration/binding page. If `registration_url` is configured in script parameters, a registration button is displayed. It's part of a form that has WWPass ticket and PUID of the user in hidden fields.
 3. The user clicks on the button and is sent to the registration web application with POST request.
-4. The registration application requests new ticket form the one it received, finalizing the received ticket.
-5. The registration application requests PUID with the new ticket and asserts that it's equal to the PUID received from the request.
-6. The registration application displays a web form to the user with the new ticket and PUID in hidden fields. The form has additional JavaScript snipped that displays countdown timer for the ticket expiration.
-7. The user fills in the from and submits it.
-8. The registration application repeats steps 4,5 above and validates received data, also ensuring that this email and call sign are not already claimed.
-9. The registration form issues SCIM request to Gluu to create new user. New username is "wwpass-&lt;puid&gt;". Call sign is stored in "nickName" attribute. "externalID" is set to "wwpass:&lt;puid&gt;" it maps to "OxTrustExternalId" in Gluu LDAP.
-10. The registration application redirects the user back to the login page the same way `wwpass-frontend.js` does. It puts the latest ticket in the `wwp_ticket` query argument.
-11. The WWPass custom authentication script retrieves PUID using the ticket, then searches for the user with corresponding "OxTrustExternalId" attribute. If the user is found, it's authenticated in Gluu, "OxTrustExternalId" attribute is removed and an "oxExternalUid" attribute with value "wwpass:&lt;puid&gt;" as a normal binding.
-12. If step 10 (redirect) fails, the next time the user authenticates, step 11 is performed during normal authentication process before step 2 (display the registration/binding page).
+4. The registration application displays a web form to the user with the ticket and PUID in hidden fields. The form should have an additional JavaScript snipped that displays countdown timer for the ticket expiration.
+5. The user fills in the from and submits it.
+6. The registration application validates user input and sends JWT request to WARCA API POST: /v1/user/.
+7. The api application requests new ticket form the one it received, finalizing the received ticket.
+8. The api application requests PUID with the new ticket and asserts that it's equal to the PUID received from the request.
+9. The api issues SCIM request to Gluu to create new user. New username is "wwpass-&lt;puid&gt;". "externalID" is set to "wwpass:&lt;puid&gt;" it maps to "OxTrustExternalId" in Gluu LDAP.
+10. The api replies with "inum" of new user and redirect location to the registration application .
+11. The registration application redirects the user back to the login page using the URL from the api
+12. The WWPass custom authentication script retrieves PUID using the ticket, then searches for the user with corresponding "OxTrustExternalId" attribute. If the user is found, it's authenticated in Gluu, "OxTrustExternalId" attribute is removed and an "oxExternalUid" attribute with value "wwpass:&lt;puid&gt;" as a normal binding.
+13. If step 11 (redirect) fails, the next time the user authenticates, step 12 is performed during normal authentication process before step 2 (display the registration/binding page).
 
 ## Installation and configuration
 
@@ -42,6 +43,44 @@ It's assumed that Gluu is running and WWPass authentication is configured (see [
     3. `uma2_id`: Client ID from step 2 in [Gluu configuration](#Gluu-configuration)
     4. `uma2_kid`: `kid` from step 3 in [Gluu configuration](#Gluu-configuration)
     5. `uma2_secret`: Contents of `private_key.pem` from step 4.4 in [Gluu configuration](#Gluu-configuration)
+    6. `api_key`: Generate random 32 byte key using secure RNG and base64 encode it
 4. Configure your web server to run `webapp.py --config=webapp.conf` as a demon
 5. Install python modules for the webapp: "python3-tornado", "python3-jwt"
 6. Configure your web server software to proxy requests for relevant virtual host to this helper webapp
+
+## API reference
+
+### /v1/user
+
+#### POST
+Create new user.
+Request is form-encoded with a single field:
+```
+ request=JWT.encode({
+                'ticket':<ticket>,
+                'puid':<puid>,
+                'email':<email>,
+                'name':<Full Name>},
+            algorithm='HS256',
+            key=<api_key>)
+```
+Reply:
+
+On success
+```
+ JWT.encode({
+     'redirect_to':<url>,
+     'uid':<gluu_user_id>},
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+On error
+```
+ JWT.encode({
+     'ticket':<new_ticket>,
+     'reason':<error message>,
+     'status':<error_code>},
+            algorithm='HS256',
+            key=<api_key>)
+```
