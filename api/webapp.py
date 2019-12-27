@@ -113,7 +113,7 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
         if 'result' not in response or not response['result']:
             raise tornado.web.HTTPError(403, "Invalid request")
         ticket = response['data']
-        request = {
+        wwpass_request = {
             'ticket': ticket,
             'auth_type': auth_type
         }
