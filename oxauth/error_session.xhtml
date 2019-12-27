@@ -1,0 +1,47 @@
+<!DOCTYPE composition
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    template="/WEB-INF/incl/layout/common-template.xhtml">
+    
+    <ui:param name="showGlobalMessages" value="false" />
+
+    <f:metadata>
+        <f:viewAction action="#{authenticator.prepareAuthenticationForStep}" if="#{not identity.loggedIn}" />
+    </f:metadata>
+
+    <ui:define name="head">
+        <meta name="description" content="Error page description" />
+    </ui:define>
+
+    <ui:define name="pageTitle">
+        <h:outputText value="#{msgs['login.pageTitle']}" />
+    </ui:define>
+
+    <ui:define name="content-major">
+      <h2 class="heading heading--h2 heading--light heading--uppercase">Session</h2>
+        <p class="text">
+          <h:outputFormat value="#{msgs['error.invalidSessionState']}">
+            <f:param value="#{pageService.currentDateTime}" />
+          </h:outputFormat>
+        </p>
+        <p class="text">
+          <h:messages id="globalMessage" styleClass="list list--error"
+                                        errorClass="list__item list__item--error"
+                                        infoClass="list__item list__item--info"
+                                        warnClass="list__item list__item--warning"
+                                        globalOnly="true" />
+        </p >
+        <a class="button button--action" href="/">Back to login</a>
+    </ui:define>
+
+    <ui:define name="content-additional">
+      
+        <!-- <div class="content__element">
+        Anything you like here
+      </div> -->
+
+    </ui:define>
+
+</ui:composition>
+

@@ -13,6 +13,7 @@ api_key = '<base64_of_api_key>'
 
 wwpass_client_cert = '/opt/gluu-server/opt/wwpass/gluu_client.crt'
 wwpass_client_key = '/opt/gluu-server/opt/wwpass/gluu_client.key'
+use_pin = False
 
 uma2_id = 'xxxx-xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 uma2_kid = 'xxxx-xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx_sig_rs256'

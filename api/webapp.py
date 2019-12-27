@@ -102,8 +102,10 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
             raise tornado.web.HTTPError(400, "Too few request parameters")
         ticket = decoded_request['ticket']
         puid = decoded_request['puid']
+        auth_type = 'p' if self.settings['options'].use_pin else ''
         wwpass_request = {
             'ticket': ticket,
+            'auth_type': auth_type,
             'finalize': 1
         }
         response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/put.json?{urllib.parse.urlencode(wwpass_request)}', ssl_options=self. wwpass_ssl_context())).body)
@@ -111,8 +113,9 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
         if 'result' not in response or not response['result']:
             raise tornado.web.HTTPError(403, "Invalid request")
         ticket = response['data']
-        wwpass_request = {
-            'ticket': ticket
+        request = {
+            'ticket': ticket,
+            'auth_type': auth_type
         }
         response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/puid.json?{urllib.parse.urlencode(wwpass_request)}', ssl_options=self. wwpass_ssl_context())).body)
         logging.debug(f"PUID response: {response}")
@@ -184,6 +187,7 @@ def define_options() -> None:
 
     define("wwpass_client_cert", type=str)
     define("wwpass_client_key", type=str)
+    define("use_pin", type=bool, default=False)
 
     define("uma2_id", type=str)
     define("uma2_secret", type=str)

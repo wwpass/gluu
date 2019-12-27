@@ -1,0 +1,43 @@
+<!DOCTYPE composition
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    template="/WEB-INF/incl/layout/common-template.xhtml">
+    
+    <ui:param name="showGlobalMessages" value="false" />
+
+    <ui:define name="head">
+        <meta name="description" content="Logout page description" />
+    </ui:define>
+
+    <ui:define name="pageTitle">
+        <h:outputText value="#{msgs['login.pageTitle']}" />
+    </ui:define>
+
+    <ui:define name="content-major">
+      <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Logged Out</h2>
+      <p class="text text--marginTop-0">
+        Thank you for using <b>GLUU</b>
+      </p>
+      <button class="button button--action" id="passkey">Sign in again</button>
+
+      <f:view contentType="text/html" locale="#{language.localeCode}">
+        <f:metadata>
+          <f:viewAction action="#{identity.logout}" />
+          <f:viewAction action="#{logoutAction.redirect}" />
+
+          <f:viewParam name="id_token_hint" value="#{logoutAction.idTokenHint}" />
+          <f:viewParam name="post_logout_redirect_uri" value="#{logoutAction.postLogoutRedirectUri}" />
+        </f:metadata>
+        </f:view>
+    </ui:define>
+
+    <ui:define name="content-additional">
+      
+        <!-- <div class="content__element">
+        Anything you like here
+      </div> -->
+
+    </ui:define>
+
+</ui:composition>

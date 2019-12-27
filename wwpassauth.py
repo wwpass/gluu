@@ -120,7 +120,7 @@ class PersonAuthentication(PersonAuthenticationType):
 
     def prepareForStep(self, configurationAttributes, requestParameters, step):
         identity = CdiUtil.bean(Identity)
-        identity.setWorkingParameter("use_pin", self.use_pin)
+        identity.setWorkingParameter("use_pin", bool(self.use_pin))
         if (step == 1):
             print "WWPASS. Prepare for Step 1"
             return True
