@@ -89,7 +89,7 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
         NewUserHandler._wwpass_ssl_context = ctx
         return NewUserHandler._wwpass_ssl_context
 
-    async def post(self):  #pylint: disable=arguments-differ
+    async def post(self) -> None:  #pylint: disable=arguments-differ
         request = self.get_body_argument('request', None)
         if not request:
             raise tornado.web.HTTPError(400, "Bad request")
@@ -106,18 +106,19 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
             'ticket': ticket,
             'finalize': 1
         }
-        response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/put.json?{urllib.parse.urlencode(request)}', ssl_options=self. wwpass_ssl_context())).body)
+        response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/put.json?{urllib.parse.urlencode(wwpass_request)}', ssl_options=self. wwpass_ssl_context())).body)
         logging.debug(f"Put ticket response: {response}")
         if 'result' not in response or not response['result']:
             raise tornado.web.HTTPError(403, "Invalid request")
         ticket = response['data']
-        request = {
+        wwpass_request = {
             'ticket': ticket
         }
-        response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/puid.json?{urllib.parse.urlencode(request)}', ssl_options=self. wwpass_ssl_context())).body)
+        response = json.loads((await self.http().fetch(f'https://spfe.wwpass.com/puid.json?{urllib.parse.urlencode(wwpass_request)}', ssl_options=self. wwpass_ssl_context())).body)
         logging.debug(f"PUID response: {response}")
         if 'result' not in response or not response['result'] or puid != response['data']:
             raise tornado.web.HTTPError(403, "Invalid request")
+        self.set_header("Content-type","application/jwt")
         fullname = decoded_request['name']
         email = decoded_request['email']
         errors: List[str] = []
@@ -190,7 +191,7 @@ def define_options() -> None:
 
 
 urls = [
-    (r"/newuser/?", NewUserHandler),
+    (r"/v1/user/?", NewUserHandler),
     #(r"/scim/?", SCIMHandler),
 ]
 
