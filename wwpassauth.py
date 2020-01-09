@@ -82,7 +82,7 @@ class PersonAuthentication(PersonAuthenticationType):
                 return False
 
             if ticket:
-                if 'bind' in requestParameters:
+                if 'bind' not in requestParameters:
                     # Binding with existing PassKey
                     puid_new = self.getPuid(ticket)
                     user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid_new)
