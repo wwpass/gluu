@@ -33,7 +33,7 @@ class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #py
         if self.get_argument('code', False):
             try:
                 access = await self.get_authenticated_user(
-                    redirect_uri=f'{self.settings["options"].base_url}sso/',
+                    redirect_uri=f'{self.settings["options"].base_url}/discourse',
                     code=self.get_argument('code'))
                 userinfo = await self.get_userinfo(access['access_token'])
                 logging.debug(f"Userinfo: {userinfo}")
@@ -73,7 +73,7 @@ class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #py
                 self.render('error.html',reason="Bad SSO request")
                 return
             self.authorize_redirect(
-                redirect_uri=f'{self.settings["options"].base_url}sso/',
+                redirect_uri=f'{self.settings["options"].base_url}/discourse',
                 scope=['openid', 'profile', 'email'],
                 response_type='code',
                 state=(sso_request, sso_signature))
@@ -98,8 +98,7 @@ def define_options() -> None:
     define("moderators_group_inum", type=str)
 
 urls = [
-    (r"/", tornado.web.RedirectHandler, {"url": "/sso/"}),
-    (r"/sso/?", SSOHandler),
+    (r"/discourse/?", SSOHandler),
     (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static_path})
 ]
 
@@ -108,6 +107,9 @@ if __name__ == "__main__":
     define_options()
     parse_command_line()
     parse_config_file(options.config)
+
+    options.base_url = options.base_url.rstrip('/')
+    options.gluu_url = options.gluu_url.rstrip('/')
 
     GluuOAuth2MixIn.set_api_url(options['gluu_url'], options['oauth2_id'], options['oauth2_secret'])
 
