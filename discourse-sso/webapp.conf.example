@@ -1,0 +1,19 @@
+logging = 'info'
+debug = False
+
+#user = 'www-data'
+#group = 'www-data'
+
+bind = 'localhost'
+port = 9063
+base_url = 'https://sso.example.com/'
+
+gluu_url= 'https://gluu.example.com/'
+
+oauth2_id = ''
+oauth2_secret = ''
+
+discourse_secret = b''
+
+moderators_group_inum = ''
+admins_group_inum = ''
