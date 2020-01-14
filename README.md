@@ -7,8 +7,8 @@ WWPass integration with GLUU IAM service
  - Secure SP key file with better permissions/ownership
  - Properly fix WWPass SDK for it to work with Jython 2.7.1
  - Assert that registering the same user in parallel won't introduce vulnerability
- - Make anyconnect OAuth2client use more secure authentication method
  - Recover an account using email
+ - Make single sign out
 
 ## Instuctions
 

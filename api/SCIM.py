@@ -78,10 +78,7 @@ class SCIMClient():
         return response
 
     async def getUsersList(self) -> List[Dict[str, Any]]:
-        request = {
-        }
-        logging.debug(f"Filter: {urllib.parse.urlencode(request)}")
-        response = await self._callScimApi(f'{self.scim_users_url}?{urllib.parse.urlencode(request)}')
+        response = await self._callScimApi(f'{self.scim_users_url}')
         if response.code != 200:
             raise tornado.httpclient.HTTPError(response.code, response.body)
         response_json = json.loads(response.body)
@@ -102,7 +99,7 @@ class SCIMClient():
         response_json = json.loads(response.body)
         return cast(List[Dict[str, Any]], response_json['Resources'] if 'Resources' in response_json else list())
 
-    async def createUser(self, **kwargs: Dict[str, Any]) -> None:
+    async def createUser(self, **kwargs: Dict[str, Any]) -> List[Dict[str, Any]]:
         request = kwargs
         body = json.dumps(request)
         logging.debug(f"Creating user: {body}")
