@@ -31,27 +31,27 @@
           <form id="loginForm" name="loginForm" method="post" class="form from--bind" enctype="application/x-www-form-urlencoded">
             <input type="hidden" name="loginForm" value="loginForm" />
             <p class="text">Enter your credentials to bind PassKey to your account</p>
-            
+
             <label for="loginForm:username" class="form__label"
             value="#{msgs['login.username']}">
               Username
             </label>
             <input id="loginForm:username" type="text" name="loginForm:username" autocomplete="off" class="form__input" value="#{credentials.username}" />
-  
+
             <label for="loginForm:password" class="form__label" value="#{msgs['login.password']}">Password</label>
             <input id="loginForm:password" type="password" name="loginForm:password" autocomplete="off" value="#{credentials.password}" class="form__input" />
-  
+
             <h:commandButton id="loginButton" styleClass="button button--action"
                   value="Bind" action="#{authenticator.authenticate}" />
-  
-            
+
+
           </form>
 
           <div class="or">or</div>
         </div>
       </h:panelGroup>
 
-      <h:panelGroup rendered="true">
+      <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('allow_passkey_bind')))}">
         <div class="bind_option">
           <input type="submit" value="Bind with another PassKey" class="button button--action" />
 
@@ -85,12 +85,13 @@
             <h:inputHidden id="ticket" value="#{identity.getWorkingParameter('ticket')}" />
             <h:inputHidden id="puid" value="#{identity.getWorkingParameter('puid')}" />
           </form>
+          <p class="text">You presented a new WWPass Key, not associated with any WARCA account. If you already have WARCA account, and need to replace your WWPass key, please follow <a href="#{identity.getWorkingParameter('recovery_url')}">this link</a>.</p>
         </div>
       </h:panelGroup>
     </ui:define>
 
     <ui:define name="content-additional">
-      
+
         <!-- <div class="content__element">
         Anything you like here
       </div> -->

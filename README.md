@@ -33,8 +33,10 @@ Add the following parameters to the script:
  - `wwpass_crt_file`: location of SP certificate file: `/opt/wwpass_gluu/gluu_client.crt`
  - `wwpass_key_file`: location of SP private key file: `/opt/wwpass_gluu/gluu_client.key`
  - `registration_url`: URL of registration web application: `https://connect.warca.net/newuser` (see: [Registration](registration//README.md))
+ - `recovery_url`: URL for account recovery
  - `allow_password_bind`: Add this parameter with any non-empty value if you would like to enable binding WWPass PassKey to an account using username and password
- - `use_pin`: Nonempty value will require PIN to log in
+ - `allow_passkey_bind`: Add this parameter with any non-empty value if you would like to enable binding WWPass PassKey to an account using another PassKey
+  - `use_pin`: Nonempty value will require PIN to log in
 
 Don't forget to enable it.
 

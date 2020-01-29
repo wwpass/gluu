@@ -19,7 +19,9 @@ class PersonAuthentication(PersonAuthenticationType):
     def init(self, configurationAttributes):
         print "WWPASS. Initialization"
         self.allow_password_bind = configurationAttributes.get("allow_password_bind").getValue2() if configurationAttributes.containsKey("allow_password_bind") else None
+        self.allow_passkey_bind = configurationAttributes.get("allow_passkey_bind").getValue2() if configurationAttributes.containsKey("allow_passkey_bind") else None
         self.registration_url = configurationAttributes.get("registration_url").getValue2() if configurationAttributes.containsKey("registration_url") else None
+        self.recovery_url = configurationAttributes.get("recovery_url").getValue2() if configurationAttributes.containsKey("recovery_url") else None
         self.wwc = WWPassConnection(
             configurationAttributes.get("wwpass_key_file").getValue2(),
             configurationAttributes.get("wwpass_crt_file").getValue2())
@@ -82,6 +84,8 @@ class PersonAuthentication(PersonAuthenticationType):
                 return False
 
             if ticket:
+                if not self.allow_passkey_bind:
+                    return False
                 if 'bind' not in requestParameters:
                     # Binding with existing PassKey
                     puid_new = self.getPuid(ticket)
@@ -126,7 +130,9 @@ class PersonAuthentication(PersonAuthenticationType):
             return True
         elif (step == 2):
             identity.setWorkingParameter("registration_url", self.registration_url)
+            identity.setWorkingParameter("recovery_url", self.recovery_url)
             identity.setWorkingParameter("allow_password_bind", self.allow_password_bind)
+            identity.setWorkingParameter("allow_passkey_bind", self.allow_passkey_bind)
             print "WWPASS. Prepare for Step 2"
             return True
         return False
