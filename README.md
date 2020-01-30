@@ -52,7 +52,7 @@ Add the following to site configuration:
   require all granted
 </Location>
 
-ScriptAlias "/wwpass/" "/opt/wwpass_glue/cgi/"
+ScriptAlias "/wwpass/" "/opt/wwpass_gluu/cgi/"
 
 <Directory /opt/wwpass_gluu/cgi/>
   SetHandler cgi-script
