@@ -1,0 +1,47 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Warca SSO Logout</title>
+</head>
+<body class="pageBody">
+    <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        Promise.all([
+            fetch('/session/current.json',{ 
+                credentials: "include",
+                cache: "no-store",
+                mode: "cors"
+            })
+            .then(function(response){
+                return response.json()
+            }),
+            fetch('/session/csrf.json',{ 
+                credentials: "include",
+                cache: "no-store",
+                mode: "cors"
+            })
+            .then(function(response){
+                return response.json()
+            })
+        ]).then(function(values){
+            const user_response = values[0];
+            const csrf = values[1];
+            return fetch('/session/' + user_response.current_user.username,
+            {
+                headers: {
+                    'X-CSRF-Token': csrf.csrf
+                },
+                credentials: "include",
+                method: "DELETE",
+                cache: "no-store",
+                mode: "cors"
+            })
+        }).then(function(){
+            window.location.href = '/';
+        },function(){
+            window.location.href = '/';
+        })
+    });    
+    </script>
+</body>
+</html>

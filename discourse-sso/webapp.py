@@ -21,6 +21,10 @@ from GluuOIDCClient import GluuOAuth2MixIn
 base_path = os.path.abspath(os.path.dirname(__file__))
 static_path = os.path.realpath(os.path.join(base_path, './static'))
 os.chdir(base_path)
+class LogoutHandler(tornado.web.RequestHandler):
+    def get(self) -> None: #pylint: disable=arguments-differ
+        self.set_cookie('_t','')
+        self.redirect('/')
 
 class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #pylint: disable=abstract-method
     """
@@ -99,6 +103,7 @@ def define_options() -> None:
 
 urls = [
     (r"/discourse/?", SSOHandler),
+    (r"/logout/?", LogoutHandler),
     (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static_path})
 ]
 

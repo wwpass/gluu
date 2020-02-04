@@ -12,6 +12,8 @@ Open `Settings->Login`:
   - Set `sso url` to `https://your.deploy.url/discourse`
   - Set `sso secret` to sufficiently random string (256 bits of entropy should be enough)
   - Check `enable sso`
+Open `Settings->Users`:
+  - Set `logout redirect`: to `https://your.gluu.url/oxauth/restv1/end_session?post_logout_redirect_uri=https%3A%2F%2Fyour.discourse.url%2F`
 
 ### Gluu configuration
 1. Open `Configuration -> OpenID Connect -> Clients`. Create a new client. Use following parameters:
@@ -23,6 +25,8 @@ Open `Settings->Login`:
   - Scopes: "openid", "email", "profile"
   - Response Types: "code"
   - Redirect Login URIs: "https://your.deploy.url/discourse"
+  - Post Logout Redirect URI: "https://your.discourse.url/"
+  - Advanced settings -> Front Channel Logout URI: "https://your.discourse.url/sso/logout"
 
 Generate client secret and save the client to get the ID.
 Save the secret and clientID values.
@@ -32,7 +36,13 @@ Fine `profile` scope and add "memberOf" claim to it.
 
 3. Open `Users->Manage groups`. Find or create groups for Discourse admins and moderators. Note inums of these groups (it's available in the URLs of the group details page).
 
-
+### Web server configuration
+Configure your web server that is serving you Discourse forum to proxy "/sso/logout" URL to "https://your.deploy.url/logout". For example, in Nginx:
+```
+  location /sso/logout {
+          proxy_pass https://your.deploy.url/logout;
+  }
+```
 
 ### Helper webapp
 1. Deploy `webapp.py`, `GluuOIDCClient.py` and `templates/` to a directory on a web server.
@@ -41,6 +51,3 @@ Fine `profile` scope and add "memberOf" claim to it.
 4. Configure your web server to run `webapp.py --config=webapp.conf` as a demon.
 5. Install python modules for the webapp: "python3-tornado", "python3-jwt"
 6. Configure your web server software to proxy requests for relevant virtual host to this helper webapp.
-
-
-
