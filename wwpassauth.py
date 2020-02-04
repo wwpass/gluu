@@ -84,41 +84,41 @@ class PersonAuthentication(PersonAuthenticationType):
                 return False
 
             if ticket:
-                if not self.allow_passkey_bind:
-                    return False
-                if 'bind' not in requestParameters:
-                    # Binding with existing PassKey
+                puid_new = self.getPuid(ticket)
+                if puid == puid_new:
+                    # Registering via external web service
+                    if not self.registration_url:
+                        return False
                     puid_new = self.getPuid(ticket)
+                    return self.tryFirstLogin(puid, userService, authenticationService)
+                else:
+                    if not self.allow_passkey_bind:
+                        return False
+                    # Binding with existing PassKey
                     user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid_new)
                     if user:
                         if authenticationService.authenticate(user.getUserId()):
                             userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%puid)
                             return True
                     return False
-                # Registering via external web service
-                if not self.registration_url:
+            else:
+                # Binding via username/password
+                if not self.allow_password_bind:
                     return False
-                puid_new = self.getPuid(ticket)
-                if puid != puid_new:
+                credentials = identity.getCredentials()
+                user_name = credentials.getUsername()
+                user_password = credentials.getPassword()
+                logged_in = False
+                if (StringHelper.isNotEmptyString(user_name) and StringHelper.isNotEmptyString(user_password)):
+                    logged_in = authenticationService.authenticate(user_name, user_password)
+                if not logged_in:
                     return False
-                return self.tryFirstLogin(puid, userService, authenticationService)
-
-            # Binding via username/password
-            if not self.allow_password_bind:
-                return False
-            credentials = identity.getCredentials()
-            user_name = credentials.getUsername()
-            user_password = credentials.getPassword()
-            logged_in = False
-            if (StringHelper.isNotEmptyString(user_name) and StringHelper.isNotEmptyString(user_password)):
-                logged_in = authenticationService.authenticate(user_name, user_password)
-            if not logged_in:
-                return False
-            user = authenticationService.getAuthenticatedUser()
-            if not user:
-                return False
-            userService.addUserAttribute(user_name, "oxExternalUid", "wwpass:%s"%puid)
-            return True
+                user = authenticationService.getAuthenticatedUser()
+                if not user:
+                    return False
+                userService.addUserAttribute(user_name, "oxExternalUid", "wwpass:%s"%puid)
+                return True
+            return False
         else:
             return False
 
