@@ -67,10 +67,9 @@
   <script type="text/javascript">
     window.history.replaceState({}, document.title, document.location.pathname);
 
-    const isMobile = () => navigator &&
-      'userAgent' in navigator &&
-      navigator.userAgent.match(/iPhone|iPod|iPad|Android/i);
-
+    var isMobile = function isMobile() {
+      return navigator && 'userAgent' in navigator && navigator.userAgent.match(/iPhone|iPod|iPad|Android/i);
+    };
     const mobile = document.querySelector(`#mobile_advice`);
     const desktop = document.querySelector(`#desktop_advice`);
 
