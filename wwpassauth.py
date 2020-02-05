@@ -35,7 +35,7 @@ class PersonAuthentication(PersonAuthenticationType):
         return True
 
     def getApiVersion(self):
-        return 1
+        return 2
 
     def isValidAuthenticationMethod(self, usageType, configurationAttributes):
         return True
@@ -60,9 +60,8 @@ class PersonAuthentication(PersonAuthenticationType):
         authenticationService = CdiUtil.bean(AuthenticationService)
         userService = CdiUtil.bean(UserService)
         ticket = requestParameters.get('wwp_ticket')[0] if 'wwp_ticket' in requestParameters else None
-
+        identity = CdiUtil.bean(Identity)
         if (step == 1):
-            identity = CdiUtil.bean(Identity)
             print "WWPASS. Authenticate for step 1"
             puid = self.getPuid(ticket)
             user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid)
@@ -89,8 +88,9 @@ class PersonAuthentication(PersonAuthenticationType):
                     # Registering via external web service
                     if not self.registration_url:
                         return False
-                    puid_new = self.getPuid(ticket)
-                    return self.tryFirstLogin(puid, userService, authenticationService)
+                    if self.tryFirstLogin(puid, userService, authenticationService):
+                        identity.setWorkingParameter("puid", None)
+                        return True
                 else:
                     if not self.allow_passkey_bind:
                         return False
@@ -99,6 +99,7 @@ class PersonAuthentication(PersonAuthenticationType):
                     if user:
                         if authenticationService.authenticate(user.getUserId()):
                             userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%puid)
+                            identity.setWorkingParameter("puid", None)
                             return True
                     return False
             else:
@@ -117,6 +118,7 @@ class PersonAuthentication(PersonAuthenticationType):
                 if not user:
                     return False
                 userService.addUserAttribute(user_name, "oxExternalUid", "wwpass:%s"%puid)
+                identity.setWorkingParameter("puid", None)
                 return True
             return False
         else:
@@ -149,3 +151,12 @@ class PersonAuthentication(PersonAuthenticationType):
 
     def logout(self, configurationAttributes, requestParameters):
         return True
+
+    def getNextStep(self, configurationAttributes, requestParameters, step):
+        # If user not pass current step change step to previous
+        identity = CdiUtil.bean(Identity)
+        puid = identity.getWorkingParameter("puid")
+        if puid and step != 1:
+            print "WWPass. Get next step. Retrying step 2"
+            return 2
+        return -1
