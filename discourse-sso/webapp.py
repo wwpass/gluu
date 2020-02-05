@@ -59,7 +59,8 @@ class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #py
                     'external_id': userinfo['inum'],
                     'name': userinfo['name'],
                     'admin': "true" if f'inum={self.settings["options"].admins_group_inum},ou=groups,o=gluu' in groups else "false",
-                    'moderator':  "true" if f'inum={self.settings["options"].moderators_group_inum},ou=groups,o=gluu' in groups else "false"
+                    'moderator':  "true" if f'inum={self.settings["options"].moderators_group_inum},ou=groups,o=gluu' in groups else "false",
+                    'require_activation': "false" if not self.settings["options"].validated_group_inum or f'inum={self.settings["options"].validated_group_inum},ou=groups,o=gluu' in groups else "true",
                 }
                 encoded_payload = base64.encodebytes(urllib.parse.urlencode(sso_reply).encode()).replace(b'\n',b'')
                 signature = hmac.new(self.settings["options"].discourse_secret, encoded_payload, digestmod = hashlib.sha256).hexdigest()
@@ -100,6 +101,7 @@ def define_options() -> None:
     define("discourse_secret", type=bytes)
     define("admins_group_inum", type=str)
     define("moderators_group_inum", type=str)
+    define("validated_group_inum", type=str, default='')
 
 urls = [
     (r"/discourse/?", SSOHandler),

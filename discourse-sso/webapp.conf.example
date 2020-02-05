@@ -17,3 +17,4 @@ discourse_secret = b''
 
 moderators_group_inum = ''
 admins_group_inum = ''
+validated_group_inum = ''
