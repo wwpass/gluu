@@ -77,13 +77,13 @@ class PersonAuthentication(PersonAuthenticationType):
             return False
         elif (step == 2):
             print "WWPASS. Authenticate for step 2"
-            identity = CdiUtil.bean(Identity)
             puid = identity.getWorkingParameter("puid")
             if not puid:
                 return False
-
             if ticket:
                 puid_new = self.getPuid(ticket)
+                # Always use the latest PUID when retrying step 2
+                identity.setWorkingParameter("puid", puid_new)
                 if puid == puid_new:
                     # Registering via external web service
                     if not self.registration_url:
