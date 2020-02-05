@@ -21,3 +21,5 @@ uma2_secret = '''-----BEGIN PRIVATE KEY-----
 ...
 -----END PRIVATE KEY-----
 '''
+
+managed_gropus = ('',)

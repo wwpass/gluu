@@ -45,6 +45,7 @@ It's assumed that Gluu is running and WWPass authentication is configured (see [
     5. `uma2_kid`: `kid` from step 3 in [Gluu configuration](#Gluu-configuration)
     6. `uma2_secret`: Contents of `private_key.pem` from step 4.4 in [Gluu configuration](#Gluu-configuration)
     7. `api_key`: Generate random 32 byte key using secure RNG and base64 encode it
+    8. `managed_groups`: Tuple of group Inum's. These groups could be managed by API all other groups are not exposed
 4. Configure your web server to run `webapp.py --config=webapp.conf` as a demon
 5. Install python modules for the webapp: "python3-tornado", "python3-jwt"
 6. Configure your web server software to proxy requests for relevant virtual host to this helper webapp
@@ -82,6 +83,52 @@ On error
      'ticket':<new_ticket>,
      'reason':<error message>,
      'status':<error_code>},
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+### /v1/user/{user_id}/group/{group_id}
+
+Manage group membership. Only groups defined in configuration can be managed.
+
+#### POST
+
+Add user to group
+
+Request is form-encoded with a single field:
+```
+ request=JWT.encode({
+                'user':<userInum>,
+                'group':<groupInum>,
+                'member': True},
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+On success: 
+```
+ JWT.encode({ 'success': True }
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+#### DELETE
+
+Remove user from group
+
+Request is form-encoded with a single field:
+```
+ request=JWT.encode({
+                'user':<userInum>,
+                'group':<groupInum>,
+                'member': False},
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+On success: 
+```
+ JWT.encode({ 'success': True }
             algorithm='HS256',
             key=<api_key>)
 ```

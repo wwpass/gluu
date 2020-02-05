@@ -6,6 +6,7 @@ import json
 from typing import cast, Any, Dict, List, Optional
 from secrets import token_urlsafe
 import jwt
+import re
 
 import tornado.httpclient
 
@@ -19,6 +20,7 @@ class SCIMClient():
         self.gluu_api_base = gluu_api_base
         self.token_url = f"{gluu_api_base}/oxauth/restv1/token"
         self.scim_users_url = f"{gluu_api_base}/identity/restv1/scim/v2/Users/"
+        self.scim_groups_url = f"{gluu_api_base}/identity/restv1/scim/v2/Groups/"
         self.client_id = key
         self.oauth_key = secret
         self.oauth_kid = kid
@@ -114,3 +116,41 @@ class SCIMClient():
             raise tornado.httpclient.HTTPError(response.code, response.body)
         response_json = json.loads(response.body)
         return cast(List[Dict[str, Any]], response_json)
+
+    async def _changeGroupMembership(self, userInum: str, groupInum: str, member: bool) -> List[Dict[str, Any]]:
+        assert re.match(r'[a-z0-1-]+', userInum)
+        assert re.match(r'[a-z0-1-]+', groupInum)
+        patch_request = { "schemas":
+            ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                "Operations":[
+                    {
+                        "op":"add" if member else "remove",
+                        "path":"members" if member else f"members[value eq \"{userInum}\"]",
+                        "value":[
+                            {
+                                "value": userInum,
+                                "$ref": f'{self.scim_users_url}{userInum}'
+                            }
+                        ]
+                    },
+                ]
+            }
+        logging.debug(f"Patching user {userInum}: {json.dumps(patch_request)}")
+        response = await self._callScimApi(
+            f'{self.scim_groups_url}{groupInum}',
+             method="PATCH", 
+             body=json.dumps(patch_request),
+             headers={
+                 'Content-type': 'application/json'
+             })
+        if response.code != 200:
+            raise tornado.httpclient.HTTPError(response.code, response.body)
+        response_json = json.loads(response.body)
+        logging.debug(f"Reply: {response_json}")
+        return response_json
+
+    async def addGroupMembership(self, userInum: str, groupInum: str):
+        return await self._changeGroupMembership(userInum, groupInum, True)
+
+    async def removeGroupMembership(self, userInum: str, groupInum: str):
+        return await self._changeGroupMembership(userInum, groupInum, False)

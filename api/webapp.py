@@ -72,6 +72,46 @@ class SCIMHandler(tornado.web.RequestHandler, tornado.auth.OAuth2Mixin): #type: 
         self.write(f"<pre>{pprint.pformat(users)}</pre>")
         self.finish()
 
+class GroupsHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable=abstract-method
+    async def _changeMembership(self, userInum: str, groupInum: str, member: bool) -> None:
+        request = self.get_body_argument('request', None)
+        if not request:
+            raise tornado.web.HTTPError(400, "Bad request")
+        try:
+            decoded_request = jwt_decode(request, key=self.settings['api_key'])
+        except DecodeError:
+            raise tornado.web.HTTPError(403, "Invalid request")
+        logging.debug(f"Request: {decoded_request}")
+        if not all(param in decoded_request for param in ('user', 'group', 'member')):
+            raise tornado.web.HTTPError(400, "Too few request parameters")
+        if decoded_request['user'] != userInum or decoded_request['group'] != groupInum or decoded_request['member'] != member:
+            raise tornado.web.HTTPError(400, "Bad request parameters")
+        if groupInum not in self.settings['options'].managed_groups:
+            raise tornado.web.HTTPError(404, "No such group")
+
+        self.set_header("Content-type","application/jwt")        
+        if member:
+            response = await self.settings['scim'].addGroupMembership(
+                userInum = userInum,
+                groupInum = groupInum
+            )
+        else:
+            response = await self.settings['scim'].removeGroupMembership(
+                userInum = userInum,
+                groupInum = groupInum
+            )
+        self.write(jwt_encode({'success': True
+                },
+            algorithm='HS256',
+            key=self.settings['api_key']))
+        self.finish()
+
+    async def post(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ        
+        return await self._changeMembership(userInum, groupInum, True)
+
+    async def delete(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ        
+        return await self._changeMembership(userInum, groupInum, False)
+
 class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable=abstract-method
     _wwpass_ssl_context: Optional[ssl.SSLContext] = None
     @staticmethod
@@ -193,9 +233,12 @@ def define_options() -> None:
     define("uma2_secret", type=str)
     define("uma2_kid", type=str)
 
+    define("managed_groups", type=tuple)
+
 
 urls = [
     (r"/v1/user/?", NewUserHandler),
+    (r"/v1/user/(.*)/group/(.*)/?", GroupsHandler),
     #(r"/scim/?", SCIMHandler),
 ]
 
