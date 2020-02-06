@@ -118,8 +118,8 @@ class SCIMClient():
         return cast(List[Dict[str, Any]], response_json)
 
     async def _changeGroupMembership(self, userInum: str, groupInum: str, member: bool) -> List[Dict[str, Any]]:
-        assert re.match(r'[a-z0-1-]+', userInum)
-        assert re.match(r'[a-z0-1-]+', groupInum)
+        assert re.match(r'[a-f0-9-]+', userInum)
+        assert re.match(r'[a-f0-9-]+', groupInum)
         patch_request = { "schemas":
             ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
                 "Operations":[
@@ -138,7 +138,7 @@ class SCIMClient():
         logging.debug(f"Patching user {userInum}: {json.dumps(patch_request)}")
         response = await self._callScimApi(
             f'{self.scim_groups_url}{groupInum}',
-             method="PATCH", 
+             method="PATCH",
              body=json.dumps(patch_request),
              headers={
                  'Content-type': 'application/json'
