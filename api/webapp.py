@@ -75,6 +75,7 @@ class SCIMHandler(tornado.web.RequestHandler, tornado.auth.OAuth2Mixin): #type: 
 class JWTProtection(tornado.web.RequestHandler):
     jti: Optional[str] = None
     VALID_FOR = timedelta(seconds = 30)
+    NBF_LEEWAY = timedelta(seconds = 1)
 
     def decodeRequest(self, recquiredFields: Sequence[str]= tuple()):
         request = self.get_body_argument('request', None)
@@ -105,7 +106,7 @@ class JWTProtection(tornado.web.RequestHandler):
         jwt_reply = dict(reply)
         jwt_reply.update({
             'iat': datetime.utcnow(),
-            'nbf': datetime.utcnow(),
+            'nbf': datetime.utcnow() - self.NBF_LEEWAY,
             'exp': datetime.utcnow() + self.VALID_FOR,
             'jti': self.jti
         })
