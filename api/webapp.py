@@ -6,6 +6,7 @@ import urllib
 import urllib.parse
 import json
 import ssl
+from datetime import datetime, timedelta
 from email.utils import parseaddr
 from typing import cast, Any, Dict, List, Optional, Sequence
 
@@ -18,7 +19,7 @@ import tornado.httpclient
 from tornado.options import define, options, parse_config_file, parse_command_line
 import tornado.escape
 
-from jwt import encode as jwt_encode, decode as jwt_decode, InvalidTokenError
+from jwt import encode as jwt_encode, decode as jwt_decode, InvalidTokenError, MissingRequiredClaimError
 from base64 import decodebytes as base64_decode
 from SCIM import SCIMClient
 
@@ -63,7 +64,6 @@ ip0+E9I=
 -----END CERTIFICATE----- '''
 
 class SCIMHandler(tornado.web.RequestHandler, tornado.auth.OAuth2Mixin): #type: ignore #pylint: disable=abstract-method
-
     async def get(self) -> None: #pylint: disable=arguments-differ
         import pprint
         #users = await self.settings['scim'].getUsersList()
@@ -73,6 +73,9 @@ class SCIMHandler(tornado.web.RequestHandler, tornado.auth.OAuth2Mixin): #type: 
         self.finish()
 
 class JWTProtection(tornado.web.RequestHandler):
+    jti: Optional[str] = None
+    VALID_FOR = timedelta(seconds = 30)
+
     def decodeRequest(self, recquiredFields: Sequence[str]= tuple()):
         request = self.get_body_argument('request', None)
         if not request:
@@ -86,6 +89,9 @@ class JWTProtection(tornado.web.RequestHandler):
                     'require_exp': True,
                     'require_nbf': True
                 })
+            if 'jti' not in decoded_request:
+                raise MissingRequiredClaimError('jti')
+            self.jti = decoded_request['jti']
         except InvalidTokenError as e:
             logging.warning(f"Invalid token: {e}")
             raise tornado.web.HTTPError(403, "Invalid request")
@@ -96,7 +102,14 @@ class JWTProtection(tornado.web.RequestHandler):
 
     def sendReply(self, reply: Dict[str, Any]) -> None:
         self.set_header("Content-type","application/jwt")
-        self.write(jwt_encode(reply,
+        jwt_reply = dict(reply)
+        jwt_reply.update({
+            'iat': datetime.utcnow(),
+            'nbf': datetime.utcnow(),
+            'exp': datetime.utcnow() + self.VALID_FOR,
+            'jti': self.jti
+        })
+        self.write(jwt_encode(jwt_reply,
             algorithm='HS256',
             key=self.settings['api_key']))
         self.finish()
