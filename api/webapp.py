@@ -81,7 +81,11 @@ class JWTProtection(tornado.web.RequestHandler):
             decoded_request = jwt_decode(
                 request,
                 key = self.settings['api_key'],
-                audience = f'{self.settings["options"].base_uri}{self.request.uri}')
+                audience = f'{self.settings["options"].base_uri}{self.request.uri}',
+                options = {
+                    'require_exp': True,
+                    'require_nbf': True
+                })
         except InvalidTokenError as e:
             logging.warning(f"Invalid token: {e}")
             raise tornado.web.HTTPError(403, "Invalid request")
