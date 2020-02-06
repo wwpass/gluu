@@ -7,6 +7,7 @@ debug = False
 bind = 'localhost'
 port = 9061
 
+base_uri = 'https://api.example.com'
 gluu_url = 'https://gluu.example.com/'
 
 api_key = '<base64_of_api_key>'

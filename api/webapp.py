@@ -18,7 +18,7 @@ import tornado.httpclient
 from tornado.options import define, options, parse_config_file, parse_command_line
 import tornado.escape
 
-from jwt import encode as jwt_encode, decode as jwt_decode, DecodeError
+from jwt import encode as jwt_encode, decode as jwt_decode, InvalidTokenError
 from base64 import decodebytes as base64_decode
 from SCIM import SCIMClient
 
@@ -78,8 +78,12 @@ class JWTProtection(tornado.web.RequestHandler):
         if not request:
             raise tornado.web.HTTPError(400, "Bad request")
         try:
-            decoded_request = jwt_decode(request, key=self.settings['api_key'])
-        except DecodeError:
+            decoded_request = jwt_decode(
+                request,
+                key = self.settings['api_key'],
+                audience = f'{self.settings["options"].base_uri}{self.request.uri}')
+        except InvalidTokenError as e:
+            logging.warning(f"Invalid token: {e}")
             raise tornado.web.HTTPError(403, "Invalid request")
         logging.debug(f"Request: {decoded_request}")
         if not all(param in decoded_request for param in recquiredFields):
@@ -207,13 +211,14 @@ def define_options() -> None:
     define("config",default="/etc/wwpass/oauth2.conf")
     define("template_path",default=os.path.normpath(os.path.join(base_path, 'templates')))
 
-    define("user",default=None)
-    define("group",default=None)
+    define("user")
+    define("group")
 
     define("debug", type=bool, default=False)
     define("bind", default="0.0.0.0")
     define("port", type=int, default=9062)
 
+    define("base_uri", type=str)
     define("gluu_url", type=str)
 
     define("api_key", type=str)
