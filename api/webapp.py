@@ -7,7 +7,7 @@ import urllib.parse
 import json
 import ssl
 from email.utils import parseaddr
-from typing import cast, Any, Dict, List, Optional
+from typing import cast, Any, Dict, List, Optional, Sequence
 
 
 import tornado.httpserver
@@ -72,8 +72,8 @@ class SCIMHandler(tornado.web.RequestHandler, tornado.auth.OAuth2Mixin): #type: 
         self.write(f"<pre>{pprint.pformat(users)}</pre>")
         self.finish()
 
-class GroupsHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable=abstract-method
-    async def _changeMembership(self, userInum: str, groupInum: str, member: bool) -> None:
+class JWTProtection(tornado.web.RequestHandler):
+    def decodeRequest(self, recquiredFields: Sequence[str]= tuple()):
         request = self.get_body_argument('request', None)
         if not request:
             raise tornado.web.HTTPError(400, "Bad request")
@@ -82,14 +82,26 @@ class GroupsHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable=
         except DecodeError:
             raise tornado.web.HTTPError(403, "Invalid request")
         logging.debug(f"Request: {decoded_request}")
-        if not all(param in decoded_request for param in ('user', 'group', 'member')):
+        if not all(param in decoded_request for param in recquiredFields):
             raise tornado.web.HTTPError(400, "Too few request parameters")
+        return decoded_request
+
+    def sendReply(self, reply: Dict[str, Any]) -> None:
+        self.set_header("Content-type","application/jwt")
+        self.write(jwt_encode(reply,
+            algorithm='HS256',
+            key=self.settings['api_key']))
+        self.finish()
+
+
+class GroupsHandler(JWTProtection): #type: ignore #pylint: disable=abstract-method
+    async def _changeMembership(self, userInum: str, groupInum: str, member: bool) -> None:
+        decoded_request = self.decodeRequest(('user', 'group', 'member'))
         if decoded_request['user'] != userInum or decoded_request['group'] != groupInum or decoded_request['member'] != member:
             raise tornado.web.HTTPError(400, "Bad request parameters")
         if groupInum not in self.settings['options'].managed_groups:
             raise tornado.web.HTTPError(404, "No such group")
 
-        self.set_header("Content-type","application/jwt")        
         if member:
             response = await self.settings['scim'].addGroupMembership(
                 userInum = userInum,
@@ -100,19 +112,16 @@ class GroupsHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable=
                 userInum = userInum,
                 groupInum = groupInum
             )
-        self.write(jwt_encode({'success': True
-                },
-            algorithm='HS256',
-            key=self.settings['api_key']))
-        self.finish()
 
-    async def post(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ        
+        self.sendReply({'success': True})
+
+    async def post(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ
         return await self._changeMembership(userInum, groupInum, True)
 
-    async def delete(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ        
+    async def delete(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ
         return await self._changeMembership(userInum, groupInum, False)
 
-class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable=abstract-method
+class NewUserHandler(JWTProtection): #type: ignore #pylint: disable=abstract-method
     _wwpass_ssl_context: Optional[ssl.SSLContext] = None
     @staticmethod
     def http() -> tornado.httpclient.AsyncHTTPClient:
@@ -121,7 +130,7 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
     def wwpass_ssl_context(self) -> ssl.SSLContext:
         if NewUserHandler._wwpass_ssl_context:
             return NewUserHandler._wwpass_ssl_context
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS)
         ctx.load_verify_locations(cadata = WWPASS_CA_CERT)
         ctx.load_cert_chain(
             certfile = self.settings['options'].wwpass_client_cert,
@@ -130,16 +139,7 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
         return NewUserHandler._wwpass_ssl_context
 
     async def post(self) -> None:  #pylint: disable=arguments-differ
-        request = self.get_body_argument('request', None)
-        if not request:
-            raise tornado.web.HTTPError(400, "Bad request")
-        try:
-            decoded_request = jwt_decode(request, key=self.settings['api_key'])
-        except DecodeError:
-            raise tornado.web.HTTPError(403, "Invalid request")
-        logging.debug(f"Request: {decoded_request}")
-        if not all(param in decoded_request for param in ('ticket', 'puid', 'email', 'name')):
-            raise tornado.web.HTTPError(400, "Too few request parameters")
+        decoded_request = self.decodeRequest(('ticket', 'puid', 'email', 'name'))
         ticket = decoded_request['ticket']
         puid = decoded_request['puid']
         auth_type = 'p' if self.settings['options'].use_pin else ''
@@ -161,7 +161,7 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
         logging.debug(f"PUID response: {response}")
         if 'result' not in response or not response['result'] or puid != response['data']:
             raise tornado.web.HTTPError(403, "Invalid request")
-        self.set_header("Content-type","application/jwt")
+
         fullname = decoded_request['name']
         email = decoded_request['email']
         errors: List[str] = []
@@ -175,13 +175,10 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
             #TODO: check for emails with '.' and '+' as identical
             errors.append("This email is already claimed")
         if errors:
-            self.write(jwt_encode({
+            self.sendReply({
                     'status': 400,
                     'reason': ". ".join(errors),
-                    'ticket': ticket},
-                algorithm='HS256',
-                key=self.settings['api_key']))
-            self.finish()
+                    'ticket': ticket})
             return
 
         response = await self.settings['scim'].createUser(
@@ -202,13 +199,9 @@ class NewUserHandler(tornado.web.RequestHandler): #type: ignore #pylint: disable
             'wwp_ticket': ticket
         }
         loginform_url = f'{self.settings["options"].gluu_url}/oxauth/postlogin.htm?{urllib.parse.urlencode(request)}'
-        self.write(jwt_encode({
+        self.sendReply({
                 'redirect_to': loginform_url,
-                'uid': userID},
-            algorithm='HS256',
-            key=self.settings['api_key']))
-        self.finish()
-
+                'uid': userID})
 
 def define_options() -> None:
     define("config",default="/etc/wwpass/oauth2.conf")
@@ -233,7 +226,7 @@ def define_options() -> None:
     define("uma2_secret", type=str)
     define("uma2_kid", type=str)
 
-    define("managed_groups", type=tuple)
+    define("managed_groups", type=tuple, default=())
 
 
 urls = [
