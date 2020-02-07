@@ -6,6 +6,7 @@ import urllib
 import urllib.parse
 import json
 import ssl
+import re
 from datetime import datetime, timedelta
 from email.utils import parseaddr
 from typing import cast, Any, Dict, List, Optional, Sequence
@@ -63,7 +64,7 @@ LEBB84k3+v+AtbXePEwvp+o1nu/+1sRkhqlNFHN67vakqC4xTxiuPxu6Pb/uDeNI
 ip0+E9I=
 -----END CERTIFICATE----- '''
 
-class SCIMHandler(tornado.web.RequestHandler, tornado.auth.OAuth2Mixin): #type: ignore #pylint: disable=abstract-method
+class SCIMHandler(tornado.web.RequestHandler, tornado.auth.OAuth2Mixin): #pylint: disable=abstract-method
     async def get(self) -> None: #pylint: disable=arguments-differ
         import pprint
         #users = await self.settings['scim'].getUsersList()
@@ -77,7 +78,7 @@ class JWTProtection(tornado.web.RequestHandler):
     VALID_FOR = timedelta(seconds = 30)
     NBF_LEEWAY = timedelta(seconds = 1)
 
-    def decodeRequest(self, recquiredFields: Sequence[str]= tuple()):
+    def decodeRequest(self, recquiredFields: Sequence[str]= tuple()) -> Dict[str, Any]:
         request = self.get_body_argument('request', None)
         if not request:
             raise tornado.web.HTTPError(400, "Bad request")
@@ -116,8 +117,10 @@ class JWTProtection(tornado.web.RequestHandler):
         self.finish()
 
 
-class GroupsHandler(JWTProtection): #type: ignore #pylint: disable=abstract-method
+class GroupsHandler(JWTProtection): #pylint: disable=abstract-method
     async def _changeMembership(self, userInum: str, groupInum: str, member: bool) -> None:
+        if  not re.match(r'[a-f0-9-]+', userInum) or not re.match(r'[a-f0-9-]+', groupInum):
+            raise tornado.web.HTTPError(404, "Not found")
         decoded_request = self.decodeRequest(('user', 'group', 'member'))
         if decoded_request['user'] != userInum or decoded_request['group'] != groupInum or decoded_request['member'] != member:
             raise tornado.web.HTTPError(400, "Bad request parameters")
@@ -137,13 +140,30 @@ class GroupsHandler(JWTProtection): #type: ignore #pylint: disable=abstract-meth
 
         self.sendReply({'success': True})
 
+    async def get(self, userInum: str, groupInum: str) -> None:
+        self.decodeRequest() # To verify signature
+        if not userInum and re.match(r'[a-f0-9-]+', groupInum):
+            if groupInum not in self.settings['options'].managed_groups:
+                raise tornado.web.HTTPError(404, "No such group")
+            response = await self.settings['scim'].getGroupMembership(
+                groupInum = groupInum
+            )
+            self.sendReply({'group': groupInum, 'members': response})
+        elif not groupInum and re.match(r'[a-f0-9-]+', userInum):
+            response = await self.settings['scim'].getGroupsForUser(
+                userInum = userInum
+            )
+            groups = tuple(group for group in response if group in self.settings['options'].managed_groups)
+            self.sendReply({'user': userInum, 'groups': groups})
+            return
+
     async def post(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ
         return await self._changeMembership(userInum, groupInum, True)
 
     async def delete(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ
         return await self._changeMembership(userInum, groupInum, False)
 
-class NewUserHandler(JWTProtection): #type: ignore #pylint: disable=abstract-method
+class NewUserHandler(JWTProtection): #pylint: disable=abstract-method
     _wwpass_ssl_context: Optional[ssl.SSLContext] = None
     @staticmethod
     def http() -> tornado.httpclient.AsyncHTTPClient:
@@ -252,11 +272,13 @@ def define_options() -> None:
     define("managed_groups", type=tuple, default=())
 
 
-urls = [
+urls = (
     (r"/v1/user/?", NewUserHandler),
-    (r"/v1/user/(.*)/group/(.*)/?", GroupsHandler),
+    (r"/v1/user/([a-f0-9-]+)/group/([a-f0-9-]+)/?", GroupsHandler),
+    (r"/v1/user/([a-f0-9-]+)/groups()/?", GroupsHandler),
+    (r"/v1/()group/([a-f0-9-]+)/users/?", GroupsHandler),
     #(r"/scim/?", SCIMHandler),
-]
+)
 
 
 if __name__ == "__main__":
@@ -276,7 +298,7 @@ if __name__ == "__main__":
         'scim': SCIMClient(options['gluu_url'], options['uma2_id'], options['uma2_secret'], options['uma2_kid'])
     }
 
-    application = tornado.web.Application(urls, **settings)
+    application = tornado.web.Application(urls, **settings) # type: ignore
 
     logging.info('Starting server')
     server = tornado.httpserver.HTTPServer(application, xheaders=True)

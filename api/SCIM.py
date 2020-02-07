@@ -3,7 +3,7 @@ import logging
 import urllib.parse
 import time
 import json
-from typing import cast, Any, Dict, List, Optional
+from typing import cast, Any, Dict, List, Optional, Tuple
 from secrets import token_urlsafe
 import jwt
 import re
@@ -82,7 +82,7 @@ class SCIMClient():
     async def getUsersList(self) -> List[Dict[str, Any]]:
         response = await self._callScimApi(f'{self.scim_users_url}')
         if response.code != 200:
-            raise tornado.httpclient.HTTPError(response.code, response.body)
+            raise tornado.httpclient.HTTPError(response.code, response.body.decode())
         response_json = json.loads(response.body)
         return cast(List[Dict[str, Any]], response_json['Resources'] if 'Resources' in response_json else list())
 
@@ -97,7 +97,7 @@ class SCIMClient():
         logging.debug(f"Filter: {urllib.parse.urlencode(request)}")
         response = await self._callScimApi(f'{self.scim_users_url}?{urllib.parse.urlencode(request)}')
         if response.code != 200:
-            raise tornado.httpclient.HTTPError(response.code, response.body)
+            raise tornado.httpclient.HTTPError(response.code, response.body.decode())
         response_json = json.loads(response.body)
         return cast(List[Dict[str, Any]], response_json['Resources'] if 'Resources' in response_json else list())
 
@@ -113,11 +113,11 @@ class SCIMClient():
             },
             body=body)
         if response.code // 100 != 2:
-            raise tornado.httpclient.HTTPError(response.code, response.body)
+            raise tornado.httpclient.HTTPError(response.code, response.body.decode())
         response_json = json.loads(response.body)
         return cast(List[Dict[str, Any]], response_json)
 
-    async def _changeGroupMembership(self, userInum: str, groupInum: str, member: bool) -> List[Dict[str, Any]]:
+    async def _changeGroupMembership(self, userInum: str, groupInum: str, member: bool) -> Dict[str, Any]:
         assert re.match(r'[a-f0-9-]+', userInum)
         assert re.match(r'[a-f0-9-]+', groupInum)
         patch_request = { "schemas":
@@ -135,7 +135,7 @@ class SCIMClient():
                     },
                 ]
             }
-        logging.debug(f"Patching user {userInum}: {json.dumps(patch_request)}")
+        logging.debug(f"Patching group {groupInum}: {json.dumps(patch_request)}")
         response = await self._callScimApi(
             f'{self.scim_groups_url}{groupInum}',
              method="PATCH",
@@ -144,13 +144,37 @@ class SCIMClient():
                  'Content-type': 'application/json'
              })
         if response.code != 200:
-            raise tornado.httpclient.HTTPError(response.code, response.body)
+            raise tornado.httpclient.HTTPError(response.code, response.body.decode())
         response_json = json.loads(response.body)
         logging.debug(f"Reply: {response_json}")
-        return response_json
+        return cast(Dict[str, Any], response_json)
 
-    async def addGroupMembership(self, userInum: str, groupInum: str):
+    async def addGroupMembership(self, userInum: str, groupInum: str) -> Dict[str, Any]:
         return await self._changeGroupMembership(userInum, groupInum, True)
 
-    async def removeGroupMembership(self, userInum: str, groupInum: str):
+    async def removeGroupMembership(self, userInum: str, groupInum: str) -> Dict[str, Any]:
         return await self._changeGroupMembership(userInum, groupInum, False)
+
+    async def getGroupMembership(self, groupInum: str) -> Tuple[str, ...]:
+        assert re.match(r'[a-f0-9-]+', groupInum)
+        request = {
+            'attributes': 'members'
+        }
+        response = await self._callScimApi(f'{self.scim_groups_url}{groupInum}?{urllib.parse.urlencode(request)}')
+        if response.code != 200:
+            raise tornado.httpclient.HTTPError(response.code, response.body.decode())
+        response_json = json.loads(response.body)
+        logging.debug(f"Reply: {response_json}")
+        return tuple(cast(str, member['value']) for member in (response_json['members'] if 'members' in response_json else ()))
+
+    async def getGroupsForUser(self, userInum: str) -> Tuple[str, ...]:
+        assert re.match(r'[a-f0-9-]+', userInum)
+        request = {
+            'attributes': 'groups'
+        }
+        response = await self._callScimApi(f'{self.scim_users_url}{userInum}?{urllib.parse.urlencode(request)}')
+        if response.code != 200:
+            raise tornado.httpclient.HTTPError(response.code, response.body.decode())
+        response_json = json.loads(response.body)
+        logging.debug(f"Reply: {response_json}")
+        return tuple(cast(str, group['value']) for group in (response_json['groups'] if 'groups' in response_json else ()))

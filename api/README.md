@@ -52,6 +52,18 @@ It's assumed that Gluu is running and WWPass authentication is configured (see [
 
 ## API reference
 
+All JWT requests are expected to contatin the following claims:
+ - 'aud' - Requested URI
+ - 'jti' - One-time unpredictable value. It will be echoed in the reply
+ - 'exp' - Expiration time for the JWT
+ - 'nbf' - NotBefore time for the JWT
+
+Returned JWT will contain the following claims:
+ - 'jti' - 'jti' value from the request
+ - 'exp' - Expiration time for the JWT
+ - 'nbf' - NotBefore time for the JWT
+ - 'iat' - Time of creation of the JWT
+
 ### /v1/user
 
 #### POST
@@ -105,7 +117,7 @@ Request is form-encoded with a single field:
             key=<api_key>)
 ```
 
-On success: 
+On success:
 ```
  JWT.encode({ 'success': True }
             algorithm='HS256',
@@ -126,9 +138,52 @@ Request is form-encoded with a single field:
             key=<api_key>)
 ```
 
-On success: 
+On success:
 ```
  JWT.encode({ 'success': True }
             algorithm='HS256',
             key=<api_key>)
 ```
+
+### /v1/user/{user_id}/groups
+
+#### GET
+Get groups this user belongs to.
+Request is form-encoded with a single field just to verify signature:
+```
+ request=JWT.encode({},
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+On success:
+```
+ JWT.encode({
+     'user': <user_id>,
+     'groups': [<group_id>, ...]
+            }
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+### /v1/group/{group_id}/users
+
+#### GET
+Get groups this user belongs to.
+Request is form-encoded with a single field just to verify signature:
+```
+ request=JWT.encode({},
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+On success:
+```
+ JWT.encode({
+     'group': <group_id>,
+     'members': [<user_id>, ...]
+            }
+            algorithm='HS256',
+            key=<api_key>)
+```
+
