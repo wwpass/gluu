@@ -187,3 +187,26 @@ On success:
             key=<api_key>)
 ```
 
+### /v1/user/{user_id}
+
+#### PATCH
+Change user attributes
+
+User attributes that can be changed:
+ - name
+ - email
+
+```
+ request=JWT.encode({<attr_name>:<new_value>, ...},
+            algorithm='HS256',
+            key=<api_key>)
+```
+
+Any number of valid attributes may be  present in the request
+
+On success:
+```
+ JWT.encode({ 'success': True }
+            algorithm='HS256',
+            key=<api_key>)
+```

@@ -8,7 +8,6 @@ import json
 import ssl
 import re
 from datetime import datetime, timedelta
-from email.utils import parseaddr
 from typing import cast, Any, Dict, List, Optional, Sequence
 
 
@@ -22,7 +21,7 @@ import tornado.escape
 
 from jwt import encode as jwt_encode, decode as jwt_decode, InvalidTokenError, MissingRequiredClaimError
 from base64 import decodebytes as base64_decode
-from SCIM import SCIMClient
+from SCIM import SCIMClient, EMAIL_REGEX
 
 
 base_path = os.path.abspath(os.path.dirname(__file__))
@@ -128,12 +127,12 @@ class GroupsHandler(JWTProtection): #pylint: disable=abstract-method
             raise tornado.web.HTTPError(404, "No such group")
 
         if member:
-            response = await self.settings['scim'].addGroupMembership(
+            await self.settings['scim'].addGroupMembership(
                 userInum = userInum,
                 groupInum = groupInum
             )
         else:
-            response = await self.settings['scim'].removeGroupMembership(
+            await self.settings['scim'].removeGroupMembership(
                 userInum = userInum,
                 groupInum = groupInum
             )
@@ -162,6 +161,16 @@ class GroupsHandler(JWTProtection): #pylint: disable=abstract-method
 
     async def delete(self, userInum: str, groupInum: str) -> None:  #pylint: disable=arguments-differ
         return await self._changeMembership(userInum, groupInum, False)
+
+class UserHandler(JWTProtection):
+    async def patch(self, userInum: str) -> None: #pylint: disable=arguments-differ
+        request = self.decodeRequest()
+        fields = dict((k,request[k]) for k in ('email', 'name') if k in request)
+        await self.settings['scim'].updateUser(
+            userInum = userInum,
+            **fields
+        )
+        self.sendReply({'success': True})
 
 class NewUserHandler(JWTProtection): #pylint: disable=abstract-method
     _wwpass_ssl_context: Optional[ssl.SSLContext] = None
@@ -211,7 +220,7 @@ class NewUserHandler(JWTProtection): #pylint: disable=abstract-method
             errors.append("Full name is a required parameter")
         if not email:
             errors.append("Email is a required parameter")
-        elif parseaddr(email) == ('',''):
+        elif not re.match(EMAIL_REGEX, email):
             errors.append("Wrong email format")
         elif await self.settings['scim'].findUsersByAttr('emails.value',email):
             #TODO: check for emails with '.' and '+' as identical
@@ -274,6 +283,7 @@ def define_options() -> None:
 
 urls = (
     (r"/v1/user/?", NewUserHandler),
+    (r"/v1/user/([a-f0-9-]+)/?", UserHandler),
     (r"/v1/user/([a-f0-9-]+)/group/([a-f0-9-]+)/?", GroupsHandler),
     (r"/v1/user/([a-f0-9-]+)/groups()/?", GroupsHandler),
     (r"/v1/()group/([a-f0-9-]+)/users/?", GroupsHandler),

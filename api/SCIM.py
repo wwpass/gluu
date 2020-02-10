@@ -9,6 +9,10 @@ import jwt
 import re
 
 import tornado.httpclient
+import tornado.web
+
+## https://stackoverflow.com/questions/201323/how-to-validate-an-email-address-using-a-regular-expression
+EMAIL_REGEX = re.compile(r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])")
 
 
 class SCIMClient():
@@ -178,3 +182,51 @@ class SCIMClient():
         response_json = json.loads(response.body)
         logging.debug(f"Reply: {response_json}")
         return tuple(cast(str, group['value']) for group in (response_json['groups'] if 'groups' in response_json else ()))
+
+    async def updateUser(self, userInum: str, **fields: str ) -> Dict[str, Any]:
+        assert re.match(r'[a-f0-9-]+', userInum)
+        operations = []
+        if 'email' in fields:
+            email = fields['email']
+            if not re.match(EMAIL_REGEX, email):
+                raise tornado.web.HTTPError(400, "Wrong email format")
+            operations.append(
+                    {
+                        "op": "replace",
+                        "path": "emails",
+                        "value":[
+                            {
+                                "value": email,
+                                "primary": True
+                            }
+                        ]
+                    },
+            )
+        if 'name' in fields:
+            name = fields['name']
+            if not name:
+                raise tornado.web.HTTPError(400, "Name cannot be empty")
+            operations.append(
+                    {
+                        "op": "replace",
+                        "path": "displayName",
+                        "value": name
+                    },
+            )
+        patch_request = { "schemas":
+            ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                "Operations": operations
+            }
+        logging.debug(f"Patching user {userInum}: {json.dumps(patch_request)}")
+        response = await self._callScimApi(
+            f'{self.scim_users_url}{userInum}',
+             method="PATCH",
+             body=json.dumps(patch_request),
+             headers={
+                 'Content-type': 'application/json'
+             })
+        if response.code != 200:
+            raise tornado.httpclient.HTTPError(response.code, response.body.decode())
+        response_json = json.loads(response.body)
+        logging.debug(f"Reply: {response_json}")
+        return cast(Dict[str, Any], response_json)
