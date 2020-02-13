@@ -74,6 +74,7 @@ Request is form-encoded with a single field:
                 'ticket':<ticket>,
                 'puid':<puid>,
                 'email':<email>,
+                'nickname':<callSign>, # Optional
                 'name':<Full Name>},
             algorithm='HS256',
             key=<api_key>)
@@ -195,6 +196,7 @@ Change user attributes
 User attributes that can be changed:
  - name
  - email
+ - nickname
 
 ```
  request=JWT.encode({<attr_name>:<new_value>, ...},
@@ -202,11 +204,19 @@ User attributes that can be changed:
             key=<api_key>)
 ```
 
-Any number of valid attributes may be  present in the request
+Any number of valid attributes may be present in the request
 
 On success:
 ```
- JWT.encode({ 'success': True }
+ JWT.encode({ 'success': True },
+            algorithm='HS256',
+            key=<api_key>)
+```
+On error:
+```
+ JWT.encode({
+                'success': False,
+                'reason': "<whant_went_wrong>"},
             algorithm='HS256',
             key=<api_key>)
 ```

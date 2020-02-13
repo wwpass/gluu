@@ -165,7 +165,24 @@ class GroupsHandler(JWTProtection): #pylint: disable=abstract-method
 class UserHandler(JWTProtection):
     async def patch(self, userInum: str) -> None: #pylint: disable=arguments-differ
         request = self.decodeRequest()
-        fields = dict((k,request[k]) for k in ('email', 'name') if k in request)
+        fields = dict((k,request[k]) for k in ('email', 'name', 'nickname') if k in request)
+        errors: List[str] = []
+        if 'email' in fields:
+            email = fields['email']
+            if not re.match(EMAIL_REGEX, email):
+                errors.append("Wrong email format")
+            elif await self.settings['scim'].findUsersByAttr('emails.value',email):
+                #TODO: check for emails with '.' and '+' as identical
+                errors.append("This email is already claimed")
+        if 'name' in fields:
+            if not fields['name']:
+                errors.append("Full name cannot be empty")
+        if errors:
+            self.sendReply({
+                    'success': False,
+                    'reason': ". ".join(errors)})
+            return
+
         await self.settings['scim'].updateUser(
             userInum = userInum,
             **fields
@@ -215,6 +232,7 @@ class NewUserHandler(JWTProtection): #pylint: disable=abstract-method
 
         fullname = decoded_request['name']
         email = decoded_request['email']
+        nickname = decoded_request.get('nickname','')
         errors: List[str] = []
         if not fullname:
             errors.append("Full name is a required parameter")
@@ -237,6 +255,7 @@ class NewUserHandler(JWTProtection): #pylint: disable=abstract-method
             emails=[{'primary':True, 'value': email}],
             displayName=fullname,
             name={'formatted': fullname},
+            nickName=nickname,
             userName=f'wwpass-{puid}',
             active=True
         )

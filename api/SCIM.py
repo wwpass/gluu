@@ -213,6 +213,23 @@ class SCIMClient():
                         "value": name
                     },
             )
+        if 'nickname' in fields:
+            nickname = fields['nickname']
+            if nickname:
+                operations.append(
+                        {
+                            "op": "replace",
+                            "path": "nickName",
+                            "value": nickname
+                        },
+                )
+            else:
+                operations.append(
+                        {
+                            "op": "remove",
+                            "path": "nickName"
+                        },
+                )
         patch_request = { "schemas":
             ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
                 "Operations": operations
