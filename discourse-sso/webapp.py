@@ -31,10 +31,10 @@ class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #py
     Handler for AnyConnect login
     """
     async def get(self) -> None: #pylint: disable=arguments-differ
-        if self.get_argument('error', False):
+        if self.get_argument('error', None):
             self.render('error.html',reason=self.get_argument('error'))
             return
-        if self.get_argument('code', False):
+        if self.get_argument('code', None):
             try:
                 access = await self.get_authenticated_user(
                     redirect_uri=f'{self.settings["options"].base_url}/discourse',
@@ -53,6 +53,12 @@ class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #py
                 nonce = sso_request_params[b'nonce'][0]
                 return_url = sso_request_params[b'return_sso_url'][0]
                 groups = userinfo.get("member_of", ())
+                validated = self.settings["options"].validated_group_inum and f'inum={self.settings["options"].validated_group_inum},ou=groups,o=gluu' in groups
+                if not validated:
+                    self.redirect(url_concat(
+                        f'{self.settings["options"].base_url}/discourse',
+                         {'error': 'You have not yet validated your email address.'}))
+                    return
                 sso_reply = {
                     'nonce': nonce,
                     'email': userinfo['email'],
@@ -60,7 +66,7 @@ class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #py
                     'name': userinfo['name'],
                     'admin': "true" if f'inum={self.settings["options"].admins_group_inum},ou=groups,o=gluu' in groups else "false",
                     'moderator':  "true" if f'inum={self.settings["options"].moderators_group_inum},ou=groups,o=gluu' in groups else "false",
-                    'require_activation': "false" if not self.settings["options"].validated_group_inum or f'inum={self.settings["options"].validated_group_inum},ou=groups,o=gluu' in groups else "true",
+                    'require_activation': "false",
                 }
                 encoded_payload = base64.encodebytes(urllib.parse.urlencode(sso_reply).encode()).replace(b'\n',b'')
                 signature = hmac.new(self.settings["options"].discourse_secret, encoded_payload, digestmod = hashlib.sha256).hexdigest()
@@ -72,8 +78,8 @@ class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #py
                 self.render('error.html',reason="Bad SSO request")
                 return
         else:
-            sso_request = self.get_argument('sso', False)
-            sso_signature = self.get_argument('sig', False)
+            sso_request = self.get_argument('sso', None)
+            sso_signature = self.get_argument('sig', None)
             if not (sso_request and sso_signature):
                 self.render('error.html',reason="Bad SSO request")
                 return
