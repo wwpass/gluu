@@ -61,6 +61,7 @@ class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #py
                     return
                 sso_reply = {
                     'nonce': nonce,
+                    'username': userinfo['nickname'] if 'nickname' in userinfo else userinfo['inum'],
                     'email': userinfo['email'],
                     'external_id': userinfo['inum'],
                     'name': userinfo['name'],
