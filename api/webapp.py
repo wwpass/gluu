@@ -78,14 +78,14 @@ class JWTProtection(tornado.web.RequestHandler):
     NBF_LEEWAY = timedelta(seconds = 1)
 
     def decodeRequest(self, recquiredFields: Sequence[str]= tuple()) -> Dict[str, Any]:
-        request = self.get_body_argument('request', None)
+        request = self.get_body_argument('request', None) if self.request.method != 'GET' else self.get_argument('request', None)
         if not request:
             raise tornado.web.HTTPError(400, "Bad request")
         try:
             decoded_request = jwt_decode(
                 request,
                 key = self.settings['api_key'],
-                audience = f'{self.settings["options"].base_uri}{self.request.uri}',
+                audience = f'{self.settings["options"].base_uri}{self.request.path}',
                 options = {
                     'require_exp': True,
                     'require_nbf': True
