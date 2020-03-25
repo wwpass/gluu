@@ -8,7 +8,6 @@ WWPass integration with GLUU IAM service
  - Properly fix WWPass SDK for it to work with Jython 2.7.1
  - Assert that registering the same user in parallel won't introduce vulnerability
  - Recover an account using email
- - Make single sign out
 
 ## Instuctions
 
