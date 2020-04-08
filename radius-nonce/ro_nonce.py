@@ -40,10 +40,10 @@ class DynamicScope(DynamicScopeType):
         authorizationGrant = dynamicScopeContext.getAuthorizationGrant()
         user = dynamicScopeContext.getUser()
         userService = CdiUtil.bean(UserService)
-        userGroupService = CdiUtil.bean(UserGroupService)
         if self.groupDN:
             print("Checking user to be in group: %s" % self.groupDN)
-            if not userGroupService.isUserInGroup(self.groupDN, user.getDn()):
+            groups = userService.getCustomAttribute(user, "memberOf").getValues()
+            if not self.groupDN in groups:
                 print("User %s is not in group: %s" % (user.getDn(), self.groupDN))
                 return False
         jsonWebResponse = dynamicScopeContext.getJsonWebResponse()
