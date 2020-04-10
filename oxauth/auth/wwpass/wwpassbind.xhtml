@@ -20,6 +20,9 @@
     </ui:define>
 
     <ui:define name="content-major">
+      <div id="errors" style="color:red;">
+        <p>#{identity.getWorkingParameter('errors')}</p>
+      </div>
       <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('allow_password_bind')))}">
         <div class="bind_option">
           <input type="submit" value="Bind with a password" class="button button--action" />
@@ -28,7 +31,6 @@
         </div>
 
         <div id="password_bind" style="display: none;">
-          <h:messages style="color:red;" />
           <b:form id="loginForm" name="loginForm" method="post" class="form from--bind" enctype="application/x-www-form-urlencoded">
             <input type="hidden" name="loginForm" value="loginForm" />
             <p class="text">Enter your credentials to bind PassKey to your account</p>
@@ -49,8 +51,6 @@
 
             <h:commandButton id="loginButton" styleClass="button button--action"
                   value="Bind" action="#{authenticator.authenticate}" />
-
-
           </b:form>
 
           <div class="or">or</div>

@@ -61,6 +61,7 @@ class PersonAuthentication(PersonAuthenticationType):
         userService = CdiUtil.bean(UserService)
         ticket = requestParameters.get('wwp_ticket')[0] if 'wwp_ticket' in requestParameters else None
         identity = CdiUtil.bean(Identity)
+        identity.setWorkingParameter("errors", "")
         if (step == 1):
             print "WWPASS. Authenticate for step 1"
             puid = self.getPuid(ticket)
@@ -79,6 +80,7 @@ class PersonAuthentication(PersonAuthenticationType):
             print "WWPASS. Authenticate for step 2"
             puid = identity.getWorkingParameter("puid")
             if not puid:
+                identity.setWorkingParameter("errors", "WWPass login failed")
                 return False
             if ticket:
                 puid_new = self.getPuid(ticket)
@@ -101,6 +103,7 @@ class PersonAuthentication(PersonAuthenticationType):
                             userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%puid)
                             identity.setWorkingParameter("puid", None)
                             return True
+                    identity.setWorkingParameter("errors", "Invalid user")
                     return False
             else:
                 # Binding via username/password
@@ -113,9 +116,11 @@ class PersonAuthentication(PersonAuthenticationType):
                 if (StringHelper.isNotEmptyString(user_name) and StringHelper.isNotEmptyString(user_password)):
                     logged_in = authenticationService.authenticate(user_name, user_password)
                 if not logged_in:
+                    identity.setWorkingParameter("errors", "Invalid username or password")
                     return False
                 user = authenticationService.getAuthenticatedUser()
                 if not user:
+                    identity.setWorkingParameter("errors", "Invalid user")
                     return False
                 userService.addUserAttribute(user_name, "oxExternalUid", "wwpass:%s"%puid)
                 identity.setWorkingParameter("puid", None)
@@ -135,12 +140,12 @@ class PersonAuthentication(PersonAuthenticationType):
             identity.setWorkingParameter("recovery_url", self.recovery_url)
             identity.setWorkingParameter("allow_password_bind", self.allow_password_bind)
             identity.setWorkingParameter("allow_passkey_bind", self.allow_passkey_bind)
-            print "WWPASS. Prepare for Step 2"
+            print "WWPASS. Prepare for Step 2 errors:%s" % identity.getWorkingParameter("errors")
             return True
         return False
 
     def getExtraParametersForStep(self, configurationAttributes, step):
-        return Arrays.asList("puid", "ticket", "use_pin")
+        return Arrays.asList("puid", "ticket", "use_pin", "errors")
 
     def getCountAuthenticationSteps(self, configurationAttributes):
         identity = CdiUtil.bean(Identity)
