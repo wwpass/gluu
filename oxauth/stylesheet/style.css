@@ -170,7 +170,7 @@ body {
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
   background-image: url("../img/WWPass-logo.svg");
-  background-size: 250px;
+  background-size: 200px;
   background-repeat: no-repeat;
   background-position: center; }
 
@@ -224,7 +224,7 @@ body {
   color: #ffffff; }
 
 .heading--action {
-  color: #0055cc; }
+  color: #0077ff; }
 
 .heading--center {
   text-align: center;
@@ -292,7 +292,7 @@ body {
   color: #c2c2c2; }
 
 .text--action {
-  color: #0055cc; }
+  color: #0077ff; }
 
 .text--center {
   text-align: center;
@@ -317,13 +317,13 @@ body {
   min-width: 200px;
   height: 40px;
   margin: 0 auto;
-  color: #0077ff;
+  color: #0055cc;
   font-size: 14px;
   line-height: 34px;
   font-weight: 400;
   text-decoration: none;
   text-align: center;
-  border: 2px solid #0077ff;
+  border: 2px solid #0055cc;
   border-radius: 4px;
   -webkit-padding-start: 15px;
           padding-inline-start: 15px;
@@ -340,24 +340,24 @@ body {
 
 .button--common {
   background-color: #ffffff;
-  color: #0077ff;
-  border-color: #0077ff; }
+  color: #0055cc;
+  border-color: #0055cc; }
 
 .button--common:hover,
 .button--common:focus,
 .button--common:active {
-  color: #0055cc;
-  border-color: #0055cc; }
+  color: #0077ff;
+  border-color: #0077ff; }
 
 .button--action {
   color: #ffffff;
-  background-color: #0077ff; }
+  background-color: #0055cc; }
 
 .button--action:hover,
 .button--action:focus,
 .button--action:active {
-  background-color: #0055cc;
-  border-color: #0055cc; }
+  background-color: #0077ff;
+  border-color: #0077ff; }
 
 .button--store {
   min-width: 125px;
@@ -369,8 +369,8 @@ body {
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
-  color: #0077ff;
-  border-color: #0077ff;
+  color: #0055cc;
+  border-color: #0055cc;
   -webkit-transition-property: all;
   transition-property: all;
   -webkit-transition-duration: 0.2s;
@@ -383,8 +383,8 @@ body {
 .button--store:hover,
 .button--store:focus,
 .button--store:active {
-  color: #0055cc;
-  border-color: #0055cc; }
+  color: #0077ff;
+  border-color: #0077ff; }
 
 .button--store-google {
   background-image: url("../img/gluu-button-android.svg");
