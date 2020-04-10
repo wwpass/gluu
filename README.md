@@ -13,7 +13,11 @@ WWPass integration with GLUU IAM service
 ## Instuctions
 
 ### File deployment
-Files in `oxauth` directory should be deployed to `/opt/gluu-server//opt/gluu/jetty/oxauth/webapps/oxauth.war` (it's just a zip file, use `cd oxauth; zip -ur /path/to/oxauth.war ./*` command). Or alternatively to: `/opt/gluu-server//opt/gluu/jetty/oxauth/custom/pages/`.
+Files in `oxauth` directory should be deployed to `/opt/gluu-server//opt/gluu/jetty/oxauth/webapps/oxauth.war` (it's just a zip file, use `cd oxauth; zip -ur /path/to/oxauth.war ./*` command). Or alternatively to: `/opt/gluu-server/opt/gluu/jetty/oxauth/custom/pages/`.
+
+Files in `oxtrust` directory should be deployed to `/opt/gluu-server/opt/gluu/jetty/identity/custom/`.
+
+Files in `idp` directory should be deployed to `/opt/gluu-server/opt/gluu/jetty/idp/custom/pages/`.
 
 `wwpass.py` to `/opt/gluu-server/opt/gluu/python/libs/`
 
