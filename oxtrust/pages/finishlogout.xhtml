@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:a4j="http://richfaces.org/a4j"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:ox="http://xmlns.jcp.org/jsf/composite/ox"
+	xmlns:rich="http://richfaces.org/rich"
+	xmlns:richext="http://xmlns.jcp.org/jsf/composite/richext"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	template="/WEB-INF/incl/layout/fullWidthEmpty.xhtml">
+	<f:metadata>
+		<f:viewAction action="#{logoutAction.postLogout}" onPostback="false" />
+	</f:metadata>
+
+	<ui:define name="head">
+		<style>
+        </style>
+	</ui:define>
+	<ui:define name="body">
+        <p class="text">
+            <b>#{msg['finishLogout.loggedOut']}</b>
+          </p>
+          <p class="text" id="connect_text">
+            Thank you for using <b>WWPass</b>.
+          </p>
+        <a class="button button--action" href="login.htm" id="signin">#{msg['finishLogout.signIn']}</a>
+	</ui:define>
+</ui:composition>
