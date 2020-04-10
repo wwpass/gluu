@@ -15,14 +15,15 @@
 	<ui:define name="head">
 		<style>
         </style>
-	</ui:define>
-	<ui:define name="body">
+  </ui:define>
+  
+	<ui:define name="content-major">
         <p class="text">
-            <b>#{msg['finishLogout.loggedOut']}</b>
-          </p>
-          <p class="text" id="connect_text">
-            Thank you for using <b>WWPass</b>.
-          </p>
+          <b>#{msg['finishLogout.loggedOut']}</b>
+        </p>
+        <p class="text" id="connect_text">
+          Thank you for using <b>WWPass</b>.
+        </p>
         <a class="button button--action" href="login.htm" id="signin">#{msg['finishLogout.signIn']}</a>
 	</ui:define>
 </ui:composition>
