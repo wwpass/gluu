@@ -169,8 +169,8 @@ body {
   min-height: 100px;
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
-  background-image: url("../img/WWPass-logo.svg");
-  background-size: 200px;
+  background-image: url("../img/jet-logo.svg");
+  background-size: 80px;
   background-repeat: no-repeat;
   background-position: center; }
 
@@ -224,7 +224,7 @@ body {
   color: #ffffff; }
 
 .heading--action {
-  color: #0077ff; }
+  color: #00C3FF; }
 
 .heading--center {
   text-align: center;
@@ -277,7 +277,7 @@ body {
 .text--link:hover,
 .text--link:focus,
 .text--link:active {
-  color: #0077ff; }
+  color: #00C3FF; }
 
 .text--light {
   font-weight: lighter; }
@@ -292,7 +292,7 @@ body {
   color: #c2c2c2; }
 
 .text--action {
-  color: #0077ff; }
+  color: #00C3FF; }
 
 .text--center {
   text-align: center;
@@ -317,13 +317,13 @@ body {
   min-width: 200px;
   height: 40px;
   margin: 0 auto;
-  color: #0055cc;
+  color: #0E0E2B;
   font-size: 14px;
   line-height: 34px;
   font-weight: 400;
   text-decoration: none;
   text-align: center;
-  border: 2px solid #0055cc;
+  border: 2px solid #0E0E2B;
   border-radius: 4px;
   -webkit-padding-start: 15px;
           padding-inline-start: 15px;
@@ -340,24 +340,24 @@ body {
 
 .button--common {
   background-color: #ffffff;
-  color: #0055cc;
-  border-color: #0055cc; }
+  color: #0E0E2B;
+  border-color: #0E0E2B; }
 
 .button--common:hover,
 .button--common:focus,
 .button--common:active {
-  color: #0077ff;
-  border-color: #0077ff; }
+  color: #00C3FF;
+  border-color: #00C3FF; }
 
 .button--action {
   color: #ffffff;
-  background-color: #0055cc; }
+  background-color: #0E0E2B; }
 
 .button--action:hover,
 .button--action:focus,
 .button--action:active {
-  background-color: #0077ff;
-  border-color: #0077ff; }
+  background-color: #00C3FF;
+  border-color: #00C3FF; }
 
 .button--store {
   min-width: 125px;
@@ -369,8 +369,8 @@ body {
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
-  color: #0055cc;
-  border-color: #0055cc;
+  color: #0E0E2B;
+  border-color: #0E0E2B;
   -webkit-transition-property: all;
   transition-property: all;
   -webkit-transition-duration: 0.2s;
@@ -383,8 +383,8 @@ body {
 .button--store:hover,
 .button--store:focus,
 .button--store:active {
-  color: #0077ff;
-  border-color: #0077ff; }
+  color: #00C3FF;
+  border-color: #00C3FF; }
 
 .button--store-google {
   background-image: url("../img/gluu-button-android.svg");
