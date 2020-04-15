@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href={{ static_url("css/style.min.css") }}>
+  <link rel="shortcut icon" href={{ static_url("img/favicon.ico") }} type="image/x-icon">
+  <link rel="stylesheet" href={{ static_url("stylesheet/style.min.css") }}>
   <link rel="preload" href={{ static_url("img/gluu-button-ios-action.svg") }} as="image">
   <link rel="preload" href={{ static_url("img/gluu-button-android-action.svg") }} as="image">
-  <title>WWPass VPN</title>
+  <title>{{ options.title }} VPN</title>
 </head>
 
 <body class="pageBody">
@@ -44,7 +45,7 @@
             If Cisco AnyConnect does not start, make sure WWPass Connector app is installed.
           </p>
           <p class="text text--sm">
-            <a class="text text--sm text--link" href="{{wwpass_connector_link}}">WWPass connector application for
+            <a class="text text--sm text--link" href="{{options.wwpass_connector_link}}">WWPass connector application for
               Windows</a>
           </p>
         </div>
