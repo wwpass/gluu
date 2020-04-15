@@ -5,6 +5,8 @@ import grp
 import urllib
 import urllib.parse
 
+from typing import Dict, Any
+
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
@@ -15,22 +17,26 @@ import tornado.escape
 from GluuOIDCClient import GluuOAuth2MixIn
 
 base_path = os.path.abspath(os.path.dirname(__file__))
-static_path = os.path.realpath(os.path.join(base_path, './static'))
 os.chdir(base_path)
 
 
-class AnyConnectHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #pylint: disable=abstract-method
+class AnyConnectHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
     """
     Handler for AnyConnect login
     """
+    def get_template_namespace(self) -> Dict[str, Any]:
+        ns = super().get_template_namespace()
+        ns['options'] = self.settings['options']
+        return ns
+
     async def get(self) -> None: #pylint: disable=arguments-differ
         if not self.settings['options'].anyconnect_host or not self.settings['options'].anyconnect_group:
             self.render('error.html',reason='AnyConnect not configured on this instance')
             return
-        if self.get_argument('error', False):
+        if self.get_argument('error', False): #type: ignore
             self.render('error.html',reason=self.get_argument('error'))
             return
-        if self.get_argument('code', False):
+        if self.get_argument('code', False): #type: ignore
             try:
                 access = await self.get_authenticated_user(
                     redirect_uri=f'{self.settings["options"].base_url}/anyconnect/',
@@ -42,10 +48,8 @@ class AnyConnectHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ign
             if 'ro_nonce' not in user:
                 self.render('error.html',reason="Access denied")
                 return
-
             self.render('anyconnect.html',
                 ticket='redirect',
-                wwpass_connector_link = self.settings['options'].wwpass_connector_link,
                 cisco_link='https://%s/' % self.settings['options'].anyconnect_host,
                 anyconnect_url='anyconnect://connect/?%s' % urllib.parse.urlencode({
                     'host': self.settings['options'].anyconnect_host,
@@ -62,6 +66,9 @@ class AnyConnectHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ign
 def define_options() -> None:
     define("config",default="/etc/wwpass/oauth2.conf")
     define("template_path",default=os.path.normpath(os.path.join(base_path, 'templates')))
+    define("static_path",default=os.path.realpath(os.path.join(base_path, './static/wwpass')))
+
+    define("title", type=str, default='WWPass')
 
     define("user",default=None)
     define("group",default=None)
@@ -79,13 +86,6 @@ def define_options() -> None:
     define("anyconnect_group", type=str)
     define("wwpass_connector_link", type=str)
 
-urls = [
-    (r"/", tornado.web.RedirectHandler, {"url": "/anyconnect"}),
-    (r"/anyconnect/?", AnyConnectHandler),
-    (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": static_path})
-]
-
-
 if __name__ == "__main__":
     define_options()
     parse_command_line()
@@ -102,9 +102,14 @@ if __name__ == "__main__":
         'autoescape': None,
         'options': options,
         'xheaders': True,
-        'static_path': static_path,
+        'static_path': options.static_path,
     }
 
+    urls = [
+        (r"/", tornado.web.RedirectHandler, {"url": "/anyconnect"}),
+        (r"/anyconnect/?", AnyConnectHandler),
+        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": options.static_path})
+    ]
     application = tornado.web.Application(urls, **settings)
 
     logging.info('Starting server')

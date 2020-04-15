@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>WWPass</title>
+            <link type="text/css" rel="stylesheet"
+                href="/identity/ext/resources/stylesheet/style.min.css" />
+    </head>
+
+    <body class="pageBody">
+    <iframe src="/oxauth/restv1/end_session" style="height:0"></iframe>
+    <main class="pageMain loginMain">
+      <div class="content">
+        <div class="content__element content__element--first content--center  content--narrow">
+          <div class="logo">
+
+          </div>
+          <div class="hr"></div>
+
+          <p class="text">
+              You have been logged out.
+          </p>
+
+          #if ($rpContext)
+            <p class="text">
+              #springMessageText("idp.logout.sp-initiated", "You have been logged out of the following service:")
+            </p>
+            <blockquote>
+            #if ($rpUIContext)
+                $encoder.encodeForHTML($rpUIContext.getServiceName())
+            #else
+                $encoder.encodeForHTML($rpContext.getRelyingPartyId())
+            #end
+            </blockquote>
+            <br>
+          #end
+
+          <p class="text" id="connect_text">
+              Thank you for using <b>WWPass</b>.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="pageFooter">
+        <ul class="pageFooter__nav">
+          <li class="pageFooter__item"><span class="text text--sm">WWPass</span></li>
+        </ul>
+      </footer>
+    </div>
+
+ 	</body>
+</html>
