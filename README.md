@@ -8,26 +8,27 @@ WWPass integration with GLUU IAM service
  - Properly fix WWPass SDK for it to work with Jython 2.7.1
  - Assert that registering the same user in parallel won't introduce vulnerability
  - Recover an account using email
- - Make single sign out
 
 ## Instuctions
 
 ### File deployment
-Files in `oxauth` directory should be deployed to `/opt/gluu/jetty/oxauth/webapps/oxauth.war` (it's just a zip file, use `cd oxauth; zip -ur /path/to/oxauth.war ./*` command).
+Files in `oxauth` directory should be deployed to : `/opt/gluu-server/opt/gluu/jetty/oxauth/custom/`.
+
+Files in `oxtrust` directory should be deployed to `/opt/gluu-server/opt/gluu/jetty/identity/custom/`.
+
+Files in `idp` directory should be deployed to `/opt/gluu-server/opt/gluu/jetty/idp/custom/`.
 
 `wwpass.py` to `/opt/gluu-server/opt/gluu/python/libs/`
 
-`wwpassauth.py` to `/opt/gluu-server/opt/wwpass_gluu/`.
-
 `ticket.json` to `/opt/gluu-server/opt/wwpass_gluu/cgi`. Make the file executable.
 
-SP certificate and key to: `/opt/wwpass_gluu/gluu_client.crt` and `/opt/wwpass_gluu/gluu_client.key`.
+SP certificate and key to: `/opt/gluu-server/opt/wwpass_gluu/gluu_client.crt` and `/opt/gluu-server/opt/wwpass_gluu/gluu_client.key`.
 
 ### Configuration
 
 #### Configuration -> Manage Custom scripts
 
-Create custom script `wwpass` with "File" storage and path to `wwpassauth.py` from above (excluding `/opt/gluu-server/`)
+Create custom script `wwpass` with "Database" storage and contents of `wwpassauth.py`.
 
 Add the following parameters to the script:
  - `wwpass_crt_file`: location of SP certificate file: `/opt/wwpass_gluu/gluu_client.crt`
@@ -46,7 +47,7 @@ Set both options to "wwpass".
 
 #### Apache config for getticket script
 
-Add the following to site configuration:
+Add the following to site configuratio at `/opt/gluu-server/etc/apache2/sites-available/https_gluu.conf`:
 ```
 <Location /wwpass>
   require all granted
