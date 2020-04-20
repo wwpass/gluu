@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:b="http://bootsfaces.net/ui">
+<f:view transient="true" locale="#{language.localeCode}">
+
+	<h:head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>WWPass</title>
+
+		<!-- <link rel="icon" href="#{request.contextPath}/servlet/favicon"
+			type='image/x-icon' /> -->
+      <link type="text/css" rel="stylesheet"
+			href="/identity/ext/resources/stylesheet/style.min.css" />
+
+    <ui:insert name="head" />
+
+  </h:head>
+
+	<h:body class="pageBody">
+    <ui:insert name="authorize-status" />
+
+    <main class="pageMain loginMain">
+      <ui:insert name="content-wide">
+        <div class="content">
+          <div class="content__element content__element--first content--center  content--narrow">
+            <div class="logo">
+
+            </div>
+            <div class="hr"></div>
+
+            <b:growl id="growlMsg"
+                      globalOnly="true"
+                      placementFrom="top"
+                      show-detail="true"
+                      show-summary="false"
+                      allowDismiss="true"
+                      severity="info,warn,error,fatal"
+                      delay="3000"
+                      escape="false"
+                      auto-update="true" />
+
+            <ui:insert name="content-major" />
+
+          </div>
+
+        </div>
+      </ui:insert>
+
+
+    </main>
+
+    <footer class="pageFooter">
+      <ul class="pageFooter__nav">
+        <li class="pageFooter__item"><span class="text text--sm">WWPass</span></li>
+        <li class="pageFooter__item"><a href="#{client.policyUri}" class="text text--sm text--link">Privacy Policy</a></li>
+        <li class="pageFooter__item"><a href="#{client.tosUri}" class="text text--sm text--link">Terms of Service</a></li>
+      </ul>
+    </footer>
+
+    <script
+			src='#{oxTrustConfigurationService.cssLocation}/../theme/dist/js/jquery-1.12.4.min.js'
+			type="text/javascript"></script>
+		<script
+			src="#{oxTrustConfigurationService.cssLocation}/../theme/bootstrap/js/bootstrap.min.js"
+			type="text/javascript"></script>
+		<script
+			src="#{oxTrustConfigurationService.cssLocation}/../theme/dist/js/app.min.js"
+			type="text/javascript"></script>
+		<script
+			src="#{oxTrustConfigurationService.cssLocation}/../theme/plugins/iCheck/icheck.min.js"
+			type="text/javascript"></script>
+
+  </h:body>
+
+</f:view>
+</html>

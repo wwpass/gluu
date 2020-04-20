@@ -8,7 +8,7 @@ This web application allows user self-registration in Gluu with WWPass PassKey a
 3. The user clicks on the button and is sent to the registration web application with POST request.
 4. The registration application displays a web form to the user with the ticket and PUID in hidden fields. The form should have an additional JavaScript snipped that displays countdown timer for the ticket expiration.
 5. The user fills in the from and submits it.
-6. The registration application validates user input and sends JWT request to WARCA API POST: /v1/user/.
+6. The registration application validates user input and sends JWT request to WWPass API POST: /v1/user/.
 7. The api application requests new ticket form the one it received, finalizing the received ticket.
 8. The api application requests PUID with the new ticket and asserts that it's equal to the PUID received from the request.
 9. The api issues SCIM request to Gluu to create new user. New username is "wwpass-&lt;puid&gt;". "externalID" is set to "wwpass:&lt;puid&gt;" it maps to "OxTrustExternalId" in Gluu LDAP.
