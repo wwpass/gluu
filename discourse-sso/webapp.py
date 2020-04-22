@@ -26,7 +26,7 @@ class LogoutHandler(tornado.web.RequestHandler):
         self.set_cookie('_t','')
         self.redirect('/')
 
-class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #type: ignore #pylint: disable=abstract-method
+class SSOHandler(tornado.web.RequestHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
     """
     Handler for AnyConnect login
     """
@@ -136,7 +136,7 @@ if __name__ == "__main__":
         'static_path': static_path,
     }
 
-    application = tornado.web.Application(urls, **settings)
+    application = tornado.web.Application(urls, **settings) #type: ignore [arg-type]
 
     logging.info('Starting server')
     server = tornado.httpserver.HTTPServer(application, xheaders=True)

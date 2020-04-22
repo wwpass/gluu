@@ -19,9 +19,30 @@
 
         </div>
         <div class="hr"></div>
-        <p class="text">
-          <b>Authentication successful</b>
-        </p>
+        {% if available_profiles %}
+          <p class="text">
+            <b>Authentication successful</b>
+          </p>
+          {% if len(available_profiles) > 1 %}
+          <div>
+            <label for="profile_selector">Choose VPN profile:</label>
+            <select id="profile_selector" name="profile">
+              {% for profile in available_profiles %}
+              <option value="{{ profile }}">
+                {{ profile }}
+              </option>
+              {% end %}
+            </select>
+          </div>
+          {% else %}
+          <input type="hidden" id="profile_selector" name="profile" value="{{ available_profiles[0] }}">
+          {% end %}
+        {% else %}
+          <p class="text">
+            You are not allowed to access VPN
+          </p>
+        {% end %}
+
         <a class="button button--action" href="#" id="connect">Connect VPN</a>
         <div id="connect_text" style="display: none;">
           <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Connecting VPN</h2>
@@ -80,10 +101,24 @@
       } else {
         desktop.style.display = `block`;
       }
+      const last_profile = localStorage.getItem("last_profile");
+      if (last_profile != null) {
+        {% for profile in available_profiles %}
+          if (last_profile == "{{ profile }}")
+            document.querySelector(`#profile_selector`).value = last_profile;
+        {% end %}
+      }
     });
     document.querySelector(`#connect`).addEventListener('click', () => {
-      console.log('Redirect to: {{anyconnect_url}}');
-      window.open("{{anyconnect_url}}", "_blank");
+      const profile = document.querySelector(`#profile_selector`).value;
+      console.log('Profile chosen: ' + profile);
+      if (profile === null || profile == '') {
+        return false;
+      }
+      localStorage.setItem("last_profile",profile);
+      const anyconnect_url = "{{anyconnect_url}}&prefill_group_list=" + encodeURIComponent(profile)
+      console.log('Redirect to: ' + anyconnect_url);
+      window.open(anyconnect_url, "_blank");
       document.querySelector(`#connect`).style.display = 'none';
       document.querySelector(`#connect_text`).style.display = '';
       return false;
