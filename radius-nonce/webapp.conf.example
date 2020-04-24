@@ -6,6 +6,9 @@ debug = False
 
 #static_path = './static/wwpass/'
 
+# Text in the page title
+# title = 'WWPass'
+
 
 bind = 'localhost'
 port = 9061

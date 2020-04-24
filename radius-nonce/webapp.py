@@ -23,7 +23,7 @@ os.chdir(base_path)
 
 class NonceDB:
     nonces: ClassVar[Dict[str,Tuple[float, Dict[str, Any]]]] = {}
-    NONCE_TTL: ClassVar[int] = 20 # Seconds
+    NONCE_TTL: ClassVar[int] = 60 # Seconds
 
     @classmethod
     def create_nonce(cls, userinfo: Dict[str, Any]) -> str:

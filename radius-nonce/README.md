@@ -23,7 +23,7 @@ Generate client secret and save the client to get the ID.
 Save the secret and clientID values.
 
 ### Helper webapp
-1. Deploy `webapp.py`, `GluuOIDCClient.py` and `templates/` to a directory on a web server.
+1. Deploy `webapp.py`, `GluuOIDCClient.py`, `static` and `templates/` to a directory on a web server.
 2. Copy `webapp.conf.example` to the web server and rename it to `webapp.conf`
 3. Edit `webapp.conf`, filling values relevan to your system. Don't forget to deploy WWPass Connector application and put a link for downloading it in the config.
 4. Configure your web server to run `webapp.py --config=webapp.conf` as a demon.
@@ -32,4 +32,6 @@ Save the secret and clientID values.
 
 ### FREERADIUS configuration
 
-TODO
+1. Put `radius-check.sh` into `/usr/locla/bin` or other approppriate location. Make sure it's owned by root ad has permissions: 0755. If you changed listening port in webapp.conf, make sure to change the port value in this script as well.
+2. Configure your FREERADIUS according to the example in `freeradius.conf`. This setup performs all the work in the "authorize" section. "authenticate" just authenticates all the users that were approved in "authorize".
+3. Restart your FREERADIUS and point Cisco ASA to use it for authentication.

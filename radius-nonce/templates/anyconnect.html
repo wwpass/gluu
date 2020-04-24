@@ -19,6 +19,7 @@
 
         </div>
         <div class="hr"></div>
+        <div class="before_connect">
         {% if available_profiles %}
           <p class="text">
             <b>Authentication successful</b>
@@ -44,7 +45,8 @@
         {% end %}
 
         <a class="button button--action" href="#" id="connect">Connect VPN</a>
-        <div id="connect_text" style="display: none;">
+      </div>
+        <div class="after_connect" style="display: none;">
           <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Connecting VPN</h2>
           <p class="text" id="connect_text">
             Cisco AnyConnect will start automatically.
@@ -119,8 +121,8 @@
       const anyconnect_url = "{{anyconnect_url}}&prefill_group_list=" + encodeURIComponent(profile)
       console.log('Redirect to: ' + anyconnect_url);
       window.open(anyconnect_url, "_blank");
-      document.querySelector(`#connect`).style.display = 'none';
-      document.querySelector(`#connect_text`).style.display = '';
+      document.querySelector(`.before_connect`).style.display = 'none';
+      document.querySelector(`.after_connect`).style.display = '';
       return false;
     });
   </script>
