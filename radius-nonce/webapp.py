@@ -101,7 +101,8 @@ class AnyConnectHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract
                     'prefill_username': self.settings['options'].default_username,
                     'prefill_password': NonceDB.create_nonce(user)
                 }),
-                available_profiles = self.get_available_profiles(user))
+                available_profiles = self.get_available_profiles(user),
+                nonce_ttl = NonceDB.NONCE_TTL,)
         else:
             self.authorize_redirect(
                 redirect_uri=f'{self.settings["options"].base_url}/anyconnect/',
