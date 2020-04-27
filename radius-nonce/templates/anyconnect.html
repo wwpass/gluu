@@ -25,9 +25,9 @@
             <b>Authentication successful</b>
           </p>
           {% if len(available_profiles) > 1 %}
-          <div>
-            <label for="profile_selector">Choose VPN profile:</label>
-            <select id="profile_selector" name="profile">
+          <div class="form">
+            <label class="form__label form__label--big" for="profile_selector">Choose VPN profile:</label>
+            <select class="form__input form__input--select" id="profile_selector" name="profile">
               {% for profile in available_profiles %}
               <option value="{{ profile }}">
                 {{ profile }}
