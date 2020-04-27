@@ -170,7 +170,7 @@ body {
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
   background-image: url("../img/jet-logo.svg");
-  background-size: 80px;
+  background-size: 200px;
   background-repeat: no-repeat;
   background-position: center; }
 
@@ -416,6 +416,51 @@ body {
       -ms-flex-direction: column;
           flex-direction: column; }
 
+.button--connect {
+  -webkit-padding-before: 1px;
+          padding-block-start: 1px; }
+
+.button__timer {
+  display: inline-block;
+  position: relative;
+  width: 30px;
+  height: 30px; }
+
+.button__timerAnimation {
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  top: 2px;
+  left: 0;
+  border: 2px solid #EEF2FA;
+  border-radius: 50%;
+  -webkit-animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+          animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: #EEF2FA transparent transparent transparent; }
+
+.button__timer .button__timerAnimation:nth-child(1) {
+  -webkit-animation-delay: -0.45s;
+          animation-delay: -0.45s; }
+
+@-webkit-keyframes loader-ring {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg); }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg); } }
+
+@keyframes loader-ring {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg); }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg); } }
+
 .form {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -431,10 +476,21 @@ body {
   margin: 0; }
 
 .form__label {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
   -webkit-margin-before: 5px;
           margin-block-start: 5px;
   font-size: 13px;
   line-height: 18px; }
+
+.form__label--big {
+  font-size: 16px;
+  line-height: 22px; }
 
 .form__input {
   width: 200px;
@@ -455,6 +511,21 @@ body {
           padding-inline-end: 10px;
   font-size: 14px;
   line-height: 17px; }
+
+.form__input--select {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  width: 100%;
+  -webkit-margin-start: 0;
+          margin-inline-start: 0;
+  -webkit-margin-end: 0;
+          margin-inline-end: 0;
+  background-color: #EEF2FA;
+  background-image: url(../img/icon-drop.svg);
+  background-repeat: no-repeat;
+  background-position: 94% 50%;
+  background-size: 15px 15px; }
 
 .list {
   text-align: left;
