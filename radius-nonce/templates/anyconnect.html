@@ -148,12 +148,14 @@
     }, 1000);
     window.setTimeout(() => { clearInterval(delayUpdate) }, delay * 1000);
     
-    window.setTimeout(() => {
+    const timeoutConnectUpdate = setTimeout(() => {
       beforeConnect.style.display = `none`;
       timeoutConnect.style.display = `block`;
     }, delay * 1000);
 
     buttonConnect.addEventListener(`click`, () => {
+      clearInterval(delayUpdate);
+      clearTimeout(timeoutConnectUpdate);
       const profile = profileSelector.value;
       console.log(`Profile chosen: ${profile}`);
       if (profile === null || profile === ``) {
