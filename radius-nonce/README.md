@@ -40,7 +40,7 @@ Save the secret and clientID values.
 authorize {
 	filter_username		# check for invalid chars in username
 	preprocess
-	checknonce		# module to authorize. see notice in according module file ${confdir}/mods-enabled/getcurlauth
+	checknonce		# module to authorize. see notice in according module file ${confdir}/mods-enabled/checknonce
 	if ( ok ) {		# module exit code
     # here we send Access-Accept if OK
     update control {
