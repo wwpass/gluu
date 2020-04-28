@@ -32,6 +32,30 @@ Save the secret and clientID values.
 
 ### FREERADIUS configuration
 
-1. Put `radius-check.sh` into `/usr/locla/bin` or other approppriate location. Make sure it's owned by root ad has permissions: 0755. If you changed listening port in webapp.conf, make sure to change the port value in this script as well.
-2. Configure your FREERADIUS according to the example in `freeradius.conf`. This setup performs all the work in the "authorize" section. "authenticate" just authenticates all the users that were approved in "authorize".
-3. Restart your FREERADIUS and point Cisco ASA to use it for authentication.
+1. Put `freeradius/radius-check.sh` into `/usr/local/bin` or other approppriate location. Make sure it's owned by root ad has permissions: 0755.
+2. Configure a client for FREERADIUS in `/etc/freeradius/3.0/clients.conf` refer to FREERADIUS documentation on how to configre clients.
+3. Configure a module that would check a nonce issued by the helper webapp. Copy `freeradius/checknonce` to `/etc/freeradius/3.0/mods-available/` and make a symlink to it from `/etc/freeradius/3.0/mods-enabled/`. If you have changed a listening port for the helper webapp, make sure to change it there as well.
+4. Confiure a site. Example site configuration is provided in `freeradius/cisco-wwpass`. If you would like to use existing or custom configuration, replace the "authorize" and "authenticate" sections with the following configutration:
+```
+authorize {
+	filter_username		# check for invalid chars in username
+	preprocess
+	checknonce		# module to authorize. see notice in according module file ${confdir}/mods-enabled/getcurlauth
+	if ( ok ) {		# module exit code
+    # here we send Access-Accept if OK
+    update control {
+      Auth-Type = Accept
+    }
+  } else { # here we send Access-Reject if module fails
+    reject
+  }
+}
+
+authenticate {
+	# No any authentication needed due to WWPass technology.
+	# If you are here (in this radius virtual host) you are authenticated already.
+}
+```
+Note that this setup performs all the work in the "authorize" section. "authenticate" just authenticates all the users that were approved in "authorize".
+
+5. Restart your FREERADIUS and point Cisco ASA to use it for authentication.
