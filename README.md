@@ -24,6 +24,8 @@ Files in `idp` directory should be deployed to `/opt/gluu-server/opt/gluu/jetty/
 
 `ticket.json` to `/opt/gluu-server/opt/wwpass_gluu/cgi`. Make the file executable.
 
+`wwpass.ca.crt` to `/opt/gluu-server/opt/wwpass_gluu/wwpass.ca.crt`.
+
 SP certificate and key to: `/opt/gluu-server/opt/wwpass_gluu/gluu_client.crt` and `/opt/gluu-server/opt/wwpass_gluu/gluu_client.key`.
 
 `wwpass.ca.crt` to `/opt/gluu-server/opt/wwpass_gluu/`
