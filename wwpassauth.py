@@ -4,24 +4,41 @@ from org.gluu.model.custom.script.type.auth import PersonAuthenticationType
 from org.gluu.oxauth.service import AuthenticationService
 from org.xdi.oxauth.service import UserService
 from org.gluu.util import StringHelper
+from org.gluu.service import MailService
 
+from com.google.common.io import BaseEncoding
+
+import jarray
 from java.util import Arrays
+from java.security import SecureRandom
 import java
+
+from time import time
 
 from wwpass import WWPassConnection
 
 
 class PersonAuthentication(PersonAuthenticationType):
+    EMAIL_NONCE_EXPIRATION = 600 # seconds
+
     def __init__(self, currentTimeMillis):
         self.currentTimeMillis = currentTimeMillis
         self.user = None
 
+    @staticmethod
+    def generateNonce(keyLength):
+        bytes = jarray.zeros(keyLength, "b")
+        secureRandom = SecureRandom()
+        secureRandom.nextBytes(bytes)
+        return BaseEncoding.base64().omitPadding().encode(bytes)
+
     def init(self, configurationAttributes):
         print "WWPASS. Initialization"
-        self.allow_password_bind = configurationAttributes.get("allow_password_bind").getValue2() if configurationAttributes.containsKey("allow_password_bind") else None
-        self.allow_passkey_bind = configurationAttributes.get("allow_passkey_bind").getValue2() if configurationAttributes.containsKey("allow_passkey_bind") else None
-        self.registration_url = configurationAttributes.get("registration_url").getValue2() if configurationAttributes.containsKey("registration_url") else None
-        self.recovery_url = configurationAttributes.get("recovery_url").getValue2() if configurationAttributes.containsKey("recovery_url") else None
+        self.allow_email_bind = configurationAttributes.get("allow_email_bind").getValue2() if configurationAttributes.containsKey("allow_email_bind") else ''
+        self.allow_password_bind = configurationAttributes.get("allow_password_bind").getValue2() if configurationAttributes.containsKey("allow_password_bind") else ''
+        self.allow_passkey_bind = configurationAttributes.get("allow_passkey_bind").getValue2() if configurationAttributes.containsKey("allow_passkey_bind") else ''
+        self.registration_url = configurationAttributes.get("registration_url").getValue2() if configurationAttributes.containsKey("registration_url") else ''
+        self.recovery_url = configurationAttributes.get("recovery_url").getValue2() if configurationAttributes.containsKey("recovery_url") else ''
         self.wwc = WWPassConnection(
             configurationAttributes.get("wwpass_key_file").getValue2(),
             configurationAttributes.get("wwpass_crt_file").getValue2())
@@ -57,13 +74,13 @@ class PersonAuthentication(PersonAuthenticationType):
         return puid
 
     def authenticate(self, configurationAttributes, requestParameters, step):
+        print("WWPass. Authenticate for step %d" %step)
         authenticationService = CdiUtil.bean(AuthenticationService)
         userService = CdiUtil.bean(UserService)
         ticket = requestParameters.get('wwp_ticket')[0] if 'wwp_ticket' in requestParameters else None
         identity = CdiUtil.bean(Identity)
         identity.setWorkingParameter("errors", "")
         if (step == 1):
-            print "WWPASS. Authenticate for step 1"
             puid = self.getPuid(ticket)
             user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid)
             if user:
@@ -77,8 +94,8 @@ class PersonAuthentication(PersonAuthenticationType):
                 return True
             return False
         elif (step == 2):
-            print "WWPASS. Authenticate for step 2"
             puid = identity.getWorkingParameter("puid")
+            email = requestParameters.get('email')[0] if 'email' in requestParameters else None
             if not puid:
                 identity.setWorkingParameter("errors", "WWPass login failed")
                 return False
@@ -105,9 +122,35 @@ class PersonAuthentication(PersonAuthenticationType):
                             return True
                     identity.setWorkingParameter("errors", "Invalid user")
                     return False
+            elif email:
+                # Binding via email
+                if not self.allow_email_bind:
+                    return False
+                email = requestParameters.get('email')[0] if 'email' in requestParameters else None
+                identity.setWorkingParameter("email", email)
+                user = userService.getUserByAttribute('mail', email)
+                if not user:
+                    print("User with email '%s' not found." % email)
+                    return True
+                nonce = self.generateNonce(33)
+                mailService = CdiUtil.bean(MailService)
+                identity.setWorkingParameter("email_nonce", nonce)
+                identity.setWorkingParameter("email_nonce_exp", str(time() + self.EMAIL_NONCE_EXPIRATION))
+                subject = "Bind your WWPass Key"
+                body = """
+To bind your WWPass Key to your account, copy and paste the following
+code into "Email code" field in the login form:
+    %s
+If you haven't requested this operation, you can safely disregard this email.
+                """
+                mailService.sendMail(email, subject, body % nonce)
+                return True
             else:
                 # Binding via username/password
                 if not self.allow_password_bind:
+                    return False
+                puid = identity.getWorkingParameter("puid")
+                if not puid:
                     return False
                 credentials = identity.getCredentials()
                 user_name = credentials.getUsername()
@@ -126,33 +169,72 @@ class PersonAuthentication(PersonAuthenticationType):
                 identity.setWorkingParameter("puid", None)
                 return True
             return False
+        elif step == 3:
+            # Verify email nonce
+            if not self.allow_email_bind:
+                identity.setWorkingParameter("email", None)
+                return False
+            puid = identity.getWorkingParameter("puid")
+            if not puid:
+                return False
+            nonce = requestParameters.get('code')[0] if 'code' in requestParameters else None
+            email = identity.getWorkingParameter("email")
+            proper_nonce = identity.getWorkingParameter("email_nonce")
+            nonce_expiration = float(identity.getWorkingParameter("email_nonce_exp") or 0.0)
+            if not nonce or not email or not proper_nonce or not nonce_expiration or nonce_expiration < time() or nonce != proper_nonce:
+                print("WWPass. Wrong email verification code", nonce,email,proper_nonce,nonce_expiration, time())
+                identity.setWorkingParameter("email", None)
+                identity.setWorkingParameter("errors", "Invalid email or verification code")
+                return False
+            user = userService.getUserByAttribute('mail', email)
+            identity.setWorkingParameter("email", None)
+            if user:
+                if authenticationService.authenticate(user.getUserId()):
+                    userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%identity.getWorkingParameter("puid"))
+                    identity.setWorkingParameter("puid", None)
+                    return True
+            print("No user")
+            return False
         else:
             return False
 
     def prepareForStep(self, configurationAttributes, requestParameters, step):
         identity = CdiUtil.bean(Identity)
         identity.setWorkingParameter("use_pin", bool(self.use_pin))
+        print("PrepareForStep %s" % step)
         if (step == 1):
-            print "WWPASS. Prepare for Step 1"
             return True
         elif (step == 2):
             identity.setWorkingParameter("registration_url", self.registration_url)
             identity.setWorkingParameter("recovery_url", self.recovery_url)
+            identity.setWorkingParameter("allow_email_bind", self.allow_email_bind)
             identity.setWorkingParameter("allow_password_bind", self.allow_password_bind)
             identity.setWorkingParameter("allow_passkey_bind", self.allow_passkey_bind)
-            print "WWPASS. Prepare for Step 2 errors:%s" % identity.getWorkingParameter("errors")
+            print("WWPASS. Errors:%s" % identity.getWorkingParameter("errors"))
+            return True
+        elif (step == 3):
             return True
         return False
 
     def getExtraParametersForStep(self, configurationAttributes, step):
-        return Arrays.asList("puid", "ticket", "use_pin", "errors")
+        if step == 3:
+            return Arrays.asList("puid", "email", "email_nonce", "email_nonce_exp")
+        return Arrays.asList("puid", "ticket", "use_pin", "errors", "email")
 
     def getCountAuthenticationSteps(self, configurationAttributes):
         identity = CdiUtil.bean(Identity)
-        return 2 if identity.isSetWorkingParameter("puid") else 1
+        if not identity.isSetWorkingParameter("puid"):
+            return 1
+        if not self.allow_email_bind:
+            return 2
+        return 3
 
     def getPageForStep(self, configurationAttributes, step):
-        return "/auth/wwpass/wwpass.xhtml" if step == 1 else "/auth/wwpass/wwpassbind.xhtml"
+        if step == 1:
+            return "/auth/wwpass/wwpass.xhtml"
+        if step == 2:
+            return "/auth/wwpass/wwpassbind.xhtml"
+        return "/auth/wwpass/checkemail.xhtml"
 
     def logout(self, configurationAttributes, requestParameters):
         return True
@@ -161,7 +243,8 @@ class PersonAuthentication(PersonAuthenticationType):
         # If user not pass current step change step to previous
         identity = CdiUtil.bean(Identity)
         puid = identity.getWorkingParameter("puid")
-        if puid and step != 1:
-            print "WWPass. Get next step. Retrying step 2"
+        email = identity.getWorkingParameter("email")
+        print ("WWPass getNextStep for step %d, email: %s" % (step, email))
+        if puid and not email and step != 1:
             return 2
         return -1

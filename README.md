@@ -46,6 +46,7 @@ Add the following parameters to the script:
  - `wwpass_key_file`: location of SP private key file: `/opt/wwpass_gluu/gluu_client.key`
  - `registration_url`: URL of registration web application, if you have one
  - `recovery_url`: URL for account recovery, if you have one
+ - `allow_email_bind`: Add this parameter with any non-empty value if you would like to enable binding WWPass PassKey to an account using a one-time code from an email
  - `allow_password_bind`: Add this parameter with any non-empty value if you would like to enable binding WWPass PassKey to an account using username and password
  - `allow_passkey_bind`: Add this parameter with any non-empty value if you would like to enable binding WWPass PassKey to an account using another PassKey
   - `use_pin`: Nonempty value will require PIN to log in
