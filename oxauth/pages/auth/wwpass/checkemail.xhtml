@@ -1,0 +1,51 @@
+<!DOCTYPE composition
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:b="http://bootsfaces.net/ui"
+    template="/WEB-INF/incl/layout/common-template.xhtml">
+    <f:metadata>
+      <f:viewAction action="#{authenticator.prepareAuthenticationForStep}"
+      if="#{sessionIdService.notSessionIdAuthenticated}" />
+
+      <f:viewParam name="login_hint" value="#{loginAction.loginHint}" />
+    </f:metadata>
+
+    <ui:define name="head">
+        <meta name="description" content="WWPass Bind page description" />
+    </ui:define>
+
+    <ui:define name="pageTitle">
+        <h:outputText value="#{msgs['login.pageTitle']}" />
+    </ui:define>
+
+    <ui:define name="content-major">
+      <h:panelGroup>
+        <div id="email_check">
+          <b:form id="checkEmailForm" name="checkEmailForm" method="post" class="form from--bind" enctype="application/x-www-form-urlencoded">
+            <input type="hidden" name="loginForm" value="checkEmailForm" />
+            <p class="text">Enter a code that was sent to #{identity.getWorkingParameter('email')}</p>
+            <label for="code" class="form__label" value="">
+              Email code
+            </label>
+						<input placeholder="JGLs2Ms1zHbBRocJo8hmjTnBH4iArnkBK0xv35Htd5k3" name="code"
+							required="true" autocomplete="off" value="" class="form__input">
+          </input>
+
+            <h:commandButton id="loginButton" styleClass="button button--action"
+                  value="Verify email" action="#{authenticator.authenticate}" />
+          </b:form>
+        </div>
+      </h:panelGroup>
+    </ui:define>
+
+    <ui:define name="content-additional">
+
+        <!-- <div class="content__element">
+        Anything you like here
+      </div> -->
+
+    </ui:define>
+
+</ui:composition>
+
