@@ -114,7 +114,7 @@ body {
   font-family: "Roboto", "Arial", sans-serif;
   color: #707070;
   font-weight: 300;
-  background-color: #EEF2FA;
+  background: #EEF2FA;
   min-width: 320px;
   min-height: 100vh;
   display: -webkit-box;
