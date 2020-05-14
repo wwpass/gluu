@@ -115,6 +115,9 @@ body {
   color: #707070;
   font-weight: 300;
   background: url("../img/mountains.jpg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   min-width: 320px;
   min-height: 100vh;
   display: -webkit-box;
