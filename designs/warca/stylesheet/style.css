@@ -114,7 +114,10 @@ body {
   font-family: "Roboto", "Arial", sans-serif;
   color: #707070;
   font-weight: 300;
-  background-color: #EEF2FA;
+  background: #EEF2FA;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   min-width: 320px;
   min-height: 100vh;
   display: -webkit-box;
@@ -170,7 +173,7 @@ body {
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
   background-image: url("../img/WARCA_Logo_RGB.svg");
-  background-size: 200px;
+  background-size: 190px;
   background-repeat: no-repeat;
   background-position: center; }
 
