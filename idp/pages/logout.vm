@@ -8,7 +8,7 @@
     </head>
 
     <body class="pageBody">
-      <iframe src='/oxauth/restv1/end_session?post_logout_redirect_uri=https%3A//$environment.getProperty("idp.scope")/idp/profile/Logout' style="height:0" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+      <iframe src='/oxauth/restv1/end_session?post_logout_redirect_uri=https%3A//$environment.getProperty("idp.scope")/idp/profile/Logout' style="position:absolute;opacity:0;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
     <main class="pageMain loginMain">
       <div class="content">
         <div class="content__element content__element--first content--center  content--narrow">
