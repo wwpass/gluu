@@ -359,6 +359,8 @@ body {
 .button--action:hover,
 .button--action:focus,
 .button--action:active {
+  color: #ffffff;
+  text-decoration: none;
   background-color: #0077ff;
   border-color: #0077ff; }
 
