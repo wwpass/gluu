@@ -157,7 +157,10 @@ If you haven't requested this operation, you can safely disregard this email.
                 user_password = credentials.getPassword()
                 logged_in = False
                 if (StringHelper.isNotEmptyString(user_name) and StringHelper.isNotEmptyString(user_password)):
-                    logged_in = authenticationService.authenticate(user_name, user_password)
+                    try:
+                        logged_in = authenticationService.authenticate(user_name, user_password)
+                    except Exception as e:
+                        print(e)
                 if not logged_in:
                     identity.setWorkingParameter("errors", "Invalid username or password")
                     return False
@@ -225,7 +228,7 @@ If you haven't requested this operation, you can safely disregard this email.
         identity = CdiUtil.bean(Identity)
         if not identity.isSetWorkingParameter("puid"):
             return 1
-        if not self.allow_email_bind:
+        if not identity.isSetWorkingParameter("email"):
             return 2
         return 3
 
