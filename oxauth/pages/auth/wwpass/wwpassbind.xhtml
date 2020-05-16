@@ -27,7 +27,6 @@
           <div class="bind_option">
             <input type="submit" value="Bind with an email" class="button button--action" />
 
-            <div class="or">or</div>
           </div>
 
           <div id="email_bind" style="display: none;">
@@ -46,14 +45,12 @@
                     value="Verify email" action="#{authenticator.authenticate}" />
             </b:form>
 
-            <div class="or">or</div>
           </div>
         </h:panelGroup>
         <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('allow_password_bind')))}">
           <div class="bind_option">
             <input type="submit" value="Bind with a password" class="button button--action" />
 
-            <div class="or">or</div>
           </div>
 
           <div id="password_bind" style="display: none;">
@@ -79,7 +76,6 @@
                     value="Bind" action="#{authenticator.authenticate}" />
             </b:form>
 
-            <div class="or">or</div>
           </div>
         </h:panelGroup>
 
@@ -87,7 +83,6 @@
           <div class="bind_option">
             <input type="submit" value="Bind with another PassKey" class="button button--action" />
 
-            <div class="or">or</div>
           </div>
 
           <div id="bind" style="display: none;">
@@ -100,11 +95,10 @@
                 <button class="button button--action">Log in with PassKey</button>
               </div>
             </div>
-            <div class="or marginTop-20">or</div>
           </div>
         </h:panelGroup>
 
-        <h:panelGroup rendered="#{identity.getWorkingParameter('registration_url') != null}">
+        <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('registration_url')))}">
           <div id="register">
             <form id="registerForm" class=""
               action="#{identity.getWorkingParameter('registration_url')}" method="POST">
@@ -116,6 +110,10 @@
               <h:inputHidden id="ticket" value="#{identity.getWorkingParameter('ticket')}" />
               <h:inputHidden id="puid" value="#{identity.getWorkingParameter('puid')}" />
             </form>
+          </div>
+        </h:panelGroup>
+        <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('recovery_url')))}">
+          <div id="recovery">
             <p class="text">You presented a new WWPass Key, not associated with any WWPass account. If you already have WWPass account, and need to replace your WWPass key, please follow <a href="#{identity.getWorkingParameter('recovery_url')}">this link</a>.</p>
           </div>
         </h:panelGroup>
