@@ -89,6 +89,3 @@ Restart apache2 after that:
 # systemctl restart apache2
 ```
 
-#### Layouts, styles, images origin repo
-You can find all originals and implementation instructions for the xhtml, images and css in this repo:
-https://gitlab.wwpass.net/Igor.Vladimirskiy/gluulego
