@@ -114,7 +114,7 @@ body {
   font-family: "Roboto", "Arial", sans-serif;
   color: #707070;
   font-weight: 300;
-  background: #EEF2FA;
+  background: url("../img/mountains.jpg");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -172,7 +172,7 @@ body {
   min-height: 100px;
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
-  background-image: url("../img/WWPass-logo.svg");
+  background-image: url("../img/Atabasca-logo.svg");
   background-size: 190px;
   background-repeat: no-repeat;
   background-position: center; }
@@ -227,7 +227,7 @@ body {
   color: #ffffff; }
 
 .heading--action {
-  color: #0077ff; }
+  color: #596C76; }
 
 .heading--center {
   text-align: center;
@@ -280,7 +280,7 @@ body {
 .text--link:hover,
 .text--link:focus,
 .text--link:active {
-  color: #0077ff; }
+  color: #596C76; }
 
 .text--light {
   font-weight: lighter; }
@@ -295,7 +295,7 @@ body {
   color: #c2c2c2; }
 
 .text--action {
-  color: #0077ff; }
+  color: #596C76; }
 
 .text--center {
   text-align: center;
@@ -320,13 +320,13 @@ body {
   min-width: 200px;
   height: 40px;
   margin: 0 auto;
-  color: #0055cc;
+  color: #323d43;
   font-size: 14px;
   line-height: 34px;
   font-weight: 400;
   text-decoration: none;
   text-align: center;
-  border: 2px solid #0055cc;
+  border: 2px solid #323d43;
   border-radius: 4px;
   -webkit-padding-start: 15px;
           padding-inline-start: 15px;
@@ -343,26 +343,26 @@ body {
 
 .button--common {
   background-color: #ffffff;
-  color: #0055cc;
-  border-color: #0055cc; }
+  color: #323d43;
+  border-color: #323d43; }
 
 .button--common:hover,
 .button--common:focus,
 .button--common:active {
-  color: #0077ff;
-  border-color: #0077ff; }
+  color: #596C76;
+  border-color: #596C76; }
 
 .button--action {
   color: #ffffff;
-  background-color: #0055cc; }
+  background-color: #323d43; }
 
 .button--action:hover,
 .button--action:focus,
 .button--action:active {
   color: #ffffff;
   text-decoration: none;
-  background-color: #0077ff;
-  border-color: #0077ff; }
+  background-color: #596C76;
+  border-color: #596C76; }
 
 .button--store {
   min-width: 125px;
@@ -374,8 +374,8 @@ body {
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
-  color: #0055cc;
-  border-color: #0055cc;
+  color: #323d43;
+  border-color: #323d43;
   -webkit-transition-property: all;
   transition-property: all;
   -webkit-transition-duration: 0.2s;
@@ -388,8 +388,8 @@ body {
 .button--store:hover,
 .button--store:focus,
 .button--store:active {
-  color: #0077ff;
-  border-color: #0077ff; }
+  color: #596C76;
+  border-color: #596C76; }
 
 .button--store-google {
   background-image: url("../img/gluu-button-android.svg");

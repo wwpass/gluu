@@ -1,0 +1,10 @@
+#
+# This module intended to execute simple curl wrapper to get authorization
+# status of RADIUS nonce attribute (%{User-Password}) if it is present in
+# WWPass RADIUS Helper App and is valid
+#
+
+exec checknonce {
+	wait = yes
+	program = "/usr/local/bin/radius-check.sh %{User-Name} %{ASA-TunnelGroupName} %{User-Password} 9061"
+}

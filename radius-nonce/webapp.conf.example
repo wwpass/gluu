@@ -6,6 +6,9 @@ debug = False
 
 #static_path = './static/wwpass/'
 
+# Text in the page title
+# title = 'WWPass'
+
 
 bind = 'localhost'
 port = 9061
@@ -19,3 +22,13 @@ wwpass_connector_link = '/downloads/WWPass%20Connector%20for%20Cisco%20AnyConnec
 
 oauth2_id = ''
 oauth2_secret = ''
+
+# VPN profiles and LDAP Group DNs that allow them
+
+profiles = {
+    'adminVPN': 'CN=VPNAdmin,OU=Security,OU=Groups,OU=Office,DC=example,DC=com',
+    'userVPN': 'inum=1a8337c6-2e31-433d-8aca-0c28ade3f945,ou=groups,o=gluu',
+    'commonVPN': '', # Available to all users
+}
+
+# default_username = 'wwpassuser'

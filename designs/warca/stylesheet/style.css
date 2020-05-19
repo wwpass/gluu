@@ -114,7 +114,10 @@ body {
   font-family: "Roboto", "Arial", sans-serif;
   color: #707070;
   font-weight: 300;
-  background-color: #EEF2FA;
+  background: #EEF2FA;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   min-width: 320px;
   min-height: 100vh;
   display: -webkit-box;
@@ -170,7 +173,7 @@ body {
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
   background-image: url("../img/WARCA_Logo_RGB.svg");
-  background-size: 250px;
+  background-size: 190px;
   background-repeat: no-repeat;
   background-position: center; }
 
@@ -224,7 +227,7 @@ body {
   color: #ffffff; }
 
 .heading--action {
-  color: #0055cc; }
+  color: #00C3FF; }
 
 .heading--center {
   text-align: center;
@@ -277,7 +280,7 @@ body {
 .text--link:hover,
 .text--link:focus,
 .text--link:active {
-  color: #0077ff; }
+  color: #00C3FF; }
 
 .text--light {
   font-weight: lighter; }
@@ -292,7 +295,7 @@ body {
   color: #c2c2c2; }
 
 .text--action {
-  color: #0055cc; }
+  color: #00C3FF; }
 
 .text--center {
   text-align: center;
@@ -317,13 +320,13 @@ body {
   min-width: 200px;
   height: 40px;
   margin: 0 auto;
-  color: #0077ff;
+  color: #0E0E2B;
   font-size: 14px;
   line-height: 34px;
   font-weight: 400;
   text-decoration: none;
   text-align: center;
-  border: 2px solid #0077ff;
+  border: 2px solid #0E0E2B;
   border-radius: 4px;
   -webkit-padding-start: 15px;
           padding-inline-start: 15px;
@@ -340,24 +343,26 @@ body {
 
 .button--common {
   background-color: #ffffff;
-  color: #0077ff;
-  border-color: #0077ff; }
+  color: #0E0E2B;
+  border-color: #0E0E2B; }
 
 .button--common:hover,
 .button--common:focus,
 .button--common:active {
-  color: #0055cc;
-  border-color: #0055cc; }
+  color: #00C3FF;
+  border-color: #00C3FF; }
 
 .button--action {
   color: #ffffff;
-  background-color: #0077ff; }
+  background-color: #0E0E2B; }
 
 .button--action:hover,
 .button--action:focus,
 .button--action:active {
-  background-color: #0055cc;
-  border-color: #0055cc; }
+  color: #ffffff;
+  text-decoration: none;
+  background-color: #00C3FF;
+  border-color: #00C3FF; }
 
 .button--store {
   min-width: 125px;
@@ -369,8 +374,8 @@ body {
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
-  color: #0077ff;
-  border-color: #0077ff;
+  color: #0E0E2B;
+  border-color: #0E0E2B;
   -webkit-transition-property: all;
   transition-property: all;
   -webkit-transition-duration: 0.2s;
@@ -383,8 +388,8 @@ body {
 .button--store:hover,
 .button--store:focus,
 .button--store:active {
-  color: #0055cc;
-  border-color: #0055cc; }
+  color: #00C3FF;
+  border-color: #00C3FF; }
 
 .button--store-google {
   background-image: url("../img/gluu-button-android.svg");
@@ -416,6 +421,51 @@ body {
       -ms-flex-direction: column;
           flex-direction: column; }
 
+.button--connect {
+  -webkit-padding-before: 1px;
+          padding-block-start: 1px; }
+
+.button__timer {
+  display: inline-block;
+  position: relative;
+  width: 30px;
+  height: 30px; }
+
+.button__timerAnimation {
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  top: 2px;
+  left: 0;
+  border: 2px solid #EEF2FA;
+  border-radius: 50%;
+  -webkit-animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+          animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: #EEF2FA transparent transparent transparent; }
+
+.button__timer .button__timerAnimation:nth-child(1) {
+  -webkit-animation-delay: -0.45s;
+          animation-delay: -0.45s; }
+
+@-webkit-keyframes loader-ring {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg); }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg); } }
+
+@keyframes loader-ring {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg); }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg); } }
+
 .form {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -431,10 +481,21 @@ body {
   margin: 0; }
 
 .form__label {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
   -webkit-margin-before: 5px;
           margin-block-start: 5px;
   font-size: 13px;
   line-height: 18px; }
+
+.form__label--big {
+  font-size: 16px;
+  line-height: 22px; }
 
 .form__input {
   width: 200px;
@@ -455,6 +516,21 @@ body {
           padding-inline-end: 10px;
   font-size: 14px;
   line-height: 17px; }
+
+.form__input--select {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  width: 100%;
+  -webkit-margin-start: 0;
+          margin-inline-start: 0;
+  -webkit-margin-end: 0;
+          margin-inline-end: 0;
+  background-color: #EEF2FA;
+  background-image: url(../img/icon-drop.svg);
+  background-repeat: no-repeat;
+  background-position: 94% 50%;
+  background-size: 15px 15px; }
 
 .list {
   text-align: left;

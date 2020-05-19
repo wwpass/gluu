@@ -19,16 +19,53 @@
 
         </div>
         <div class="hr"></div>
-        <p class="text">
-          <b>Authentication successful</b>
-        </p>
-        <a class="button button--action" href="#" id="connect">Connect VPN</a>
-        <div id="connect_text" style="display: none;">
+        <div class="before_connect">
+          {% if available_profiles %}
+            <p class="text">
+              <b>Authentication successful</b>
+            </p>
+            {% if len(available_profiles) > 1 %}
+            <div class="form">
+              <label class="form__label form__label--big" for="profile_selector">Choose VPN profile:</label>
+              <select class="form__input form__input--select" id="profile_selector" name="profile">
+                {% for profile in available_profiles %}
+                <option value="{{ profile }}">
+                  {{ profile }}
+                </option>
+                {% end %}
+              </select>
+            </div>
+            {% else %}
+            <input type="hidden" id="profile_selector" name="profile" value="{{ available_profiles[0] }}">
+            {% end %}
+          {% else %}
+            <p class="text">
+              You are not allowed to access VPN
+            </p>
+          {% end %}
+
+          <a class="button button--action button--connect" href="#" id="connect">
+            <span class="button__timer">
+              60
+              <div class="button__timerAnimation"></div>
+            </span>
+            Connect VPN
+          </a>
+        </div>
+        <div class="after_connect" style="display: none;">
           <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Connecting VPN</h2>
           <p class="text" id="connect_text">
             Cisco AnyConnect will start automatically.
           </p>
           <a class="button button--action" href="">Reconnect VPN</a>
+        </div>
+        <div class="timeout_connect" style="display: none;">
+          <p class="text">
+            Your current connection timed out.
+            <a class="button button--action" href="#" id="reload">
+              Reload page
+            </a>
+          </p>
         </div>
         <div class="hr"></div>
         <div id="mobile_advice" class="text text--sm" style="display: none;">
@@ -45,8 +82,7 @@
             If Cisco AnyConnect does not start, make sure WWPass Connector app is installed.
           </p>
           <p class="text text--sm">
-            <a class="text text--sm text--link" href="{{options.wwpass_connector_link}}">WWPass connector application for
-              Windows</a>
+            <a class="text text--sm text--link" href="{{options.wwpass_connector_link}}">WWPass connector application for&nbsp;Windows</a>
           </p>
         </div>
         <p class="text text--sm">
@@ -69,24 +105,73 @@
     window.history.replaceState({}, document.title, document.location.pathname);
 
     var isMobile = function isMobile() {
-      return navigator && 'userAgent' in navigator && navigator.userAgent.match(/iPhone|iPod|iPad|Android/i);
+      return navigator && `userAgent` in navigator && navigator.userAgent.match(/iPhone|iPod|iPad|Android/i);
     };
-    const mobile = document.querySelector(`#mobile_advice`);
-    const desktop = document.querySelector(`#desktop_advice`);
+    const content = document.querySelector(`.content`);
+    const mobile = content.querySelector(`#mobile_advice`);
+    const desktop = content.querySelector(`#desktop_advice`);
+    const beforeConnect = content.querySelector(`.before_connect`);
+    const afterConnect = content.querySelector(`.after_connect`);
+    const timeoutConnect = content.querySelector(`.timeout_connect`);
+    const buttonReload = content.querySelector(`#reload`);
+    const profileSelector = content.querySelector(`#profile_selector`);
+    const buttonConnect = content.querySelector(`#connect`);
+    const buttonTimer = content.querySelector(`.button__timer`);
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener(`DOMContentLoaded`, () => {
       if (isMobile()) {
         mobile.style.display = `block`;
       } else {
         desktop.style.display = `block`;
       }
+      const last_profile = localStorage.getItem(`last_profile`);
+      if (last_profile != null) {
+        {% for profile in available_profiles %}
+          if (last_profile == "{{ profile }}")
+            profileSelector.value = last_profile;
+        {% end %}
+      }
     });
-    document.querySelector(`#connect`).addEventListener('click', () => {
-      console.log('Redirect to: {{anyconnect_url}}');
-      window.open("{{anyconnect_url}}", "_blank");
-      document.querySelector(`#connect`).style.display = 'none';
-      document.querySelector(`#connect_text`).style.display = '';
+
+    const setButtonTimer = (seconds) => {
+      buttonTimer.innerHTML = `
+        ${seconds}
+        <div class="button__timerAnimation"></div>`;
+    };
+
+    let delay = {{ nonce_ttl }};
+    setButtonTimer(delay);
+
+    const delayUpdate = setInterval(() => {
+      delay -= 1;
+      setButtonTimer(delay);
+    }, 1000);
+    window.setTimeout(() => { clearInterval(delayUpdate) }, delay * 1000);
+    
+    const timeoutConnectUpdate = setTimeout(() => {
+      beforeConnect.style.display = `none`;
+      timeoutConnect.style.display = `block`;
+    }, delay * 1000);
+
+    buttonConnect.addEventListener(`click`, () => {
+      clearInterval(delayUpdate);
+      clearTimeout(timeoutConnectUpdate);
+      const profile = profileSelector.value;
+      console.log(`Profile chosen: ${profile}`);
+      if (profile === null || profile === ``) {
+        return false;
+      }
+      localStorage.setItem(`last_profile`, profile);
+      const anyconnect_url = `{{anyconnect_url}}&prefill_group_list=${encodeURIComponent(profile)}`
+      console.log(`Redirect to: ${anyconnect_url}`);
+      window.open(anyconnect_url, `_blank`);
+      beforeConnect.style.display = `none`;
+      afterConnect.style.display = `block`;
       return false;
+    });
+
+    buttonReload.addEventListener(`click`, () => {
+      location.reload();
     });
   </script>
 </body>

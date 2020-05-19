@@ -1,0 +1,118 @@
+server cisco-iam {
+    listen {
+        type = auth
+        ipaddr = *
+        port = 7862 	# here should be 0 (zero) for automatic selecting port from /etc/services
+        limit {
+            max_connections = 16	# self explanatory parameters
+            lifetime = 0
+            idle_timeout = 30
+        }
+    }
+
+    listen {
+        ipaddr = *
+        port = 7863
+        type = acct
+        limit {
+        }
+    }
+#
+# IPv6 configuration of listen section
+#
+
+    listen {
+        type = auth
+        ipv6addr = ::	# any.  ::1 == localhost
+        port = 7862
+        limit {
+            max_connections = 16
+            lifetime = 0
+            idle_timeout = 30
+        }
+    }
+
+    listen {
+        ipv6addr = ::
+        port = 7863
+        type = acct
+
+        limit {
+        }
+    }
+
+#
+# This is the section that checks the credentials agains WWPass RADIUS Helper App
+#
+
+    authorize {
+        filter_username		# check for invalid chars in username
+        preprocess
+        checknonce		# module to authorize. see notice in according module file ${confdir}/mods-enabled/checknonce
+        if ( ok ) {		# module exit code
+            # here we send Access-Accept if OK
+            update control {
+                Auth-Type = Accept
+            }
+        } else { # here we send Access-Reject if module fails
+            reject
+        }
+    }
+
+    authenticate {
+        # No any authentication needed due to WWPass technology.
+        # If you are here (in this radius virtual host) you are authenticated already.
+    }
+#
+# Everything below is a typical RADIUS configuration without any modifications
+#
+
+    preacct {
+        preprocess
+        acct_unique
+        suffix
+    }
+
+    accounting {
+        detail
+        exec
+        attr_filter.accounting_response
+    }
+
+    session {
+        #
+        #  See "Simultaneous Use Checking Queries" in mods-available/sql
+    }
+
+    post-auth {
+        update {
+            &reply: += &session-state:
+        }
+
+        exec
+        remove_reply_message_if_eap
+
+        Post-Auth-Type REJECT {
+            # log failed authentications in SQL, too.
+            attr_filter.access_reject
+
+            #  Remove reply message if the response contains an EAP-Message
+            remove_reply_message_if_eap
+        }
+
+        #
+        #  Filter access challenges.
+        #
+        Post-Auth-Type Challenge {
+        }
+
+    }
+
+    pre-proxy {
+        #
+        }
+
+    post-proxy {
+        #
+    }
+}
