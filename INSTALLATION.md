@@ -65,7 +65,7 @@ If you don’t have any account management infrastructure or plan to use local G
 
 It is good idea to create your own account and add it in Gluu Manager group. See: [Group management](https://gluu.org/docs/gluu-server/user-management/local-user-management/#manage-groups-in-oxtrust)
 
-![Add yourself to Gluu Manager group](./group_mgmt.png)
+![Add yourself to Gluu Manager group](./images/group_mgmt.png)
 
 ### Gluu container
 
@@ -217,13 +217,13 @@ Check that `ticket.json` is working. Go to "https://<your_gluu_host>/wwpass/tick
 
 ## Gluu server configuration
 Finally it's time to configure the Gluu server. Login as administrator and go to "Configuration -> Manage Custom scripts"
-![Person Authentication](./custom_script1.png)
+![Person Authentication](./images/custom_script1.png)
 
 Under "Person Authentication" tab, click "Add custom script configuration" at the bottom of the screen
-![Add custom script configuration](./custom_script2.png)
+![Add custom script configuration](./images/custom_script2.png)
 
 Create custom script `wwpass` with Location Type "Database".
-![Add custom script configuration](./custom_script3.png)
+![Add custom script configuration](./images/custom_script3.png)
 
 
 Add the following to “Custom Property” fields by clicking on “Add new property” button:
@@ -243,19 +243,19 @@ To enable binding WWPass PassKey to an account using username and password:
 
 To enable binding WWPass PassKey to an account using another PassKey:
  - allow_passkey_bind: True
-![Custom Properties](./custom_script4.png)
+![Custom Properties](./images/custom_script4.png)
 
 Paste with replacing the content of “wwpassauth.py” from downloaded "gluu-master" to "Script" textbox.
 
 Don't forget to enable the custom script with “Enabled” checkbox:
-![Enable script](./custom_script5.png)
+![Enable script](./images/custom_script5.png)
 
 Click “Update” button.
 
 It's also recommended to increase unauthenticated session lifetime to give users more time to bind their WWPass keys.
 
 Go to "Configuration -> JSON configuration -> OxAuth Configuration", find setting named "sessionIdUnauthenticatedUnusedLifetime" and set it to `600` or more.
-![sessionIdUnauthenticatedUnusedLifetime](./sessionIdUnauthenticatedUnusedLifetime.png)
+![sessionIdUnauthenticatedUnusedLifetime](./images/sessionIdUnauthenticatedUnusedLifetime.png)
 
 Click "Update" to save the settings.
 
@@ -270,7 +270,7 @@ Keep it open until you are sure that WWPass authentication is working, or you mi
 
 In Gluu Admin interface navigate to: "Configuration -> Manage Authentication -> Default Authentication Method"
 Set both options to "wwpass".
-![Authentication method](./auth_method.png)
+![Authentication method](./images/auth_method.png)
 
 ### Test the setup
 
@@ -288,6 +288,6 @@ Relevant Gluu log files are:
 
  Check them for any errors. Erros in `wwpass` interception script are also displayed in Gluu web interface at "Configuration -> Manage Custom scripts". If there are any errors in the script, it's name will be red and in script editing for there will be a red button "Show Error".
 
- Feel free to contact WWPass at: support@wwpass.com if you have trouble integrating WWPass in your Gluu setup
+ Feel free to contact WWPass at support@wwpass.com if you have trouble integrating WWPass in your Gluu setup
 
 
