@@ -59,7 +59,7 @@ Install Gluu Radius                                          True
 ### Importing users to Gluu
 If you have any account management infrastructure (i.e. Active Directory, OpenLDAP, eDirectory) make sure you provide a connectivity between Gluu and your LDAP directory. To import users to your Gluu server, refer to [Gluu instuction video 1](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-1/), [2](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-2/), [3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-3/).
 
-Alternatively there are instuctions on Gluu website:  [LDAP sync](https://gluu.org/docs/gluu-server/user-management/ldap-sync/), [LDAP authentication](https://gluu.org/docs/gluu-server/authn-guide/basic/)
+There are also instuctions on Gluu website for this: [LDAP sync](https://gluu.org/docs/gluu-server/user-management/ldap-sync/), [LDAP authentication](https://gluu.org/docs/gluu-server/authn-guide/basic/)
 
 If you don’t have any account management infrastructure or plan to use local Gluu accounts, please create all users and groups you need at this step before WWPass integration. Refer to: [Gluu documentation](https://gluu.org/docs/gluu-server/user-management/local-user-management/#manage-people)
 
@@ -82,7 +82,7 @@ To exit from Gluu container run `exit` command.
 If you are outside the Gluu container – the output is “none”.
 
 ### Updating Gluu to 4.1.1
-If you are running 4.x.x version of Gluu you should update to 4.1.1 (this is the latest release at the time of writing). Previus versions contain several bugs that prevent smooth integration with many SAML SPs.
+If you are running 4.x.x version of Gluu you should update to 4.1.1 (this is the latest release at the time of writing). Previous versions contain several bugs that prevent smooth integration with many SAML SPs.
 
 First download updated files:
 - https://ox.gluu.org/maven/org/gluu/oxtrust-server/4.1.1.Final/oxtrust-server-4.1.1.Final.war
@@ -114,11 +114,11 @@ $ sudo /sbin/gluu-serverd start
 
 ## Preparing the files
 
-Download the pages and scripts from Github [https://gitlab.wwpass.net/demo-projects/gluu/-/archive/master/gluu-master.tar.gz](https://gitlab.wwpass.net/demo-projects/gluu/-/archive/master/gluu-master.tar.gz):
+Download the pages and scripts from GitHub [https://github.com/wwpass/gluu/archive/master.zip](https://github.com/wwpass/gluu/archive/master.zip):
 
 Extract the files:
 ```
-$ tar xvzf gluu-master.tar.gz
+$ unzip master.zip
 ```
 
 Go to the created “gluu-master” directory (`cd gluu-master`) and copy files and directories as follows:
@@ -210,7 +210,7 @@ Enable apache module cgi and restart it:
 # systemctl restart apache2
 ```
 
-Check that `ticket.json` is working. Go to "https://<your_gluu_host>/wwpass/ticket.json". If your setup is correct you'll see something like that:
+Check that `ticket.json` is working. Go to `https://<your_gluu_host>/wwpass/ticket.json`. If your setup is correct you'll see something like that:
 ```
 {"result": true, "data": "SPNAME:07629a1963c5e4f4f339ecb852b7a0bf10a90c62@p-sp-05-50:16033", "ttl": 600, "encoding": "plain"}
 ```
@@ -272,13 +272,15 @@ In Gluu Admin interface navigate to: "Configuration -> Manage Authentication -> 
 Set both options to "wwpass".
 ![Authentication method](./images/auth_method.png)
 
+Click "Update" to save the settings.
+
 ### Test the setup
 
 Open "https://<your.gluu.url>/" in a different broswer, not the one you used to configure it.
 
 Try to sign in to your Gluu server with WWPass and bind your account using either email or username and password.
 
-If something doesn't work as expected, return to your main mrowser and revert "Configuration -> Manage Authentication -> Default Authentication Method" back to "auth_ldap_server" while you are trobleshooting the problem.
+If something doesn't work as expected, return to your main b    rowser and revert "Configuration -> Manage Authentication -> Default Authentication Method" back to "auth_ldap_server" while you are trobleshooting the problem.
 
 ## Troubleshooting
 
