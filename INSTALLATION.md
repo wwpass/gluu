@@ -18,7 +18,7 @@ a platform for user authentication, identity information, and policy decisions.
 
 Combining WWPass strong multi-factor authentication with the versatility of
 Gluu Server helps to build secure IAM solutions that can be used for single
-sign-on (SSO), customer identity and access management (CIMA), and identity
+sign-on (SSO), customer identity and access management (CIAM), and identity
 federation.
 
 ## Prerequisites
@@ -35,7 +35,7 @@ This tutorial assumes that you have the following:
 
 To obtain an application certificate and private key go to
 [wwpass.com](https://wwpass.com), click **Sign Up** to create a developer
-account and **Log In** if you already have an account. Then follow the website
+account or **Log In** if you already have an account. Then follow the website
 instructions to register your application domain and issue the application
 certificate.
 
@@ -91,7 +91,7 @@ Install Gluu Radius                                          True
 ### Import Users to Gluu
 
 If you have an account management infrastructure (i.e. Active Directory,
-OpenLDAP, eDirectory), make sure to connect them with Gluu. To import
+OpenLDAP, eDirectory), make sure to integrate them with Gluu. To import
 users to your Gluu server, refer to Gluu instruction videos
 [Part 1/3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-1/),
 [Part 2/3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-2/),
@@ -137,7 +137,7 @@ exit
 
 ### Update Gluu to 4.1.1
 
-If you use 4.x.x version of Gluu Server, you should update it to 4.1.1
+If you use 4.1.0 version of Gluu Server, you should update it to 4.1.1
 (the latest version available at the time this document was created).
 Gluu Server versions prior to 4.1.1 contain a few bugs that affect
 integrations with many SAML service providers.
@@ -267,7 +267,7 @@ chown root:gluu /opt/gluu/python/libs/wwpass.py
 Use your favorite console text editor to change Apache configuration
 
 ```console
-<vi|nano|joe|...> /opt/gluu-server/etc/apache2/sites-available/https_gluu.conf
+[vi|nano|joe|...] /opt/gluu-server/etc/apache2/sites-available/https_gluu.conf
 ```
 
 Scroll down the file until you find the last `<Location>...</Location>` tag and
@@ -299,7 +299,7 @@ systemctl restart apache2
 
 Check that `ticket.json` is working.
 Go to `https://<your_gluu_host>/wwpass/ticket.json`.
-If your setup is correct you will see the following output:
+If your setup is correct, you will see output like this:
 
 ```json
 {"result": true, "data": "SPNAME:07629a1963c5e4f4f339ecb852b7a0bf10a90c62@p-sp-05-50:16033", "ttl": 600, "encoding": "plain"}
@@ -371,7 +371,7 @@ Keep the backup session opened until you are sure that WWPass authentication
 works properly or you might lock yourself out of Gluu. If that happens, refer to:
 [Gluu FAQ](https://gluu.org/docs/gluu-server/operation/faq/#revert-an-authentication-method)
 
-In the Gluu Admin interface, navigate to: "Configuration -> Manage Authentication -> Default Authentication Method"
+In the Gluu Admin interface, navigate to `Configuration -> Manage Authentication -> Default Authentication Method`.
 Set both options to "wwpass".
 ![Authentication method](./images/auth_method.png)
 
