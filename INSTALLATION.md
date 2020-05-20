@@ -1,31 +1,62 @@
-# Enabling WWPass authentication in Gluu
+# Setting Up WWPass Authentication in Gluu Server
 
 ## Introduction
 
-[WWPass technology](https://wwpass.com/) provides easy and secure way to authenticate users in any environment. It replaces traditional approach with usernames and passwords with more secure easy-to-use authentication mechanisms, based on strong cryptography using hardware tokens or smartphone apps. [Gluu](https://gluu.org) is an access management system that combines LDAP, OpenID Connect, RADIUS and other technologies to allow single sign on with multiple applications. Combining strong WWPass authentication with versatility of Gluu allows one to have various application to authenticate users securely with standard protocols like OpenID Connect.
+[[WWPass](https://wwpass.com/) replaces the traditional username and password
+login with a more advanced multi-factor authentication solution. WWPass employs
+strong cryptography and robust combination of authentication factors to deliver
+a secure and user-friendly authentication experience. WWPass authentication
+starts with a smartphone app or a hardware token as the first authentication
+factor. Then additional authentication factors such as PIN or biometrics can be
+added to verify the user identity further.
+
+[Gluu Server](https://gluu.org/docs/gluu-server/4.1/) is a container
+distribution of free open source software (FOSS) for identity and access
+management (IAM). Gluu Server combines SAML 2.0, LDAP, OpenID Connect,
+and other authentication and authorization protocol implementations to create
+a platform for user authentication, identity information, and policy decisions.
+
+Combining WWPass strong multi-factor authentication with the versatility of
+Gluu Server helps to build secure IAM solutions that can be used for single
+sign-on (SSO), customer identity and access management (CIMA), and identity
+federation.
 
 ## Prerequisites
 
-This tutorial assumes that you have:
-- Running Gluu server v. 4.1.1 on Ubuntu server
-- Administative account on that server
-- A client certificate and a private key file for WWPass
-- WWPass Key as a moblie app or hardware token
-- Basic knowledge of HTML and CSS
+This tutorial assumes that you have the following:
 
-### Obtaining client certificate and private key file from WWPass
-To obtain certificate and private key visit [wwpass.com](https://wwpass.com) if you already have WWPass account, sign in with WWPass Application and follow the instructions there. If you are not WWPass user follow the instriction to Sign Up on [wwpass.com](https://wwpass.com)
+- Gluu Server 4.1.1 installed on Ubuntu Server 18.04 or 16.04;
+- An administrative account on this Ubuntu Server;
+- An application certificate and private key for WWPass authentication;
+- WWPass Key app or hardware token;
+- Basic knowledge of HTML and CSS;
 
-### Installing Gluu
-To install Gluu server follow the [https://gluu.org/docs/gluu-server/installation-guide/install-ubuntu/](instructions at Gluu website):
+### Obtain Application Certificate and Private Key From WWPass
 
-It's very difficult to change Gluu FQDN after the setup, so decide on it before proceeding with the setup.
+To obtain an application certificate and private key go to
+[wwpass.com](https://wwpass.com), click *)Sign Up** to create a developer
+account and **Log In** if you already have an account. Then follow the website
+instructions to register your application domain and issue the application
+certificate.
 
-Please write down carefully (in [PassHub](https://passhub.net) or similar secure password manager) the password for LDAP Admin and oxTrust Admin Password (in case they are different)
+### Install Gluu
 
-If you forget or loose them, it would be very hard to recover them.
+To install Gluu Server follow the
+[https://gluu.org/docs/gluu-server/installation-guide/install-ubuntu/]
+instructions on the Gluu website.
 
-During gluu setup process (.\setup.py), please select “Yes” to install
+Note, it is very difficult to change the Gluu domain name (FQDN) after setup.
+There is no configuration option for this in Gluu. Changing the domain name
+manually in configuration files causes lots of side effects. Be sure to choose
+the domain name before setting up Gluu Server.
+
+Do not forget to save the LDAP and oxTrust admin passwords. It is extremely
+difficult to reset these passwords in case they are lost or forgotten.
+We suggest using [PassHub](https://passhub.net) to store these passwords.
+
+When setting up Gluu with  ```setup.py```,  select "**Yes**" when asked
+to install the following components:
+
 - memcached
 - oxAuth OAuth2
 - oxTrust Admin UI
@@ -33,9 +64,11 @@ During gluu setup process (.\setup.py), please select “Yes” to install
 - Shibboleth SAML IDP
 - Gluu Radius
 
-Review the configuration settings and press “Yes”
-Configuration settings should look like:
-```
+Review the configuration settings and press "**Yes**".
+
+Configuration settings should look like this:
+
+```console
 hostname                                          iam.example.com
 orgName                                               Example inc.
 os                                                         ubuntu
@@ -56,138 +89,191 @@ Install Oxd                                                 False
 Install Gluu Radius                                          True
 ```
 
-### Importing users to Gluu
-If you have any account management infrastructure (i.e. Active Directory, OpenLDAP, eDirectory) make sure you provide a connectivity between Gluu and your LDAP directory. To import users to your Gluu server, refer to [Gluu instuction video 1](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-1/), [2](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-2/), [3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-3/).
+### Import Users to Gluu
 
-There are also instuctions on Gluu website for this: [LDAP sync](https://gluu.org/docs/gluu-server/user-management/ldap-sync/), [LDAP authentication](https://gluu.org/docs/gluu-server/authn-guide/basic/)
+If you have an account management infrastructure (i.e. Active Directory,
+OpenLDAP, eDirectory), make sure to connect them with Gluu. To import
+users to your Gluu server, refer to Gluu instruction videos
+[Part 1/3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-1/),
+[Part 2/3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-2/),
+[Part 3/3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-3/).
 
-If you don’t have any account management infrastructure or plan to use local Gluu accounts, please create all users and groups you need at this step before WWPass integration. Refer to: [Gluu documentation](https://gluu.org/docs/gluu-server/user-management/local-user-management/#manage-people)
+There are also instructions on the Gluu website for
+[LDAP sync](https://gluu.org/docs/gluu-server/user-management/ldap-sync/),
+and [LDAP Authentication](https://gluu.org/docs/gluu-server/authn-guide/basic/).
 
-It is good idea to create your own account and add it in Gluu Manager group. See: [Group management](https://gluu.org/docs/gluu-server/user-management/local-user-management/#manage-groups-in-oxtrust)
+If you don’t have any account management infrastructure or plan to use local
+Gluu accounts, create users and groups before proceeding with WWPass integration.
+Refer to: [Gluu documentation](https://gluu.org/docs/gluu-server/user-management/local-user-management/#manage-people).
+
+We suggest creating a separate account in Gluu for each Gluu administrator.
+Create a new user and add it to the Gluu Manager group.
+See [Group management](https://gluu.org/docs/gluu-server/user-management/local-user-management/#manage-groups-in-oxtrust).
 
 ![Add yourself to Gluu Manager group](./images/group_mgmt.png)
 
-### Gluu container
+### Gluu Container
 
-Gluu server runs in a container located at `/opt/gluu-server/`. To enter a shell inside the container use
-`sudo gluu-serverd login`
+Gluu Server runs in an isolated container located at `/opt/gluu-server/`.
+To start a shell in the container use
 
-To check if you are inside container run
-`systemd-detect-virt -c`
+```console
+sudo gluu-serverd login
+```
 
-If you are inside Gluu container the out put will be “systemd-nspawn”
+To check if you are inside a container, run
 
-To exit from Gluu container run `exit` command.
+```console
+systemd-detect-virt -c
+```
 
-If you are outside the Gluu container – the output is “none”.
+If you are inside a Gluu container, the command prints `systemd-nspawn`.
+Otherwise, it prints `none`.
 
-### Updating Gluu to 4.1.1
-If you are running 4.x.x version of Gluu you should update to 4.1.1 (this is the latest release at the time of writing). Previous versions contain several bugs that prevent smooth integration with many SAML SPs.
+To exit a Gluu container use
+
+```console
+exit
+```
+
+### Update Gluu to 4.1.1
+
+If you use 4.x.x version of Gluu Server, you should update it to 4.1.1
+(the latest version available at the time this document was created).
+Gluu Server versions prior to 4.1.1 contain a few bugs that affect
+integrations with many SAML service providers.
 
 First download updated files:
+
 - https://ox.gluu.org/maven/org/gluu/oxtrust-server/4.1.1.Final/oxtrust-server-4.1.1.Final.war
 - https://ox.gluu.org/maven/org/gluu/oxshibbolethIdp/4.1.1.Final/oxshibbolethIdp-4.1.1.Final.war
 - https://ox.gluu.org/maven/org/gluu/oxauth-server/4.1.1.Final/oxauth-server-4.1.1.Final.war
 
-Stop services:
+Stop Gluu services:
 
-```
-$ sudo /sbin/gluu-serverd stop
-```
-
-Backup current application files and install new files:
-```
-$ sudo mv /opt/gluu-server/opt/gluu/jetty/identity/webapps/identity.war identity.war-4.1.0
-$ sudo cp oxtrust-server-4.1.1.Final.war /opt/gluu-server/opt/gluu/jetty/identity/webapps/identity.war
-
-$ sudo mv /opt/gluu-server/opt/gluu/jetty/idp/webapps/idp.war idp.war-4.1.0
-$ sudo cp oxshibbolethIdp-4.1.1.Final.war /opt/gluu-server/opt/gluu/jetty/idp/webapps/idp.war
-
-$ sudo mv /opt/gluu-server/opt/gluu/jetty/oxauth/webapps/oxauth.war oxauth.war-4.1.0
-$ sudo cp oxauth-server-4.1.1.Final.war /opt/gluu-server/opt/gluu/jetty/oxauth/webapps/oxauth.war
+```console
+sudo /sbin/gluu-serverd stop
 ```
 
-Start gluu-server:
-```
-$ sudo /sbin/gluu-serverd start
+Backup existing Gluu Server files and install new files:
+
+```console
+sudo mv /opt/gluu-server/opt/gluu/jetty/identity/webapps/identity.war identity.war-4.1.0
+sudo cp oxtrust-server-4.1.1.Final.war /opt/gluu-server/opt/gluu/jetty/identity/webapps/identity.war
+
+sudo mv /opt/gluu-server/opt/gluu/jetty/idp/webapps/idp.war idp.war-4.1.0
+sudo cp oxshibbolethIdp-4.1.1.Final.war /opt/gluu-server/opt/gluu/jetty/idp/webapps/idp.war
+
+sudo mv /opt/gluu-server/opt/gluu/jetty/oxauth/webapps/oxauth.war oxauth.war-4.1.0
+sudo cp oxauth-server-4.1.1.Final.war /opt/gluu-server/opt/gluu/jetty/oxauth/webapps/oxauth.war
 ```
 
-## Preparing the files
+Start Gluu Server:
 
-Download the pages and scripts from GitHub [https://github.com/wwpass/gluu/archive/master.zip](https://github.com/wwpass/gluu/archive/master.zip):
-
-Extract the files:
-```
-$ unzip master.zip
+```console
+sudo /sbin/gluu-serverd start
 ```
 
-Go to the created “gluu-master” directory (`cd gluu-master`) and copy files and directories as follows:
-NB. Some of the files are relative symlinks. When deploying make sure to copy directory contents, but not the symlinks themselves.
-NB. All files and directories operations should be done from outside the container
+## Prepare WWPass Integration Files
 
-Files in `oxauth` directory should be deployed to: "/opt/gluu-server/opt/gluu/jetty/oxauth/custom/".
-```
-$ sudo cp -rL oxauth/* /opt/gluu-server/opt/gluu/jetty/oxauth/custom/
-```
+Download WWPass integration files from GitHub
+[https://github.com/wwpass/gluu/archive/master.zip](https://github.com/wwpass/gluu/archive/master.zip).
 
-Files in `oxtrust` directory should be deployed to: "/opt/gluu-server/opt/gluu/jetty/identity/custom/".
-```
-$ sudo cp -rL oxtrust/* /opt/gluu-server/opt/gluu/jetty/identity/custom/
+Extract the files
+
+```console
+unzip master.zip
 ```
 
-Files in `idp` directory should be deployed to: "/opt/gluu-server/opt/gluu/jetty/idp/custom/".
-```
-$ sudo cp -rL idp/* /opt/gluu-server/opt/gluu/jetty/idp/custom/.
+Go to the “gluu-master” directory (`cd gluu-master`) and copy files
+and directories as follows:
+
+Note, some of the files are relative symlinks. When deploying make sure to copy
+directory content, not the symlinks themselves. Also make sure all file and
+directory operations are performed outside the Gluu container.
+
+Files in `oxauth` directory should be deployed to
+`/opt/gluu-server/opt/gluu/jetty/oxauth/custom/`
+
+```console
+sudo cp -rL oxauth/* /opt/gluu-server/opt/gluu/jetty/oxauth/custom/
 ```
 
-Copy `wwpass.py` to: "/opt/gluu-server/opt/gluu/python/libs/".
-```
-$ sudo cp wwpass.py /opt/gluu-server/opt/gluu/python/libs/
+Files in `oxtrust` directory should be deployed to
+`/opt/gluu-server/opt/gluu/jetty/identity/custom/`
+
+```console
+sudo cp -rL oxtrust/* /opt/gluu-server/opt/gluu/jetty/identity/custom/
 ```
 
-Copy `ticket.json` to: "/opt/gluu-server/opt/wwpass_gluu/cgi".
-```
-$ sudo mkdir -p /opt/gluu-server/opt/wwpass_gluu/cgi
-$ sudo cp ticket.json /opt/gluu-server/opt/wwpass_gluu/cgi
+Files in `idp` directory should be deployed to
+`/opt/gluu-server/opt/gluu/jetty/idp/custom/`
+
+```console
+sudo cp -rL idp/* /opt/gluu-server/opt/gluu/jetty/idp/custom/
 ```
 
-Make sure this file is executable:
-```
-$ sudo chmod 755 /opt/gluu-server/opt/wwpass_gluu/cgi/ticket.json
+Copy `wwpass.py` to `/opt/gluu-server/opt/gluu/python/libs/`
+
+```console
+sudo cp wwpass.py /opt/gluu-server/opt/gluu/python/libs/
 ```
 
-WWPass client certificate and private key (from prerequisites) to "/opt/gluu-server/opt/wwpass_gluu/" assuming certificate and key are in your home directory:
-```
-$ sudo cp ~/gluu_client.crt /opt/gluu-server/opt/wwpass_gluu/gluu_client.crt
-$ sudo cp ~/gluu_client.key /opt/gluu-server/opt/wwpass_gluu/gluu_client.key
+Copy `ticket.json` to `/opt/gluu-server/opt/wwpass_gluu/cgi`
+
+``` console
+sudo mkdir -p /opt/gluu-server/opt/wwpass_gluu/cgi
+sudo cp ticket.json /opt/gluu-server/opt/wwpass_gluu/cgi
 ```
 
-WWPass CA certificate `wwpass.ca.crt` to "/opt/gluu-server/opt/wwpass_gluu/":
-```
-$ sudo cp wwpass.ca.crt /opt/gluu-server/opt/wwpass_gluu
+Make sure `ticket.json` is executable
+
+```console
+sudo chmod 755 /opt/gluu-server/opt/wwpass_gluu/cgi/ticket.json
 ```
 
-Login to gluu container with:
-```
-$ sudo /sbin/gluu-serverd login
+Copy WWPass application certificate and private key to
+`/opt/gluu-server/opt/wwpass_gluu/`
+(assuming the certificate and key files are in your home directory)
+
+```console
+sudo cp ~/gluu_client.crt /opt/gluu-server/opt/wwpass_gluu/gluu_client.crt
+sudo cp ~/gluu_client.key /opt/gluu-server/opt/wwpass_gluu/gluu_client.key
 ```
 
-Change ownership of files and directories just copied:
-```
-    chown -R jetty:jetty /opt/jetty
-    chown root:gluu /opt/gluu/python/libs/wwpass.py
+Replace `gluu_client.crt` and `gluu_client.key` with the names of your certificate and key files.
+
+Copy WWPass CA certificate `wwpass.ca.crt` to `/opt/gluu-server/opt/wwpass_gluu/`
+
+```console
+sudo cp wwpass.ca.crt /opt/gluu-server/opt/wwpass_gluu
 ```
 
-Now all the files are ready, we have to make the server use them!
+Log in to the Gluu Server container
 
-## Configuring the apache server
-Inside the Gluu container use your favorite console editor to change Apache configuration:
-```
-# <vi|nano|joe|...> /opt/gluu-server/etc/apache2/sites-available/https_gluu.conf
+```console
+sudo /sbin/gluu-serverd login
 ```
 
-Scroll down the file until you find the last `<Location>...</Location>` tag, insert the following snippet after it:
+Change ownership of files and directories just copied
+
+```console
+chown -R jetty:jetty /opt/jetty
+chown root:gluu /opt/gluu/python/libs/wwpass.py
 ```
+
+## Configure Apache
+
+Use your favorite console text editor to change Apache configuration
+
+```console
+<vi|nano|joe|...> /opt/gluu-server/etc/apache2/sites-available/https_gluu.conf
+```
+
+Scroll down the file until you find the last `<Location>...</Location>` tag and
+insert the following snippet below:
+
+```apache
 <Location /wwpass>
   require all granted
 </Location>
@@ -204,92 +290,116 @@ ScriptAlias "/wwpass/" "/opt/wwpass_gluu/cgi/"
 
 Save the file and exit the editor.
 
-Enable apache module cgi and restart it:
-```
-# a2enmod cgi
-# systemctl restart apache2
+Enable mod_cgi and restart apache:
+
+```console
+a2enmod cgi
+systemctl restart apache2
 ```
 
-Check that `ticket.json` is working. Go to `https://<your_gluu_host>/wwpass/ticket.json`. If your setup is correct you'll see something like that:
-```
+Check that `ticket.json` is working.
+Go to `https://<your_gluu_host>/wwpass/ticket.json`.
+If your setup is correct you will see the following output:
+
+```json
 {"result": true, "data": "SPNAME:07629a1963c5e4f4f339ecb852b7a0bf10a90c62@p-sp-05-50:16033", "ttl": 600, "encoding": "plain"}
 ```
 
-## Gluu server configuration
-Finally it's time to configure the Gluu server. Login as administrator and go to "Configuration -> Manage Custom scripts"
+## Configure Gluu Server
+
+Log in as administrator and go to "Configuration -> Manage Custom scripts".
 ![Person Authentication](./images/custom_script1.png)
 
-Under "Person Authentication" tab, click "Add custom script configuration" at the bottom of the screen
+In `Person Authentication` tab, click `Add custom script configuration` at the bottom of the page
 ![Add custom script configuration](./images/custom_script2.png)
 
-Create custom script `wwpass` with Location Type "Database".
+Create custom script `wwpass` with Location Type set to `Database`.
 ![Add custom script configuration](./images/custom_script3.png)
 
+Add the following to `Custom Property` fields by clicking on `Add new property` button:
 
-Add the following to “Custom Property” fields by clicking on “Add new property” button:
- - wwpass_crt_file: /opt/wwpass_gluu/gluu_client.crt
- - wwpass_key_file: /opt/wwpass_gluu/gluu_client.key
- - registration_url: URL of registration web application, if you have one. Do not add this property otherwise.
- - recovery_url: URL for account recovery, if you have one. Do not add this property otherwise.
+- wwpass_crt_file: /opt/wwpass_gluu/gluu_client.crt
+- wwpass_key_file: /opt/wwpass_gluu/gluu_client.key
+- registration_url: URL of the registration web application, if you have one. Do not add this property otherwise
+- recovery_url: URL for account recovery, if you have one. Do not add this property otherwise.
 
-To require PIN to log in:
- - use_pin : True
+To require PIN or biometrics during login, add:
 
-To enable binding WWPass PassKey to an account using email (Gluu sever should be configured to send emails, "Configuration -> Organization configuration -> SMTP Server Configuration" in Gluu Admin web interface):
- - allow_email_bind: True
+- use_pin: True
 
-To enable binding WWPass PassKey to an account using username and password:
- - allow_password_bind: True
+To enable binding WWPass keys with email, add:
 
-To enable binding WWPass PassKey to an account using another PassKey:
- - allow_passkey_bind: True
+- allow_email_bind: True
+
+Note, your Gluu server should be able to send emails, see
+`Configuration -> Organization configuration -> SMTP Server Configuration`.
+
+To enable binding WWPass keys with existing usernames and passwords, add:
+
+- allow_password_bind: True
+
+To enable binding WWPass keys with another WWPass key, add:
+
+- allow_passkey_bind: True
+
 ![Custom Properties](./images/custom_script4.png)
 
-Paste with replacing the content of “wwpassauth.py” from downloaded "gluu-master" to "Script" textbox.
+Replace the content of `Script` textbox with the content of `wwpassauth.py` from `gluu-master`
 
-Don't forget to enable the custom script with “Enabled” checkbox:
+Set `Enabled` checkbox to enable the custom script:
 ![Enable script](./images/custom_script5.png)
 
-Click “Update” button.
+Click the `Update` button.
 
-It's also recommended to increase unauthenticated session lifetime to give users more time to bind their WWPass keys.
+It's also recommended to increase the unauthenticated session lifetime to give
+users more time to bind their WWPass keys.
 
-Go to "Configuration -> JSON configuration -> OxAuth Configuration", find setting named "sessionIdUnauthenticatedUnusedLifetime" and set it to `600` or more.
+Go to `Configuration -> JSON configuration -> OxAuth Configuration`, find
+`sessionIdUnauthenticatedUnusedLifetime` setting and set it to `600` or more.
 ![sessionIdUnauthenticatedUnusedLifetime](./images/sessionIdUnauthenticatedUnusedLifetime.png)
 
-Click "Update" to save the settings.
+Click `Update` to save settings.
 
-### Setup authentication method
+### Set up Authentication Method
 
-Before switching to WWPass authentication make sure you have administrator session in a different browser (not in a different window, but in a completely different browser).
+Before switching to WWPass authentication, make sure you have opened
+an administrator session in a different browser (not in a different window,
+but a completely different browser). Do not close that browser window and
+reload it from time to time to make sure your session does not expire.
 
-Don't close this browser window and open it sometimes to make sure that your session is not expired.
-
-Keep it open until you are sure that WWPass authentication is working, or you might lock yourself out of Gluu. If that happens, refer to:
+Keep the backup session opened until you are sure that WWPass authentication
+works properly or you might lock yourself out of Gluu. If that happens, refer to:
 [Gluu FAQ](https://gluu.org/docs/gluu-server/operation/faq/#revert-an-authentication-method)
 
-In Gluu Admin interface navigate to: "Configuration -> Manage Authentication -> Default Authentication Method"
+In the Gluu Admin interface, navigate to: "Configuration -> Manage Authentication -> Default Authentication Method"
 Set both options to "wwpass".
 ![Authentication method](./images/auth_method.png)
 
-Click "Update" to save the settings.
+Click `Update` to save settings.
 
-### Test the setup
+### Test Your Setup
 
-Open "https://<your.gluu.url>/" in a different broswer, not the one you used to configure it.
+Open "https://<your.gluu.url>/" in a different browser (not the one you used to
+configure Gluu).
 
-Try to sign in to your Gluu server with WWPass and bind your account using either email or username and password.
+Try to sign in to your Gluu server with WWPass and bind your key using either
+email or username and password.
 
-If something doesn't work as expected, return to your main b    rowser and revert "Configuration -> Manage Authentication -> Default Authentication Method" back to "auth_ldap_server" while you are trobleshooting the problem.
+If something does not work as expected, return to your main browser and revert
+`Configuration -> Manage Authentication -> Default Authentication Method` back
+to `auth_ldap_server` while you troubleshoot the problem.
 
 ## Troubleshooting
 
 Relevant Gluu log files are:
- - `/opt/gluu-server/opt/gluu/jetty/oxauth/logs/oxauth.log`
- - `/opt/gluu-server/opt/gluu/jetty/oxauth/logs/oxauth_script.log`
 
- Check them for any errors. Erros in `wwpass` interception script are also displayed in Gluu web interface at "Configuration -> Manage Custom scripts". If there are any errors in the script, it's name will be red and in script editing for there will be a red button "Show Error".
+- `/opt/gluu-server/opt/gluu/jetty/oxauth/logs/oxauth.log`
+- `/opt/gluu-server/opt/gluu/jetty/oxauth/logs/oxauth_script.log`
 
- Feel free to contact WWPass at support@wwpass.com if you have trouble integrating WWPass in your Gluu setup
+Check the files above for any errors. Errors in `wwpass` interception script
+are also displayed in Gluu web interface at 'Configuration -> Manage Custom
+scripts'. If there are any errors in the script, its name will be in red and
+the script editor will display the red button named "Show Error".
 
-
+Feel free to contact WWPass at support@wwpass.com if you have troubles
+integrating WWPass in your Gluu Server.
