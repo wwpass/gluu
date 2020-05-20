@@ -2,7 +2,7 @@
 
 ## Introduction
 
-[[WWPass](https://wwpass.com/) replaces the traditional username and password
+[WWPass](https://wwpass.com/) replaces the traditional username and password
 login with a more advanced multi-factor authentication solution. WWPass employs
 strong cryptography and robust combination of authentication factors to deliver
 a secure and user-friendly authentication experience. WWPass authentication
@@ -34,7 +34,7 @@ This tutorial assumes that you have the following:
 ### Obtain Application Certificate and Private Key From WWPass
 
 To obtain an application certificate and private key go to
-[wwpass.com](https://wwpass.com), click *)Sign Up** to create a developer
+[wwpass.com](https://wwpass.com), click **Sign Up** to create a developer
 account and **Log In** if you already have an account. Then follow the website
 instructions to register your application domain and issue the application
 certificate.
@@ -42,8 +42,7 @@ certificate.
 ### Install Gluu
 
 To install Gluu Server follow the
-[https://gluu.org/docs/gluu-server/installation-guide/install-ubuntu/]
-instructions on the Gluu website.
+[instructions on the Gluu website](https://gluu.org/docs/gluu-server/installation-guide/install-ubuntu/).
 
 Note, it is very difficult to change the Gluu domain name (FQDN) after setup.
 There is no configuration option for this in Gluu. Changing the domain name
@@ -64,7 +63,7 @@ to install the following components:
 - Shibboleth SAML IDP
 - Gluu Radius
 
-Review the configuration settings and press "**Yes**".
+Review the configuration settings and type "**Yes**".
 
 Configuration settings should look like this:
 
@@ -241,7 +240,8 @@ sudo cp ~/gluu_client.crt /opt/gluu-server/opt/wwpass_gluu/gluu_client.crt
 sudo cp ~/gluu_client.key /opt/gluu-server/opt/wwpass_gluu/gluu_client.key
 ```
 
-Replace `gluu_client.crt` and `gluu_client.key` with the names of your certificate and key files.
+Replace `~/gluu_client.crt` and `~/gluu_client.key` with the names and location
+of your certificate and key files.
 
 Copy WWPass CA certificate `wwpass.ca.crt` to `/opt/gluu-server/opt/wwpass_gluu/`
 
@@ -271,7 +271,7 @@ Use your favorite console text editor to change Apache configuration
 ```
 
 Scroll down the file until you find the last `<Location>...</Location>` tag and
-insert the following snippet below:
+insert the following snippet below it:
 
 ```apache
 <Location /wwpass>
