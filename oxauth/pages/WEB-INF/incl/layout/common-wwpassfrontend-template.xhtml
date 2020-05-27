@@ -22,6 +22,19 @@
             });
         };
     </script>
+    <script>
+/* <![CDATA[ */
+      const isMobile = () => navigator && (
+        ('userAgent' in navigator && navigator.userAgent.match(/iPhone|iPod|iPad|Android/i))
+        || (navigator.maxTouchPoints > 1)
+      ) && !window.MSStream;
+      
+      if (isMobile()) {
+        const qrcode = document.querySelector(`#qrcode`);
+        qrcode.classList.add(`qrcode--tap`);
+      }
+/* ]]> */
+    </script>
   </ui:define>
 
 </ui:composition>
