@@ -563,6 +563,51 @@ body {
   -webkit-margin-after: 7px;
           margin-block-end: 7px; }
 
+.qrcode--tap {
+  position: relative; }
+
+.qrcode--tap::before {
+  position: absolute;
+  display: block;
+  content: '';
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  background-color: rgba(0, 0, 0, 0.65);
+  background-image: url("../img/qrcode_tap_hand.svg");
+  -webkit-animation-name: qrtapAnimation;
+          animation-name: qrtapAnimation;
+  -webkit-animation-timing-function: ease;
+          animation-timing-function: ease;
+  -webkit-animation-iteration-count: infinite;
+          animation-iteration-count: infinite;
+  -webkit-animation-duration: 2.5s;
+          animation-duration: 2.5s;
+  -webkit-animation-direction: alternate;
+          animation-direction: alternate; }
+
+@-webkit-keyframes qrtapAnimation {
+  0%,
+  55% {
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0); }
+  80%,
+  to {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.6); } }
+
+@keyframes qrtapAnimation {
+  0%,
+  55% {
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0); }
+  80%,
+  to {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.6); } }
+
 .pageFooter__nav {
   list-style: none;
   -webkit-padding-start: 0;
