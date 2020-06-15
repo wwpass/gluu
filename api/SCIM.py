@@ -31,10 +31,7 @@ class SCIMClient():
         self.rpt: Optional[str] = None
         self.pct: Optional[str] = None
 
-    async def renewAuthorization(self, response: tornado.httpclient.HTTPResponse) -> None:
-        auth_header  = dict((k.strip(), v.strip()) for k,v in (h.split('=', 1) for h in response.headers["WWW-Authenticate"].split(',')))
-        ticket = auth_header['ticket']
-        assert self.gluu_api_base.startswith(f'https://{auth_header["host_id"]}')
+    def authRequest(self, ticket: str) -> Dict[str,Any]:
         request = {
                 "grant_type": 'urn:ietf:params:oauth:grant-type:uma-ticket',
                 "ticket": ticket,
@@ -51,15 +48,35 @@ class SCIMClient():
         }
         if self.pct:
             request['pct'] = self.pct
-        body = urllib.parse.urlencode(request)
+        return request
+
+    async def renewAuthorization(self, response: tornado.httpclient.HTTPResponse) -> None:
+        auth_header  = dict((k.strip(), v.strip()) for k,v in (h.split('=', 1) for h in response.headers["WWW-Authenticate"].split(',')))
+        ticket = auth_header['ticket']
+        assert self.gluu_api_base.startswith(f'https://{auth_header["host_id"]}')
+        body = urllib.parse.urlencode(self.authRequest(ticket))
         response = await self.http().fetch(
             self.token_url,
             method="POST",
             headers={
                 "Content-Type": "application/x-www-form-urlencoded",
             },
-            body=body
+            body=body,
+            raise_error=False
         )
+        if response.code == 401: ## Probably PCT has expired
+            self.pct = None
+            body = urllib.parse.urlencode(self.authRequest(ticket))
+            response = await self.http().fetch(
+                self.token_url,
+                method="POST",
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body=body
+            )
+        elif response.code != 200:
+            raise tornado.httpclient.HTTPError(response.code, response.body.decode('UTF-8'), response)
         response_body = json.loads(response.body)
         self.rpt = response_body['access_token']
         self.pct = response_body['pct']
