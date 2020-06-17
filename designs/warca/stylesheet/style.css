@@ -586,7 +586,8 @@ body {
   -webkit-animation-duration: 2.5s;
           animation-duration: 2.5s;
   -webkit-animation-direction: alternate;
-          animation-direction: alternate; }
+          animation-direction: alternate;
+  pointer-events: none; }
 
 @-webkit-keyframes qrtapAnimation {
   0%,
