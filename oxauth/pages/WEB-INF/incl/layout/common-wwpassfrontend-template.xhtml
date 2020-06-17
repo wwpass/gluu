@@ -17,6 +17,7 @@
             WWPass.authInit({
                 qrcode:'#qrcode',
                 passkey:'#passkey',
+                forcePasskeyButton: false,
                 callbackURL: window.location.protocol + '//' + window.location.hostname + '#{request.contextPath}/postlogin.htm',
                 ticketURL: '/wwpass/ticket.json?' + (#{identity.getWorkingParameter('use_pin')}?'p=1':'')
             });
