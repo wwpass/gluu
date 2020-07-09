@@ -1,5 +1,6 @@
 from org.gluu.service.cdi.util import CdiUtil
 from org.gluu.oxauth.security import Identity
+from org.gluu.oxauth.model.configuration import AppConfiguration
 from org.gluu.model.custom.script.type.auth import PersonAuthenticationType
 from org.gluu.oxauth.service import AuthenticationService
 from org.xdi.oxauth.service import UserService
@@ -203,6 +204,7 @@ If you haven't requested this operation, you can safely disregard this email.
 
     def prepareForStep(self, configurationAttributes, requestParameters, step):
         identity = CdiUtil.bean(Identity)
+        identity.setWorkingParameter("sessionLifetime",CdiUtil.bean(AppConfiguration).getSessionIdUnauthenticatedUnusedLifetime())
         identity.setWorkingParameter("use_pin", bool(self.use_pin))
         print("PrepareForStep %s" % step)
         if (step == 1):
@@ -221,8 +223,8 @@ If you haven't requested this operation, you can safely disregard this email.
 
     def getExtraParametersForStep(self, configurationAttributes, step):
         if step == 3:
-            return Arrays.asList("puid", "email", "email_nonce", "email_nonce_exp")
-        return Arrays.asList("puid", "ticket", "use_pin", "errors", "email")
+            return Arrays.asList("puid", "email", "email_nonce", "email_nonce_exp", "sessionLifetime")
+        return Arrays.asList("puid", "ticket", "use_pin", "errors", "email", "sessionLifetime")
 
     def getCountAuthenticationSteps(self, configurationAttributes):
         identity = CdiUtil.bean(Identity)
