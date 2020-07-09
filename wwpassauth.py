@@ -5,6 +5,9 @@ from org.gluu.oxauth.service import AuthenticationService
 from org.xdi.oxauth.service import UserService
 from org.gluu.util import StringHelper
 from org.gluu.service import MailService
+from org.gluu.oxauth.model.configuration import AppConfiguration
+
+from javax.faces.context import FacesContext
 
 from com.google.common.io import BaseEncoding
 
@@ -44,6 +47,7 @@ class PersonAuthentication(PersonAuthenticationType):
             configurationAttributes.get("wwpass_crt_file").getValue2())
         self.use_pin = configurationAttributes.get("use_pin").getValue2() if configurationAttributes.containsKey("use_pin") else None
         self.auth_type = ('p',) if self.use_pin else ()
+        self.sso_cookie_domain = configurationAttributes.get("sso_cookie_domain").getValue2() if configurationAttributes.containsKey("sso_cookie_domain") else None
         print "WWPASS. Initialized successfully"
         return True
 
@@ -73,6 +77,139 @@ class PersonAuthentication(PersonAuthenticationType):
         assert puid #Just in case it's empty or None
         return puid
 
+    def authenticateWithWWPass(self, userService, authenticationService, identity, ticket):
+        puid = self.getPuid(ticket)
+        user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid)
+        if user:
+            if authenticationService.authenticate(user.getUserId()):
+                return True
+        else:
+            if self.registration_url and self.tryFirstLogin(puid, userService, authenticationService):
+                return True
+            identity.setWorkingParameter("puid", puid)
+            identity.setWorkingParameter("ticket", ticket)
+            return True
+        return False
+
+    def bindWWPass(self, requestParameters, userService, authenticationService, identity, ticket):
+        puid = identity.getWorkingParameter("puid")
+        email = requestParameters.get('email')[0] if 'email' in requestParameters else None
+        if not puid:
+            identity.setWorkingParameter("errors", "WWPass login failed")
+            return False
+        if ticket:
+            puid_new = self.getPuid(ticket)
+            # Always use the latest PUID when retrying step 2
+            identity.setWorkingParameter("puid", puid_new)
+            if puid == puid_new:
+                # Registering via external web service
+                if not self.registration_url:
+                    return False
+                if self.tryFirstLogin(puid, userService, authenticationService):
+                    identity.setWorkingParameter("puid", None)
+                    return True
+            else:
+                if not self.allow_passkey_bind:
+                    return False
+                # Binding with existing PassKey
+                user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid_new)
+                if user:
+                    if authenticationService.authenticate(user.getUserId()):
+                        userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%puid)
+                        identity.setWorkingParameter("puid", None)
+                        return True
+                identity.setWorkingParameter("errors", "Invalid user")
+                return False
+        elif email:
+            # Binding via email
+            if not self.allow_email_bind:
+                return False
+            email = requestParameters.get('email')[0] if 'email' in requestParameters else None
+            identity.setWorkingParameter("email", email)
+            user = userService.getUserByAttribute('mail', email)
+            if not user:
+                print("User with email '%s' not found." % email)
+                return True
+            nonce = self.generateNonce(33)
+            mailService = CdiUtil.bean(MailService)
+            identity.setWorkingParameter("email_nonce", nonce)
+            identity.setWorkingParameter("email_nonce_exp", str(time() + self.EMAIL_NONCE_EXPIRATION))
+            subject = "Bind your WWPass Key"
+            body = """
+To bind your WWPass Key to your account, copy and paste the following
+code into "Email code" field in the login form:
+%s
+If you haven't requested this operation, you can safely disregard this email.
+            """
+            mailService.sendMail(email, subject, body % nonce)
+            return True
+        else:
+            # Binding via username/password
+            if not self.allow_password_bind:
+                return False
+            puid = identity.getWorkingParameter("puid")
+            if not puid:
+                return False
+            credentials = identity.getCredentials()
+            user_name = credentials.getUsername()
+            user_password = credentials.getPassword()
+            logged_in = False
+            if (StringHelper.isNotEmptyString(user_name) and StringHelper.isNotEmptyString(user_password)):
+                try:
+                    logged_in = authenticationService.authenticate(user_name, user_password)
+                except Exception as e:
+                    print(e)
+            if not logged_in:
+                identity.setWorkingParameter("errors", "Invalid username or password")
+                return False
+            user = authenticationService.getAuthenticatedUser()
+            if not user:
+                identity.setWorkingParameter("errors", "Invalid user")
+                return False
+            userService.addUserAttribute(user_name, "oxExternalUid", "wwpass:%s"%puid)
+            identity.setWorkingParameter("puid", None)
+            return True
+        return False
+
+    def checkEmailNonce(self, requestParameters, userService, authenticationService, identity, ticket):
+        # Verify email nonce
+        if not self.allow_email_bind:
+            identity.setWorkingParameter("email", None)
+            return False
+        puid = identity.getWorkingParameter("puid")
+        if not puid:
+            return False
+        nonce = requestParameters.get('code')[0] if 'code' in requestParameters else None
+        email = identity.getWorkingParameter("email")
+        proper_nonce = identity.getWorkingParameter("email_nonce")
+        nonce_expiration = float(identity.getWorkingParameter("email_nonce_exp") or 0.0)
+        if not nonce or not email or not proper_nonce or not nonce_expiration or nonce_expiration < time() or nonce != proper_nonce:
+            print("WWPass. Wrong email verification code", nonce,email,proper_nonce,nonce_expiration, time())
+            identity.setWorkingParameter("email", None)
+            identity.setWorkingParameter("errors", "Invalid email or verification code")
+            return False
+        user = userService.getUserByAttribute('mail', email)
+        identity.setWorkingParameter("email", None)
+        if user:
+            if authenticationService.authenticate(user.getUserId()):
+                userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%identity.getWorkingParameter("puid"))
+                identity.setWorkingParameter("puid", None)
+                return True
+        print("No user")
+        return False
+
+
+    def doAuthenticate(self, step, requestParameters, userService, authenticationService, identity, ticket):
+        if step == 1:
+            return self.authenticateWithWWPass(userService, authenticationService, identity, ticket)
+        elif step == 2:
+            return self.bindWWPass(requestParameters, userService, authenticationService, identity, ticket)
+        elif step == 3:
+            return self.checkEmailNonce(requestParameters, userService, authenticationService, identity, ticket)
+        else:
+            return False
+
+
     def authenticate(self, configurationAttributes, requestParameters, step):
         print("WWPass. Authenticate for step %d" %step)
         authenticationService = CdiUtil.bean(AuthenticationService)
@@ -80,126 +217,11 @@ class PersonAuthentication(PersonAuthenticationType):
         ticket = requestParameters.get('wwp_ticket')[0] if 'wwp_ticket' in requestParameters else None
         identity = CdiUtil.bean(Identity)
         identity.setWorkingParameter("errors", "")
-        if (step == 1):
-            puid = self.getPuid(ticket)
-            user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid)
-            if user:
-                if authenticationService.authenticate(user.getUserId()):
-                    return True
-            else:
-                if self.registration_url and self.tryFirstLogin(puid, userService, authenticationService):
-                    return True
-                identity.setWorkingParameter("puid", puid)
-                identity.setWorkingParameter("ticket", ticket)
-                return True
-            return False
-        elif (step == 2):
-            puid = identity.getWorkingParameter("puid")
-            email = requestParameters.get('email')[0] if 'email' in requestParameters else None
-            if not puid:
-                identity.setWorkingParameter("errors", "WWPass login failed")
-                return False
-            if ticket:
-                puid_new = self.getPuid(ticket)
-                # Always use the latest PUID when retrying step 2
-                identity.setWorkingParameter("puid", puid_new)
-                if puid == puid_new:
-                    # Registering via external web service
-                    if not self.registration_url:
-                        return False
-                    if self.tryFirstLogin(puid, userService, authenticationService):
-                        identity.setWorkingParameter("puid", None)
-                        return True
-                else:
-                    if not self.allow_passkey_bind:
-                        return False
-                    # Binding with existing PassKey
-                    user = userService.getUserByAttribute("oxExternalUid", "wwpass:%s"%puid_new)
-                    if user:
-                        if authenticationService.authenticate(user.getUserId()):
-                            userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%puid)
-                            identity.setWorkingParameter("puid", None)
-                            return True
-                    identity.setWorkingParameter("errors", "Invalid user")
-                    return False
-            elif email:
-                # Binding via email
-                if not self.allow_email_bind:
-                    return False
-                email = requestParameters.get('email')[0] if 'email' in requestParameters else None
-                identity.setWorkingParameter("email", email)
-                user = userService.getUserByAttribute('mail', email)
-                if not user:
-                    print("User with email '%s' not found." % email)
-                    return True
-                nonce = self.generateNonce(33)
-                mailService = CdiUtil.bean(MailService)
-                identity.setWorkingParameter("email_nonce", nonce)
-                identity.setWorkingParameter("email_nonce_exp", str(time() + self.EMAIL_NONCE_EXPIRATION))
-                subject = "Bind your WWPass Key"
-                body = """
-To bind your WWPass Key to your account, copy and paste the following
-code into "Email code" field in the login form:
-    %s
-If you haven't requested this operation, you can safely disregard this email.
-                """
-                mailService.sendMail(email, subject, body % nonce)
-                return True
-            else:
-                # Binding via username/password
-                if not self.allow_password_bind:
-                    return False
-                puid = identity.getWorkingParameter("puid")
-                if not puid:
-                    return False
-                credentials = identity.getCredentials()
-                user_name = credentials.getUsername()
-                user_password = credentials.getPassword()
-                logged_in = False
-                if (StringHelper.isNotEmptyString(user_name) and StringHelper.isNotEmptyString(user_password)):
-                    try:
-                        logged_in = authenticationService.authenticate(user_name, user_password)
-                    except Exception as e:
-                        print(e)
-                if not logged_in:
-                    identity.setWorkingParameter("errors", "Invalid username or password")
-                    return False
-                user = authenticationService.getAuthenticatedUser()
-                if not user:
-                    identity.setWorkingParameter("errors", "Invalid user")
-                    return False
-                userService.addUserAttribute(user_name, "oxExternalUid", "wwpass:%s"%puid)
-                identity.setWorkingParameter("puid", None)
-                return True
-            return False
-        elif step == 3:
-            # Verify email nonce
-            if not self.allow_email_bind:
-                identity.setWorkingParameter("email", None)
-                return False
-            puid = identity.getWorkingParameter("puid")
-            if not puid:
-                return False
-            nonce = requestParameters.get('code')[0] if 'code' in requestParameters else None
-            email = identity.getWorkingParameter("email")
-            proper_nonce = identity.getWorkingParameter("email_nonce")
-            nonce_expiration = float(identity.getWorkingParameter("email_nonce_exp") or 0.0)
-            if not nonce or not email or not proper_nonce or not nonce_expiration or nonce_expiration < time() or nonce != proper_nonce:
-                print("WWPass. Wrong email verification code", nonce,email,proper_nonce,nonce_expiration, time())
-                identity.setWorkingParameter("email", None)
-                identity.setWorkingParameter("errors", "Invalid email or verification code")
-                return False
-            user = userService.getUserByAttribute('mail', email)
-            identity.setWorkingParameter("email", None)
-            if user:
-                if authenticationService.authenticate(user.getUserId()):
-                    userService.addUserAttribute(user.getUserId(), "oxExternalUid", "wwpass:%s"%identity.getWorkingParameter("puid"))
-                    identity.setWorkingParameter("puid", None)
-                    return True
-            print("No user")
-            return False
-        else:
-            return False
+        result = self.doAuthenticate(step, requestParameters, userService, authenticationService, identity, ticket)
+        if result and self.sso_cookie_domain:
+            externalContext = CdiUtil.bean(FacesContext).getExternalContext()
+            externalContext.addResponseCookie("sso_magic", "auth", {"path":"/", "domain":self.sso_cookie_domain, "maxAge": CdiUtil.bean(AppConfiguration).getSessionIdUnusedLifetime()})
+        return result
 
     def prepareForStep(self, configurationAttributes, requestParameters, step):
         identity = CdiUtil.bean(Identity)
@@ -240,6 +262,9 @@ If you haven't requested this operation, you can safely disregard this email.
         return "/auth/wwpass/checkemail.xhtml"
 
     def logout(self, configurationAttributes, requestParameters):
+        print("WWPASS. Logout")
+        externalContext = CdiUtil.bean(FacesContext).getExternalContext()
+        externalContext.addResponseCookie("sso_magic", "auth", {"path":"/", "domain":self.sso_cookie_domain, "maxAge": 0})
         return True
 
     def getNextStep(self, configurationAttributes, requestParameters, step):
