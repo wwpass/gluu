@@ -1,0 +1,39 @@
+logging = 'info'
+debug = False
+
+#user = 'www-data'
+#group = 'www-data'
+
+#static_path = './static/wwpass/'
+
+# Text in the page title
+# title = 'WWPass'
+
+
+bind = 'localhost'
+port = 9070
+base_url = 'https://vpn.example.com/'
+
+gluu_url= 'https://gluu.example.com/'
+
+oauth2_id = ''
+oauth2_secret = ''
+
+# Services and LDAP Group DNs that allow access to them
+
+## 'url', 'logo' and 'title' are mandatory
+## 'groups' is optional list of groups. Membership in any of the groups is enough to show the service.
+
+services = [
+    { # Available to all users
+        'url': 'https://example.com/owa',
+        'title': "EMail",
+        'logo': '/static/mail.svg'
+    },
+    {
+        'url':'https://connect.example.org/aynconnect/',
+        'title': "VPN",
+        'logo': '/static/vpn.svg',
+        'groups': ['inum=1a8337c6-2e31-433d-8aca-0c28ade3f945,ou=groups,o=gluu']
+    }
+]
