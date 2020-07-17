@@ -12,6 +12,8 @@ from javax.faces.context import FacesContext
 
 from com.google.common.io import BaseEncoding
 
+from urlparse import urlparse
+
 import jarray
 from java.util import Arrays
 from java.security import SecureRandom
@@ -48,9 +50,12 @@ class PersonAuthentication(PersonAuthenticationType):
             configurationAttributes.get("wwpass_crt_file").getValue2())
         self.use_pin = configurationAttributes.get("use_pin").getValue2() if configurationAttributes.containsKey("use_pin") else None
         self.auth_type = ('p',) if self.use_pin else ()
-        sso_cookie_domain = configurationAttributes.get("sso_cookie_domains").getValue2() if configurationAttributes.containsKey("sso_cookie_domain") else None
-        if sso_cookie_domain:
-            self.sso_cookie_domains = self.sso_cookie_domain.split(' ')
+        self.sso_cookie_domain = '.'.join(urlparse(CdiUtil.bean(AppConfiguration).getBaseEndpoint()).netloc.split('.')[-2:])
+        sso_cookie_tags = configurationAttributes.get("sso_cookie_tags").getValue2() if configurationAttributes.containsKey("sso_cookie_tags") else None
+        if sso_cookie_tags:
+            self.sso_cookie_tags = sso_cookie_tags.split(' ')
+        else:
+            self.sso_cookie_tags = []
         print "WWPASS. Initialized successfully"
         return True
 
@@ -221,10 +226,10 @@ If you haven't requested this operation, you can safely disregard this email.
         identity = CdiUtil.bean(Identity)
         identity.setWorkingParameter("errors", "")
         result = self.doAuthenticate(step, requestParameters, userService, authenticationService, identity, ticket)
-        if result and self.sso_cookie_domains:
+        if result and self.sso_cookie_tags:
             externalContext = CdiUtil.bean(FacesContext).getExternalContext()
-            for domain in self.sso_cookie_domains:
-                externalContext.addResponseCookie("sso_magic", "auth", {"path":"/", "domain":domain, "maxAge": CdiUtil.bean(AppConfiguration).getSessionIdUnusedLifetime()})
+            for tag in self.sso_cookie_tags:
+                externalContext.addResponseCookie("sso_magic_%s"%tag, "auth", {"path":"/", "domain":self.sso_cookie_domain, "maxAge": CdiUtil.bean(AppConfiguration).getSessionIdUnusedLifetime()})
         return result
 
     def prepareForStep(self, configurationAttributes, requestParameters, step):
@@ -268,8 +273,9 @@ If you haven't requested this operation, you can safely disregard this email.
 
     def logout(self, configurationAttributes, requestParameters):
         print("WWPASS. Logout")
-        externalContext = CdiUtil.bean(FacesContext).getExternalContext()
-        externalContext.addResponseCookie("sso_magic", "auth", {"path":"/", "domain":self.sso_cookie_domain, "maxAge": 0})
+        # This is not called. Probably bug in Gluu
+        # externalContext = CdiUtil.bean(FacesContext).getExternalContext()
+        # externalContext.addResponseCookie("sso_magic", "auth", {"path":"/", "domain":self.sso_cookie_domain, "maxAge": 0})
         return True
 
     def getNextStep(self, configurationAttributes, requestParameters, step):
