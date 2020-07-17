@@ -17,6 +17,7 @@ To install additional components refer to their README.md files:
  - [Cisco VPN with WWPass](radius-nonce/README.md)
  - [Discourse SSO](discourse-sso/README.md)
  - [API for user manipulation](api/README.md)
+ - [Automatic SSO](AUTO_SSO.md)
 
 ## Contacts
 
