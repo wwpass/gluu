@@ -47,7 +47,9 @@ class PersonAuthentication(PersonAuthenticationType):
             configurationAttributes.get("wwpass_crt_file").getValue2())
         self.use_pin = configurationAttributes.get("use_pin").getValue2() if configurationAttributes.containsKey("use_pin") else None
         self.auth_type = ('p',) if self.use_pin else ()
-        self.sso_cookie_domain = configurationAttributes.get("sso_cookie_domain").getValue2() if configurationAttributes.containsKey("sso_cookie_domain") else None
+        sso_cookie_domain = configurationAttributes.get("sso_cookie_domains").getValue2() if configurationAttributes.containsKey("sso_cookie_domain") else None
+        if sso_cookie_domain:
+            self.sso_cookie_domains = self.sso_cookie_domain.split(' ')
         print "WWPASS. Initialized successfully"
         return True
 
@@ -218,9 +220,10 @@ If you haven't requested this operation, you can safely disregard this email.
         identity = CdiUtil.bean(Identity)
         identity.setWorkingParameter("errors", "")
         result = self.doAuthenticate(step, requestParameters, userService, authenticationService, identity, ticket)
-        if result and self.sso_cookie_domain:
+        if result and self.sso_cookie_domains:
             externalContext = CdiUtil.bean(FacesContext).getExternalContext()
-            externalContext.addResponseCookie("sso_magic", "auth", {"path":"/", "domain":self.sso_cookie_domain, "maxAge": CdiUtil.bean(AppConfiguration).getSessionIdUnusedLifetime()})
+            for domain in self.sso_cookie_domains:
+                externalContext.addResponseCookie("sso_magic", "auth", {"path":"/", "domain":domain, "maxAge": CdiUtil.bean(AppConfiguration).getSessionIdUnusedLifetime()})
         return result
 
     def prepareForStep(self, configurationAttributes, requestParameters, step):
