@@ -54,6 +54,7 @@ class HomeHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-metho
             logging.debug(f"Got userinfo: {user}")
             self.render('home.html',
                 ticket='redirect',
+                userinfo = user,
                 services = self.get_available_services(user))
         else:
             self.authorize_redirect(
