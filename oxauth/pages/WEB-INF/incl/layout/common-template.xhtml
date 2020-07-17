@@ -56,7 +56,14 @@
     </footer>
 
     <ui:insert name="wwpass-frontend" />
-
+    <script type="text/javascript">
+      // 90% of session lifetime
+      const timeout = #{identity.getWorkingParameter('sessionLifetime')} * 900;
+    /* <![CDATA[ */
+      // Prevent session timeout while the tab is open
+      setInterval(() => {fetch(window.location.href)}, timeout);
+    /* ]]> */
+    </script>
   </h:body>
 
 </f:view>
