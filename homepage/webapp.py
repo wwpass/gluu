@@ -63,7 +63,7 @@ class HomeHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-metho
                 response_type='code')
 
 def define_options() -> None:
-    define("config",default="/etc/wwpass/oauth2.conf")
+    define("config",default="/etc/wwpass/gluu_homepage.conf")
     define("template_path",default=os.path.normpath(os.path.join(base_path, 'templates')))
     define("static_path",default=os.path.realpath(os.path.join(base_path, './static/wwpass')))
 

@@ -6,8 +6,6 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="shortcut icon" href={{ static_url("img/favicon.ico") }} type="image/x-icon">
   <link rel="stylesheet" href={{ static_url("stylesheet/style.min.css") }}>
-  <link rel="preload" href={{ static_url("img/gluu-button-ios-action.svg") }} as="image">
-  <link rel="preload" href={{ static_url("img/gluu-button-android-action.svg") }} as="image">
   <title>{{ options.title }}</title>
 </head>
 
@@ -20,13 +18,13 @@
         </li>
         <li class="mainNav__item mainNav__item--flex-column mainNav__item--user">
           <div class="user">
-            <img class="user__icon" src="img/icon-2-dev-avatar.svg" alt="" class="user__icon">
+            <img class="user__icon" src="static/img/icon-2-dev-avatar.svg" alt="" class="user__icon">
             <div class="user__name">{{ userinfo['name'] }}</div>
             <div class="user__popup">
               <div class="user__popup-header">
                 <div class="user__popup-name">{{ userinfo['name'] }}</div>
                 <div class="user__popup-close">
-                  <img class="img img--close" src="img/icon-close.svg" alt="" style="width: 20px; height: 20px;">
+                  <img class="img img--close" src="static/img/icon-close.svg" alt="" style="width: 20px; height: 20px;">
                 </div>
               </div>
               <a href="#TODO" class="user__popup-profile">Profile</a>
