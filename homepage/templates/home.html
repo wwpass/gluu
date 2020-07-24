@@ -12,20 +12,45 @@
 </head>
 
 <body class="pageBody">
-  <main class="pageMain">
-    <div class="content">
-      <div class="content__element content__element--first content--center  content--narrow">
-        <div class="logo"></div>
-        <div>{{ userinfo['name'] }}</div>
-        <div class="hr"></div>
-        {% for service in services %}
-            <div style="float: left;">
-                <a href="{{ service['url'] }}">
-                    {{ service['title'] }}<br/>
-                    <img src="{{ service['logo'] }}">
-                </a>
+  <header class="pageHeader">
+    <nav class="mainNav">
+      <ul class="mainNav__list">
+        <li class="mainNav__item">
+          <div class="logo"></div>
+        </li>
+        <li class="mainNav__item mainNav__item--flex-column mainNav__item--user">
+          <div class="user">
+            <img class="user__icon" src="img/icon-2-dev-avatar.svg" alt="" class="user__icon">
+            <div class="user__name">{{ userinfo['name'] }}</div>
+            <div class="user__popup">
+              <div class="user__popup-header">
+                <div class="user__popup-name">{{ userinfo['name'] }}</div>
+                <div class="user__popup-close">X</div>
+              </div>
+              <a href="#TODO" class="user__popup-profile">Profile</a>
+              <a href="#TODO" class="user__popup-logout">Log Out</a>
             </div>
+          </div>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="pageMain">
+    <div class="apps">
+      <ul class="apps__list">
+        {% for service in services %}
+        <li class="apps__item">
+          <a href="{{ service['url'] }}" class="apps__link">
+            <div class="apps__icon">
+              <img class="img img--apps" src="{{ service['logo'] }}" alt="">
+            </div>
+            <div class="hr apps__hr"></div>
+            <p class="text apps__tag">{{ service['title'] }}</p>
+          </a>
+        </li>
         {% end %}
+      </ul>
     </div>
   </main>
   <footer class="pageFooter">
