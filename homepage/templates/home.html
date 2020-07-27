@@ -18,13 +18,13 @@
         </li>
         <li class="mainNav__item mainNav__item--flex-column mainNav__item--user">
           <div class="user">
-            <img class="user__icon" src="static/img/icon-2-dev-avatar.svg" alt="" class="user__icon">
+            <img class="user__icon" src="{{ static_url("img/icon-2-dev-avatar.svg") }}" alt="" class="user__icon">
             <div class="user__name">{{ userinfo['name'] }}</div>
             <div class="user__popup">
               <div class="user__popup-header">
                 <div class="user__popup-name">{{ userinfo['name'] }}</div>
                 <div class="user__popup-close">
-                  <img class="img img--close" src="static/img/icon-close.svg" alt="" style="width: 20px; height: 20px;">
+                  <img class="img img--close" src="{{ static_url("img/icon-close.svg") }}" alt="" style="width: 20px; height: 20px;">
                 </div>
               </div>
               <a href="#TODO" class="user__popup-profile">Profile</a>
@@ -62,6 +62,7 @@
   <script type="text/javascript">
     window.history.replaceState({}, document.title, document.location.pathname);
   </script>
+  <script src="{{ static_url("js/user/user.js") }}"></script>
 </body>
 
 </html>
