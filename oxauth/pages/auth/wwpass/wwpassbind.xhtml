@@ -25,8 +25,7 @@
         </div>
         <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('allow_email_bind')))}">
           <div class="bind_option">
-            <input type="submit" value="Bind with an email" class="button button--action" />
-
+            <input type="submit" value="Bind with an email" class="button button--action button--bind"/>
           </div>
 
           <div id="email_bind" style="display: none;">
@@ -49,8 +48,7 @@
         </h:panelGroup>
         <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('allow_password_bind')))}">
           <div class="bind_option">
-            <input type="submit" value="Bind with a password" class="button button--action" />
-
+            <input type="submit" value="Bind with a password" class="button button--action button--bind"/>
           </div>
 
           <div id="password_bind" style="display: none;">
@@ -81,8 +79,7 @@
 
         <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('allow_passkey_bind')))}">
           <div class="bind_option">
-            <input type="submit" value="Bind with another PassKey" class="button button--action" />
-
+            <input type="submit" value="Bind with another PassKey" class="button button--action button--bind"/>
           </div>
 
           <div id="bind" style="display: none;">
@@ -99,7 +96,7 @@
         </h:panelGroup>
 
         <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('registration_url')))}">
-          <div id="register">
+          <div id="register" class="bind_option">
             <form id="registerForm" class=""
               action="#{identity.getWorkingParameter('registration_url')}" method="POST">
               <div class="">
@@ -112,9 +109,9 @@
             </form>
           </div>
         </h:panelGroup>
-        <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('recovery_url')))}">
+        <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('recovery_url')))}" class="bind_option">
           <div id="recovery">
-            <p class="text">You presented a new WWPass Key, not associated with any account. If you already have an account, and need to replace your WWPass key, please follow <a href="#{identity.getWorkingParameter('recovery_url')}">this link</a>.</p>
+            <p class="text">You presented a new WWPass Key, not associated with any account. If you already have an account, and need to replace your WWPass Key, please follow <a href="#{identity.getWorkingParameter('recovery_url')}">this link</a>.</p>
           </div>
         </h:panelGroup>
       </ui:define>
@@ -131,12 +128,17 @@
           const binds = document.querySelectorAll(`.bind_option`);
             if (binds) {
               binds.forEach((bind) => {
-              bind.addEventListener(`click`, (evt) => {
-                evt.target.parentElement.nextElementSibling.style.display='';
+            const buttons = bind.getElementsByClassName('button--bind');
+            if (buttons.length > 0) {
+              buttons[0].addEventListener(`click`, (evt) => {
+                evt.preventDefault();
+                evt.target.parentElement.nextElementSibling.style.display = null;
                 binds.forEach((bind) => {
                   bind.style.display = `none`;
                 });
               });
+              buttons[0].removeAttribute("disabled");
+            }
             });
           }
       </ui:define>
