@@ -55,7 +55,9 @@ class HomeHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-metho
             self.render('home.html',
                 ticket='redirect',
                 userinfo = user,
-                services = self.get_available_services(user))
+                services = self.get_available_services(user),
+                gluu_url = self.settings["options"].gluu_url,
+                base_url = self.settings["options"].base_url)
         else:
             self.authorize_redirect(
                 redirect_uri=f'{self.settings["options"].base_url}/',
