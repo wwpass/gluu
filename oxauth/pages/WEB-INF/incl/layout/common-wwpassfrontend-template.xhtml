@@ -25,13 +25,13 @@
     </script>
     <script>
     /* <![CDATA[ */
-      const isMobile = () => navigator && (
+      function isMobile() { return navigator && (
         ('userAgent' in navigator && navigator.userAgent.match(/iPhone|iPod|iPad|Android/i))
         || (navigator.maxTouchPoints > 1 && !navigator.userAgent.match(/Windows/i))
-      ) && !window.MSStream;
+      ) && !window.MSStream;};
 
       if (isMobile()) {
-        const qrcode = document.querySelector(`#qrcode`);
+        var qrcode = document.querySelector(`#qrcode`);
         qrcode.classList.add(`qrcode--tap`);
       }
     /* ]]> */

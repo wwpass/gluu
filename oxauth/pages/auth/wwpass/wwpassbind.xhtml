@@ -125,22 +125,26 @@
       </ui:define>
 
       <ui:define name="bind-function">
-          const binds = document.querySelectorAll(`.bind_option`);
-            if (binds) {
-              binds.forEach((bind) => {
-            const buttons = bind.getElementsByClassName('button--bind');
+      /* <![CDATA[ */
+        var binds = document.querySelectorAll(`.bind_option`);
+        if (binds) {
+          for (i=0 ; i < binds.length ; i++) {
+            var bind = binds[i];
+            var buttons = bind.getElementsByClassName('button--bind');
             if (buttons.length > 0) {
-              buttons[0].addEventListener(`click`, (evt) => {
+              buttons[0].addEventListener(`click`, function(evt) {
                 evt.preventDefault();
                 evt.target.parentElement.nextElementSibling.style.display = null;
-                binds.forEach((bind) => {
+                for (j=0 ; j < binds.length ; j++) {
+                  var bind = binds[j];
                   bind.style.display = `none`;
-                });
+                }
               });
               buttons[0].removeAttribute("disabled");
             }
-            });
           }
+        }
+      /* ]]> */
       </ui:define>
 
   </ui:composition>
