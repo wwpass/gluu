@@ -473,7 +473,12 @@ body {
   -webkit-margin-before: 10px;
           margin-block-start: 10px;
   -webkit-margin-after: 10px;
-          margin-block-end: 10px; }
+          margin-block-end: 10px;
+  -webkit-margin-start: auto;
+          margin-inline-start: auto;
+  -webkit-margin-end: auto;
+          margin-inline-end: auto;
+  width: 100%; }
 
 .profile {
   width: 100%;
