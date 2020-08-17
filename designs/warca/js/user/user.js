@@ -1,4 +1,4 @@
-(function () {
+var application = (function (exports) {
   'use strict';
 
   const userBlock = document.querySelector(`.user`);
@@ -7,7 +7,7 @@
   const overlay = document.querySelector(`.overlay`);
 
   const closePopupOnClick = (evt) => {
-    evt.preventDefault();
+    // evt.preventDefault();
     userPopup.style.display = `none`;
     overlay.style.display = `none`;
     setTimeout(() => {
@@ -27,6 +27,10 @@
     overlay.addEventListener(`click`, closePopupOnClick);
   }
 
-}());
+  exports.closePopupOnClick = closePopupOnClick;
+
+  return exports;
+
+}({}));
 
 //# sourceMappingURL=user.js.map

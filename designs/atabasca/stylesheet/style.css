@@ -296,7 +296,8 @@ body {
           padding-block-start: 15px;
   -webkit-padding-after: 15px;
           padding-block-end: 15px;
-  color: #323d43; }
+  color: #323d43;
+  text-decoration: underline; }
 
 .pageMain {
   min-height: calc(100vh - 50px); }
@@ -425,6 +426,63 @@ body {
   -webkit-margin-after: 0;
           margin-block-end: 0; }
 
+.application {
+  -webkit-margin-before: 10px;
+          margin-block-start: 10px;
+  -webkit-margin-after: 10px;
+          margin-block-end: 10px; }
+
+.profile {
+  width: 100%;
+  max-width: 260px;
+  -webkit-margin-start: auto;
+          margin-inline-start: auto;
+  -webkit-margin-end: auto;
+          margin-inline-end: auto;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  background-color: #ffffff;
+  -webkit-box-shadow: 0px 10px 30px #0000000D;
+          box-shadow: 0px 10px 30px #0000000D;
+  border-radius: 15px;
+  -webkit-padding-start: 20px;
+          padding-inline-start: 20px;
+  -webkit-padding-end: 20px;
+          padding-inline-end: 20px;
+  -webkit-padding-before: 20px;
+          padding-block-start: 20px;
+  -webkit-padding-after: 20px;
+          padding-block-end: 20px; }
+
+.profile__field {
+  -webkit-padding-before: 5px;
+          padding-block-start: 5px;
+  -webkit-padding-after: 15px;
+          padding-block-end: 15px; }
+
+.profile__name {
+  font-weight: bold; }
+
+.profile__content--long {
+  word-break: break-all; }
+
+.profile__list {
+  -webkit-margin-before: 0;
+          margin-block-start: 0;
+  -webkit-margin-after: 0;
+          margin-block-end: 0;
+  -webkit-padding-start: 0;
+          padding-inline-start: 0;
+  list-style: none; }
+
 .img--close {
   width: 20px;
   height: 20px; }
@@ -483,6 +541,10 @@ body {
 .heading--marginBottom-0 {
   -webkit-margin-after: 0;
           margin-block-end: 0; }
+
+.heading--marginBottom-15 {
+  -webkit-margin-after: 15px;
+          margin-block-end: 15px; }
 
 .text {
   font-size: 16px;
@@ -876,6 +938,23 @@ body {
       max-width: 546px; }
     .content--narrow {
       max-width: none; }
+    .profile {
+      max-width: 500px; }
+    .profile__field {
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-padding-before: 5px;
+              padding-block-start: 5px;
+      -webkit-padding-after: 5px;
+              padding-block-end: 5px; }
+    .profile__name {
+      width: 200px;
+      text-align: right;
+      -webkit-padding-end: 20px;
+              padding-inline-end: 20px; }
+  .profile__content {
+    width: 300px; }
     .heading--narrow {
       max-width: 570px; }
     .button--wrapper {
@@ -895,6 +974,11 @@ body {
       display: -webkit-box;
       display: -ms-flexbox;
       display: flex; }
+    .pageMain--header {
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+          -ms-flex-direction: column;
+              flex-direction: column; }
     .content {
       max-width: 690px;
       -webkit-box-orient: horizontal;
@@ -918,6 +1002,19 @@ body {
               order: 0; }
     .apps__item {
       padding: 15px; }
+    .application {
+      -webkit-margin-before: 20px;
+              margin-block-start: 20px;
+      -webkit-margin-after: 20px;
+              margin-block-end: 20px; }
+    .profile {
+      max-width: 540px;
+      -webkit-padding-start: 30px;
+              padding-inline-start: 30px;
+      -webkit-padding-end: 30px;
+              padding-inline-end: 30px; }
+  .profile__content {
+    width: 320px; }
     .text--center-tablet {
       text-align: center; } }
 
