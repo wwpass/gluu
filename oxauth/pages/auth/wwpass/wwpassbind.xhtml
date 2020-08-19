@@ -54,7 +54,7 @@
           <div id="password_bind" style="display: none;">
             <b:form id="loginForm" name="loginForm" method="post" class="form from--bind" enctype="application/x-www-form-urlencoded">
               <input type="hidden" name="loginForm" value="loginForm" />
-              <p class="text">Enter your credentials to bind PassKey to your account</p>
+              <p class="text">Enter your credentials to bind WWPass Key to your account</p>
 
               <label for="loginForm:username" class="form__label"
               value="#{msgs['login.username']}">
@@ -79,12 +79,12 @@
 
         <h:panelGroup rendered="#{!(''.equals(identity.getWorkingParameter('allow_passkey_bind')))}">
           <div class="bind_option">
-            <input type="submit" value="Bind with another PassKey" class="button button--action button--bind"/>
+            <input type="submit" value="Bind with another WWPass Key" class="button button--action button--bind"/>
           </div>
 
           <div id="bind" style="display: none;">
             <div class="" align="center">
-              <p class="text">Scan QRCode to bind the previous PassKey to your account</p>
+              <p class="text">Scan QRCode to bind the previous WWPass Key to your account</p>
             </div>
             <div class="" align="center">
               <div id="qrcode" style="width: 196px; height: 196px;"></div>
