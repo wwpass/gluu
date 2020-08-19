@@ -4832,6 +4832,674 @@
     });
   };
 
+  // Works with __proto__ only. Old v8 can't work with null proto objects.
+  /* eslint-disable no-proto */
+
+
+  var check = function (O, proto) {
+    _anObject(O);
+    if (!_isObject(proto) && proto !== null) throw TypeError(proto + ": can't set as prototype!");
+  };
+  var _setProto = {
+    set: Object.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
+      function (test, buggy, set) {
+        try {
+          set = _ctx(Function.call, _objectGopd.f(Object.prototype, '__proto__').set, 2);
+          set(test, []);
+          buggy = !(test instanceof Array);
+        } catch (e) { buggy = true; }
+        return function setPrototypeOf(O, proto) {
+          check(O, proto);
+          if (buggy) O.__proto__ = proto;
+          else set(O, proto);
+          return O;
+        };
+      }({}, false) : undefined),
+    check: check
+  };
+
+  var setPrototypeOf$1 = _setProto.set;
+  var _inheritIfRequired = function (that, target, C) {
+    var S = target.constructor;
+    var P;
+    if (S !== C && typeof S == 'function' && (P = S.prototype) !== C.prototype && _isObject(P) && setPrototypeOf$1) {
+      setPrototypeOf$1(that, P);
+    } return that;
+  };
+
+  var dP$2 = _objectDp.f;
+  var gOPN = _objectGopn.f;
+
+
+  var $RegExp = _global.RegExp;
+  var Base = $RegExp;
+  var proto$1 = $RegExp.prototype;
+  var re1 = /a/g;
+  var re2 = /a/g;
+  // "new" creates a new object, old webkit buggy here
+  var CORRECT_NEW = new $RegExp(re1) !== re1;
+
+  if (_descriptors && (!CORRECT_NEW || _fails(function () {
+    re2[_wks('match')] = false;
+    // RegExp constructor can alter flags and IsRegExp works correct with @@match
+    return $RegExp(re1) != re1 || $RegExp(re2) == re2 || $RegExp(re1, 'i') != '/a/i';
+  }))) {
+    $RegExp = function RegExp(p, f) {
+      var tiRE = this instanceof $RegExp;
+      var piRE = _isRegexp(p);
+      var fiU = f === undefined;
+      return !tiRE && piRE && p.constructor === $RegExp && fiU ? p
+        : _inheritIfRequired(CORRECT_NEW
+          ? new Base(piRE && !fiU ? p.source : p, f)
+          : Base((piRE = p instanceof $RegExp) ? p.source : p, piRE && fiU ? _flags.call(p) : f)
+        , tiRE ? this : proto$1, $RegExp);
+    };
+    var proxy = function (key) {
+      key in $RegExp || dP$2($RegExp, key, {
+        configurable: true,
+        get: function () { return Base[key]; },
+        set: function (it) { Base[key] = it; }
+      });
+    };
+    for (var keys = gOPN(Base), i$2 = 0; keys.length > i$2;) proxy(keys[i$2++]);
+    proto$1.constructor = $RegExp;
+    $RegExp.prototype = proto$1;
+    _redefine(_global, 'RegExp', $RegExp);
+  }
+
+  _setSpecies('RegExp');
+
+  // @@search logic
+  _fixReWks('search', 1, function (defined, SEARCH, $search) {
+    // 21.1.3.15 String.prototype.search(regexp)
+    return [function search(regexp) {
+      var O = defined(this);
+      var fn = regexp == undefined ? undefined : regexp[SEARCH];
+      return fn !== undefined ? fn.call(regexp, O) : new RegExp(regexp)[SEARCH](String(O));
+    }, $search];
+  });
+
+  var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
+    '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
+
+  var space = '[' + _stringWs + ']';
+  var non = '\u200b\u0085';
+  var ltrim = RegExp('^' + space + space + '*');
+  var rtrim = RegExp(space + space + '*$');
+
+  var exporter = function (KEY, exec, ALIAS) {
+    var exp = {};
+    var FORCE = _fails(function () {
+      return !!_stringWs[KEY]() || non[KEY]() != non;
+    });
+    var fn = exp[KEY] = FORCE ? exec(trim) : _stringWs[KEY];
+    if (ALIAS) exp[ALIAS] = fn;
+    _export(_export.P + _export.F * FORCE, 'String', exp);
+  };
+
+  // 1 -> String#trimLeft
+  // 2 -> String#trimRight
+  // 3 -> String#trim
+  var trim = exporter.trim = function (string, TYPE) {
+    string = String(_defined(string));
+    if (TYPE & 1) string = string.replace(ltrim, '');
+    if (TYPE & 2) string = string.replace(rtrim, '');
+    return string;
+  };
+
+  var _stringTrim = exporter;
+
+  var gOPN$1 = _objectGopn.f;
+  var gOPD$1 = _objectGopd.f;
+  var dP$3 = _objectDp.f;
+  var $trim = _stringTrim.trim;
+  var NUMBER = 'Number';
+  var $Number = _global[NUMBER];
+  var Base$1 = $Number;
+  var proto$2 = $Number.prototype;
+  // Opera ~12 has broken Object#toString
+  var BROKEN_COF = _cof(_objectCreate(proto$2)) == NUMBER;
+  var TRIM = 'trim' in String.prototype;
+
+  // 7.1.3 ToNumber(argument)
+  var toNumber = function (argument) {
+    var it = _toPrimitive(argument, false);
+    if (typeof it == 'string' && it.length > 2) {
+      it = TRIM ? it.trim() : $trim(it, 3);
+      var first = it.charCodeAt(0);
+      var third, radix, maxCode;
+      if (first === 43 || first === 45) {
+        third = it.charCodeAt(2);
+        if (third === 88 || third === 120) return NaN; // Number('+0x1') should be NaN, old V8 fix
+      } else if (first === 48) {
+        switch (it.charCodeAt(1)) {
+          case 66: case 98: radix = 2; maxCode = 49; break; // fast equal /^0b[01]+$/i
+          case 79: case 111: radix = 8; maxCode = 55; break; // fast equal /^0o[0-7]+$/i
+          default: return +it;
+        }
+        for (var digits = it.slice(2), i = 0, l = digits.length, code; i < l; i++) {
+          code = digits.charCodeAt(i);
+          // parseInt parses a string to a first unavailable symbol
+          // but ToNumber should return NaN if a string contains unavailable symbols
+          if (code < 48 || code > maxCode) return NaN;
+        } return parseInt(digits, radix);
+      }
+    } return +it;
+  };
+
+  if (!$Number(' 0o1') || !$Number('0b1') || $Number('+0x1')) {
+    $Number = function Number(value) {
+      var it = arguments.length < 1 ? 0 : value;
+      var that = this;
+      return that instanceof $Number
+        // check on 1..constructor(foo) case
+        && (BROKEN_COF ? _fails(function () { proto$2.valueOf.call(that); }) : _cof(that) != NUMBER)
+          ? _inheritIfRequired(new Base$1(toNumber(it)), that, $Number) : toNumber(it);
+    };
+    for (var keys$1 = _descriptors ? gOPN$1(Base$1) : (
+      // ES3:
+      'MAX_VALUE,MIN_VALUE,NaN,NEGATIVE_INFINITY,POSITIVE_INFINITY,' +
+      // ES6 (in case, if modules with ES6 Number statics required before):
+      'EPSILON,isFinite,isInteger,isNaN,isSafeInteger,MAX_SAFE_INTEGER,' +
+      'MIN_SAFE_INTEGER,parseFloat,parseInt,isInteger'
+    ).split(','), j = 0, key$1; keys$1.length > j; j++) {
+      if (_has(Base$1, key$1 = keys$1[j]) && !_has($Number, key$1)) {
+        dP$3($Number, key$1, gOPD$1(Base$1, key$1));
+      }
+    }
+    $Number.prototype = proto$2;
+    proto$2.constructor = $Number;
+    _redefine(_global, NUMBER, $Number);
+  }
+
+  // @@match logic
+  _fixReWks('match', 1, function (defined, MATCH, $match) {
+    // 21.1.3.11 String.prototype.match(regexp)
+    return [function match(regexp) {
+      var O = defined(this);
+      var fn = regexp == undefined ? undefined : regexp[MATCH];
+      return fn !== undefined ? fn.call(regexp, O) : new RegExp(regexp)[MATCH](String(O));
+    }, $match];
+  });
+
+  var prefix = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  var CSS = "".concat(prefix, "//cdn.wwpass.com/packages/wwpass.js/2.4/wwpass.js.css");
+
+  var isNativeMessaging = function isNativeMessaging() {
+    var _navigator = navigator,
+        userAgent = _navigator.userAgent;
+    var re = /Firefox\/([0-9]+)\./;
+    var match = userAgent.match(re);
+
+    if (match && match.length > 1) {
+      var version = match[1];
+
+      if (Number(version) >= 51) {
+        return 'Firefox';
+      }
+    }
+
+    re = /Chrome\/([0-9]+)\./;
+    match = userAgent.match(re);
+
+    if (match && match.length > 1) {
+      var _version = match[1];
+
+      if (Number(_version) >= 45) {
+        return 'Chrome';
+      }
+    }
+
+    return false;
+  };
+
+  var wwpassPlatformName = function wwpassPlatformName() {
+    var _navigator2 = navigator,
+        userAgent = _navigator2.userAgent;
+    var knownPlatforms = ['Android', 'iPhone', 'iPad'];
+
+    for (var i = 0; i < knownPlatforms.length; i += 1) {
+      if (userAgent.search(new RegExp(knownPlatforms[i], 'i')) !== -1) {
+        return knownPlatforms[i];
+      }
+    }
+
+    return null;
+  };
+
+  var wwpassMessageForPlatform = function wwpassMessageForPlatform(platformName) {
+    return "".concat(WWPASS_UNSUPPORTED_PLATFORM_MSG_TMPL, " ").concat(platformName);
+  };
+
+  var wwpassShowError = function wwpassShowError(message, title, onCloseCallback) {
+    if (!document.getElementById('_wwpass_css')) {
+      var l = document.createElement('link');
+      l.id = '_wwpass_css';
+      l.rel = 'stylesheet';
+      l.href = CSS;
+      document.head.appendChild(l);
+    }
+
+    var dlg = document.createElement('div');
+    dlg.id = '_wwpass_err_dlg';
+    var dlgClose = document.createElement('span');
+    dlgClose.innerHTML = 'Close';
+    dlgClose.id = '_wwpass_err_close';
+    var header = document.createElement('h1');
+    header.innerHTML = title;
+    var text = document.createElement('div');
+    text.innerHTML = message;
+    dlg.appendChild(header);
+    dlg.appendChild(text);
+    dlg.appendChild(dlgClose);
+    document.body.appendChild(dlg);
+    document.getElementById('_wwpass_err_close').addEventListener('click', function () {
+      var elem = document.getElementById('_wwpass_err_dlg');
+      elem.parentNode.removeChild(elem);
+      onCloseCallback();
+      return false;
+    });
+    return true;
+  };
+
+  var wwpassNoSoftware = function wwpassNoSoftware(code, onclose) {
+    if (code === WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND) {
+      var client = isNativeMessaging();
+      var message = '';
+
+      if (client) {
+        if (client === 'Chrome') {
+          var returnURL = encodeURIComponent(window.location.href);
+          message = '<p>The WWPass Authentication extension for Chrome is not installed or is disabled in browser settings.';
+          message += '<p>Click the link below to install and enable the WWPass Authentication extension.';
+          message += "<p><a href=\"https://chrome.wwpass.com/?callbackURL=".concat(returnURL, "\">Install WWPass Authentication Extension</a>");
+        } else if (client === 'Firefox') {
+          // Firefox
+          var _returnURL = encodeURIComponent(window.location.href);
+
+          message = '<p>The WWPass Authentication extension for Firefox is not installed or is disabled in browser settings.';
+          message += '<p>Click the link below to install and enable the WWPass Authentication extension.';
+          message += "<p><a href=\"https://firefox.wwpass.com/?callbackURL=".concat(_returnURL, "\">Install WWPass Authentication Extension</a>");
+        }
+      } else {
+        message = '<p>No Security Pack is found on your computer or WWPass&nbsp;Browser&nbsp;Plugin is disabled.</p><p>To install Security Pack visit <a href="https://ks.wwpass.com/download/">Key Services</a> or check plugin settings of your browser to activate WWPass&nbsp;Browser&nbsp;Plugin.</p><p><a href="https://support.wwpass.com/?topic=604">Learn more...</a></p>';
+      }
+
+      wwpassShowError(message, 'WWPass &mdash; No Software Found', onclose);
+    } else if (code === WWPASS_STATUS.UNSUPPORTED_PLATFORM) {
+      wwpassShowError(wwpassMessageForPlatform(wwpassPlatformName()), 'WWPass &mdash; Unsupported Platform', onclose);
+    }
+  };
+
+  var renderPassKeyButton = function renderPassKeyButton() {
+    var button = document.createElement('button');
+    button.innerHTML = '<svg id="icon-button_logo" viewBox="0 0 34 20" style="fill: none; left: 28px; stroke-width: 2px; width: 35px; height: 25px; top: 5px; position: absolute;"><switch><g><title>button_logo</title><path fill="#FFF" d="M31.2 20h-28c-1.7 0-3-1.3-3-3V3c0-1.7 1.3-3 3-3h27.4C32.5 0 34 1.6 34 3.6c0 1.3-.8 2.5-1.9 3L34 16.8c.2 1.6-.9 3-2.5 3.1-.1.1-.2.1-.3.1zM27 6h-1c-1.1 0-2 .9-2 2v1h-8.3c-.8-2.8-3.8-4.4-6.5-3.5S4.8 9.2 5.6 12s3.8 4.4 6.5 3.5c1.7-.5 3-1.8 3.5-3.5H27V6zm-1 1c-.6 0-1 .4-1 1v2H12.1V8.3c0-.2-.1-.3-.2-.3h-.2l-3.6 2.3c-.1.1-.2.3-.1.4l.1.1 3.6 2.2c.1.1.3 0 .4-.1V11H26V7z"></path></g></switch></svg> Log in with PassKey';
+    button.setAttribute('style', 'color: white; background-color: #2277E6; font-weight: 400; font-size: 18px; line-height: 36px; font-family: "Arial", sans-serif; padding-right: 15px; cursor: pointer; height: 40px; width: 255px; border-radius: 3px; border: 1px solid #2277E6; padding-left: 60px; text-decoration: none; position: relative;');
+    return button;
+  };
+
+  var PLUGIN_OBJECT_ID = '_wwpass_plugin';
+  var PLUGIN_MIME_TYPE = 'application/x-wwauth';
+  var PLUGIN_TIMEOUT = 10000;
+  var REDUCED_PLUGIN_TIMEOUT = 1000;
+  var PLUGIN_AUTH_KEYTYPE_REVISION = 9701;
+  var PluginInfo = {};
+  var savedPluginInstance;
+  var pendingReqests = [];
+
+  var havePlugin = function havePlugin() {
+    return navigator.mimeTypes[PLUGIN_MIME_TYPE] !== undefined;
+  };
+
+  var wwpassPluginShowsErrors = function wwpassPluginShowsErrors(pluginVersionString) {
+    if (typeof pluginVersionString === 'string') {
+      var pluginVersion = pluginVersionString.split('.');
+
+      for (var i = 0; i < pluginVersion.length; i += 1) {
+        pluginVersion[i] = parseInt(pluginVersion[i], 10);
+      }
+
+      if (pluginVersion.length === 3) {
+        if (pluginVersion[0] > 2 || pluginVersion[0] === 2 && pluginVersion[1] > 4 || pluginVersion[0] === 2 && pluginVersion[1] === 4 && pluginVersion[2] >= 1305) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
+  var getPluginInstance = function getPluginInstance(log) {
+    return new Promise(function (resolve, reject) {
+      if (savedPluginInstance) {
+        if (window._wwpass_plugin_loaded !== undefined) {
+          // eslint-disable-line no-underscore-dangle
+          pendingReqests.push([resolve, reject]);
+        } else {
+          log('%s: plugin is already initialized', 'getPluginInstance');
+          resolve(savedPluginInstance);
+        }
+      } else {
+        var junkBrowser = navigator.mimeTypes.length === 0;
+        var pluginInstalled = havePlugin();
+        var timeout = junkBrowser ? REDUCED_PLUGIN_TIMEOUT : PLUGIN_TIMEOUT;
+
+        if (pluginInstalled || junkBrowser) {
+          log('%s: trying to create plugin instance(junkBrowser=%s, timeout=%d)', 'getPluginInstance', junkBrowser, timeout);
+          var pluginHtml = "<object id='".concat(PLUGIN_OBJECT_ID, "' width=0 height=0 type='").concat(PLUGIN_MIME_TYPE, "'><param name='onload' value='_wwpass_plugin_loaded'/></object>");
+          var pluginDiv = document.createElement('div');
+          pluginDiv.setAttribute('style', 'position: fixed; left: 0; top:0; width: 1px; height: 1px; z-index: -1; opacity: 0.01');
+          document.body.appendChild(pluginDiv);
+          pluginDiv.innerHTML += pluginHtml;
+          savedPluginInstance = document.getElementById(PLUGIN_OBJECT_ID);
+          var timer = setTimeout(function () {
+            delete window._wwpass_plugin_loaded; // eslint-disable-line no-underscore-dangle
+
+            savedPluginInstance = null;
+            log('%s: WWPass plugin loading timeout', 'getPluginInstance');
+            reject({
+              code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
+              message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
+            });
+
+            for (var i = 0; i < pendingReqests.length; i += 1) {
+              var pendingReject = pendingReqests[i][1];
+              pendingReject({
+                code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
+                message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
+              });
+            }
+          }, PLUGIN_TIMEOUT);
+
+          window._wwpass_plugin_loaded = function () {
+            // eslint-disable-line no-underscore-dangle
+            log('%s: plugin loaded', 'getPluginInstance');
+            delete window._wwpass_plugin_loaded; // eslint-disable-line no-underscore-dangle
+
+            clearTimeout(timer);
+
+            try {
+              PluginInfo.versionString = savedPluginInstance.version;
+              PluginInfo.revision = parseInt(savedPluginInstance.version.split('.')[2], 10);
+              PluginInfo.showsErrors = wwpassPluginShowsErrors(PluginInfo.versionString);
+            } catch (err) {
+              log('%s: error parsing plugin version: %s', 'getPluginInstance', err);
+            }
+
+            resolve(savedPluginInstance);
+
+            for (var i = 0; i < pendingReqests.length; i += 1) {
+              var pendingResolve = pendingReqests[i][0];
+              pendingResolve(savedPluginInstance);
+            }
+          };
+        } else {
+          log('%s: no suitable plugins installed', 'getPluginInstance');
+          reject({
+            code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
+            message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
+          });
+        }
+      }
+    });
+  };
+
+  var wrapCallback = function wrapCallback(callback) {
+    if (!PluginInfo.showsErrors) {
+      return function (code, ticketOrMessage) {
+        if (code !== WWPASS_STATUS.OK && code !== WWPASS_STATUS.USER_REJECT) {
+          var message = "<p><b>A error has occured:</b> ".concat(ticketOrMessage, "</p>") + "<p><a href=\"https://support.wwpass.com/?topic=".concat(code, "\">Learn more</a></p>");
+          wwpassShowError(message, 'WWPass Error', function () {
+            callback(code, ticketOrMessage);
+          });
+        } else {
+          callback(code, ticketOrMessage);
+        }
+      };
+    }
+
+    return callback;
+  };
+
+  var wwpassPluginExecute = function wwpassPluginExecute(inputRequest) {
+    return new Promise(function (resolve, reject) {
+      var defaultOptions = {
+        log: function log() {}
+      };
+
+      var request = objectSpread({}, defaultOptions, inputRequest);
+
+      request.log('%s: called, operation name is "%s"', 'wwpassPluginExecute', request.operation || null);
+      getPluginInstance(request.log).then(function (plugin) {
+        var wrappedCallback = wrapCallback(function (code, ticketOrMessage) {
+          if (code === WWPASS_STATUS.OK) {
+            resolve(ticketOrMessage);
+          } else {
+            reject({
+              code: code,
+              message: ticketOrMessage
+            });
+          }
+        });
+
+        if (plugin.execute !== undefined) {
+          request.callback = wrappedCallback;
+          plugin.execute(request);
+        } else if (request.operation === 'auth') {
+          if (PluginInfo.revision < PLUGIN_AUTH_KEYTYPE_REVISION) {
+            plugin.authenticate(request.ticket, wrappedCallback);
+          } else {
+            plugin.authenticate(request.ticket, wrappedCallback, request.firstKeyType || WWPASS_KEY_TYPE_DEFAULT);
+          }
+        } else {
+          plugin.do_operation(request.operation, wrappedCallback);
+        }
+      }).catch(reject);
+    });
+  };
+
+  var pluginWaitForRemoval = function pluginWaitForRemoval() {
+    var log = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+    return new Promise(function (resolve, reject) {
+      getPluginInstance(log).then(function (plugin) {
+        plugin.on_key_removed(resolve);
+      }).catch(reject);
+    });
+  };
+
+  var EXTENSION_POLL_TIMEOUT = 200;
+  var EXTENSION_POLL_ATTEMPTS = 15;
+  var extensionNotInstalled = false;
+
+  var timedPoll = function timedPoll(args) {
+    var condition = args.condition;
+
+    if (typeof condition === 'function') {
+      condition = condition();
+    }
+
+    if (condition) {
+      args.onCondition();
+    } else {
+      var attempts = args.attempts || 0;
+
+      if (attempts--) {
+        // eslint-disable-line no-plusplus
+        var timeout = args.timeout || 100;
+        setTimeout(function (p) {
+          return function () {
+            timedPoll(p);
+          };
+        }({
+          timeout: timeout,
+          attempts: attempts,
+          condition: args.condition,
+          onCondition: args.onCondition,
+          onTimeout: args.onTimeout
+        }), timeout);
+      } else {
+        args.onTimeout();
+      }
+    }
+  };
+
+  var isNativeMessagingExtensionReady = function isNativeMessagingExtensionReady() {
+    return (document.querySelector('meta[property="wwpass:extension:version"]') || document.getElementById('_WWAuth_Chrome_Installed_')) !== null;
+  };
+
+  var randomID = function randomID() {
+    return ((1 + Math.random()) * 0x100000000 | 0).toString(16).substring(1);
+  }; // eslint-disable-line no-bitwise,max-len
+
+
+  var wwpassNMCall = function wwpassNMCall(func, args) {
+    var log = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {};
+    return new Promise(function (resolve, reject) {
+      if (extensionNotInstalled) {
+        log('%s: chrome native messaging extension is not installed', 'wwpassNMExecute');
+        reject({
+          code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
+          message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
+        });
+        return;
+      }
+
+      timedPoll({
+        timeout: EXTENSION_POLL_TIMEOUT,
+        attempts: EXTENSION_POLL_ATTEMPTS,
+        condition: isNativeMessagingExtensionReady,
+        onCondition: function onCondition() {
+          var id = randomID();
+          window.postMessage({
+            type: '_WWAuth_Message',
+            src: 'client',
+            id: id,
+            func: func,
+            args: args ? JSON.parse(JSON.stringify(args)) : args
+          }, '*');
+          window.addEventListener('message', function onMessageCallee(event) {
+            if (event.data.type === '_WWAuth_Message' && event.data.src === 'plugin' && event.data.id === id) {
+              window.removeEventListener('message', onMessageCallee, false);
+
+              if (event.data.code === WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND) {
+                var message = '<p>No Security Pack is found on your computer or WWPass&nbsp;native&nbsp;host is not responding.</p><p>To install Security Pack visit <a href="https://ks.wwpass.com/download/">Key Services</a> </p><p><a href="https://support.wwpass.com/?topic=604">Learn more...</a></p>';
+                wwpassShowError(message, 'WWPass Error', function () {
+                  reject({
+                    code: event.data.code,
+                    message: event.data.ticketOrMessage
+                  });
+                });
+              } else if (event.data.code === WWPASS_STATUS.OK) {
+                resolve(event.data.ticketOrMessage);
+              } else {
+                reject({
+                  code: event.data.code,
+                  message: event.data.ticketOrMessage
+                });
+              }
+            }
+          }, false);
+        },
+        onTimeout: function onTimeout() {
+          extensionNotInstalled = true;
+          log('%s: chrome native messaging extension is not installed', 'wwpassNMExecute');
+          reject({
+            code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
+            message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
+          });
+        }
+      });
+    });
+  };
+
+  var wwpassNMExecute = function wwpassNMExecute(inputRequest) {
+    var defaultOptions = {
+      log: function log() {}
+    };
+
+    var request = objectSpread({}, defaultOptions, inputRequest);
+
+    var log = request.log;
+    delete request.log;
+    log('%s: called', 'wwpassNMExecute');
+    request.uri = {
+      domain: window.location.hostname,
+      protocol: window.location.protocol
+    };
+    return wwpassNMCall('exec', [request], log);
+  };
+
+  var nmWaitForRemoval = function nmWaitForRemoval() {
+    var log = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+    return wwpassNMCall('on_key_rm', undefined, log);
+  };
+
+  var pluginPresent = function pluginPresent() {
+    return havePlugin() || isNativeMessagingExtensionReady();
+  };
+
+  var wwpassPlatformName$1 = function wwpassPlatformName() {
+    var _navigator = navigator,
+        userAgent = _navigator.userAgent;
+    var knownPlatforms = ['Android', 'iPhone', 'iPad'];
+
+    for (var i = 0; i < knownPlatforms.length; i += 1) {
+      if (userAgent.search(new RegExp(knownPlatforms[i], 'i')) !== -1) {
+        return knownPlatforms[i];
+      }
+    }
+
+    return null;
+  }; // N.B. it call functions in REVERSE order
+
+
+  var chainedCall = function chainedCall(functions, request, resolve, reject) {
+    functions.pop()(request).then(resolve, function (e) {
+      if (e.code === WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND) {
+        if (functions.length > 0) {
+          chainedCall(functions, request, resolve, reject);
+        } else {
+          wwpassNoSoftware(e.code, function () {});
+          reject(e);
+        }
+      } else {
+        reject(e);
+      }
+    });
+  };
+
+  var wwpassCall = function wwpassCall(nmFunc, pluginFunc, request) {
+    return new Promise(function (resolve, reject) {
+      var platformName = wwpassPlatformName$1();
+
+      if (platformName !== null) {
+        wwpassNoSoftware(WWPASS_STATUS.UNSUPPORTED_PLATFORM, function () {
+          reject({
+            code: WWPASS_STATUS.UNSUPPORTED_PLATFORM,
+            message: wwpassMessageForPlatform(platformName)
+          });
+        });
+        return;
+      }
+
+      if (havePlugin()) {
+        chainedCall([nmFunc, pluginFunc], request, resolve, reject);
+      } else {
+        chainedCall([pluginFunc, nmFunc], request, resolve, reject);
+      }
+    });
+  };
+
+  var wwpassAuth = function wwpassAuth(request) {
+    return wwpassCall(wwpassNMExecute, wwpassPluginExecute, objectSpread({}, request, {
+      operation: 'auth'
+    }));
+  };
+
+  var waitForRemoval = function waitForRemoval() {
+    return wwpassCall(nmWaitForRemoval, pluginWaitForRemoval);
+  };
+
   var getCallbackURL = function getCallbackURL() {
     var initialOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var defaultOptions = {
@@ -4912,15 +5580,114 @@
     }
   };
 
-  // @@match logic
-  _fixReWks('match', 1, function (defined, MATCH, $match) {
-    // 21.1.3.11 String.prototype.match(regexp)
-    return [function match(regexp) {
-      var O = defined(this);
-      var fn = regexp == undefined ? undefined : regexp[MATCH];
-      return fn !== undefined ? fn.call(regexp, O) : new RegExp(regexp)[MATCH](String(O));
-    }, $match];
-  });
+  var doWWPassPasskeyAuth = function doWWPassPasskeyAuth(options) {
+    return getTicket(options.ticketURL).then(function (json) {
+      var response = ticketAdapter(json);
+      var ticket = response.ticket;
+      return getClientNonceWrapper(ticket, response.ttl).then(function (key) {
+        return wwpassAuth({
+          ticket: ticket,
+          clientKeyNonce: key !== undefined ? abToB64(key) : undefined,
+          log: options.log
+        });
+      }).then(function () {
+        return ticket;
+      });
+      /* We may receive new ticket here but we need
+       * to keep the original one to find nonce */
+    });
+  };
+
+  var haveEventListener = false;
+
+  var initPasskeyButton = function initPasskeyButton(options, resolve, reject) {
+    if (options.passkeyButton.innerHTML.length === 0) {
+      options.passkeyButton.appendChild(renderPassKeyButton());
+    }
+
+    var authUnderway = false;
+    if (haveEventListener) return;
+    options.passkeyButton.addEventListener('click', function (e) {
+      if (!authUnderway) {
+        authUnderway = true;
+        doWWPassPasskeyAuth(options).then(function (newTicket) {
+          authUnderway = false;
+          resolve({
+            ppx: options.ppx,
+            version: options.version,
+            code: WWPASS_STATUS.OK,
+            message: WWPASS_OK_MSG,
+            ticket: newTicket,
+            callbackURL: options.callbackURL,
+            hw: true
+          });
+        }, function (err) {
+          authUnderway = false;
+
+          if (!err.code) {
+            options.log('passKey error', err);
+          } else if (err.code === WWPASS_STATUS.INTERNAL_ERROR || options.returnErrors) {
+            reject({
+              ppx: options.ppx,
+              version: options.version,
+              code: err.code,
+              message: err.message,
+              callbackURL: options.callbackURL
+            });
+          }
+        });
+      }
+
+      e.preventDefault();
+    }, false);
+    haveEventListener = true;
+  };
+
+  var wwpassPasskeyAuth = function wwpassPasskeyAuth(initialOptions) {
+    return new Promise(function (resolve, reject) {
+      var defaultOptions = {
+        ticketURL: '',
+        callbackURL: '',
+        ppx: 'wwp_',
+        forcePasskeyButton: true,
+        log: function log() {}
+      };
+
+      var options = objectSpread({}, defaultOptions, initialOptions);
+
+      if (!options.passkeyButton) {
+        reject({
+          ppx: options.ppx,
+          version: options.version,
+          code: WWPASS_STATUS.INTERNAL_ERROR,
+          message: 'Cannot find passkey element',
+          callbackURL: options.callbackURL
+        });
+      }
+
+      if (options.forcePasskeyButton || pluginPresent()) {
+        if (options.passkeyButton.style.display === 'none') {
+          options.passkeyButton.style.display = null;
+        }
+
+        initPasskeyButton(options, resolve, reject);
+      } else {
+        var displayBackup = options.passkeyButton.style.display;
+        options.passkeyButton.style.display = 'none';
+        var observer = new MutationObserver(function (_mutationsList, _observer) {
+          if (pluginPresent()) {
+            _observer.disconnect();
+
+            options.passkeyButton.style.display = displayBackup === 'none' ? null : displayBackup;
+            initPasskeyButton(options, resolve, reject);
+          }
+        });
+        observer.observe(document.head, {
+          childList: true
+        });
+      }
+    }).then(navigateToCallback, navigateToCallback);
+  };
 
   var toString$1 = {}.toString;
 
@@ -8394,7 +9161,7 @@
   var addButtonStyleSheet = function addButtonStyleSheet() {
     {
       var style = document.createElement('style');
-      style.innerHTML = "\n    @font-face {\n      font-family: \"Roboto\";\n      font-style: normal;\n      font-weight: 300;\n      src: local('Roboto Light'), local('Roboto-Light'), url('https://fonts.gstatic.com/s/roboto/v18/Hgo13k-tfSpn0qi1SFdUfVtXRa8TVwTICgirnJhmVJw.woff2') format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;\n      font-display: swap;\n    }\n\n    .wwpassButtonContainer {\n      min-width: 270px;\n      margin: 20px 10px;\n      display: flex;\n      justify-content: center;\n    }\n\n    .wwpassLoginButton {\n      min-width: 222px;\n      max-width: 280px;\n      width: 100%;\n      height: 48px;\n      text-align: left;\n      font-size: 18px;\n      line-height: 24px;\n      font-family: Roboto, Arial, Helvetica, sans-serif;\n      color: #FFFFFF;\n      padding-inline-start: 16px;\n      text-decoration: none;\n      border: none;\n      background-color: #000F2C;\n      background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"110\" height=\"48\" viewBox=\"0 0 110 48\"><defs><style>.a{fill:url(%23a);}.b{fill:url(%23b);}.c{fill:url(%23c);}.d{fill:url(%23d);}.e{fill:url(%23e);}%3C%2Fstyle%3E<linearGradient id=\"a\" x1=\"33.07\" y1=\"53.98\" x2=\"103.63\" y2=\"13.24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"%2300a3ff\"/><stop offset=\"0.66\" stop-color=\"%23007fff\"/><stop offset=\"1\" stop-color=\"%234200ff\"/></linearGradient><linearGradient id=\"b\" x1=\"31.75\" y1=\"45.12\" x2=\"109.11\" y2=\"0.46\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"%2300ff29\"/><stop offset=\"0.39\" stop-color=\"%2300a3ff\"/><stop offset=\"0.65\" stop-color=\"%23007fff\"/><stop offset=\"1\" stop-color=\"%234200ff\"/></linearGradient><linearGradient id=\"c\" x1=\"21.24\" y1=\"35.3\" x2=\"61.59\" y2=\"12\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"%2300ff29\"/><stop offset=\"1\" stop-color=\"%2300a3ff\"/></linearGradient><linearGradient id=\"d\" x1=\"26.02\" y1=\"28.76\" x2=\"58.35\" y2=\"10.09\" xlink:href=\"%23c\"/><linearGradient id=\"e\" x1=\"32.49\" y1=\"47.89\" x2=\"97.86\" y2=\"10.15\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"%2300ff29\"/><stop offset=\"0.36\" stop-color=\"%2300a3ff\"/><stop offset=\"0.61\" stop-color=\"%23007fff\"/><stop offset=\"1\" stop-color=\"%234200ff\"/></linearGradient></defs><polygon class=\"a\" points=\"60 0 110 0 110 48 43 48 60 0\"/><path class=\"b\" d=\"M45.68,48h-.74l17-48h.9ZM60.8,0H60L42.91,48h.82ZM59.65,0h-.82L41.75,48h.83ZM58,0h-.71L40.21,48H41ZM55,0h-.82L37.13,48H38ZM76.85,0h-.7L59.08,48h.69ZM64,0h-.93l-17,48h.85Zm10.4,0h-.83L56.51,48h.82ZM72.23,0h-.7L54.46,48h.69Zm3.2,0h-.82L57.54,48h.82ZM71.07,0h-.69L53.3,48H54Zm-3,0h-.91l-17,48h.74Zm1.07,0h-.72L51.38,48h.8ZM66.45,0H65L47.91,48h1.47ZM53.87,0h-.82L36,48h.82ZM35,0h-.83L17.11,48h.83Zm2.05,0h-.82L19.16,48H20Zm1.13,0h-.9l-17,48H21Zm2.47,0H39.19L22.12,48h1.46ZM32.44,0h-.82L14.54,48h.83Zm1.41,0H33L16,48h.82ZM11.34,48h.82L29.23,0h-.82ZM44,0h-.82L26.09,48h.83Zm2.57,0h-.83L28.66,48h.83ZM42.22,0H41.5L24.43,48h.8Zm8.83,0h-.7L33.28,48H34ZM49.13,0H47.66L30.59,48h1.46Zm3.2,0h-.8l-17,48h.72ZM45.4,0h-.82L27.51,48h.82ZM57.08,0h-.82L39.18,48H40ZM110,3.2V1.15L93.31,48H94Zm0,3.25V4.39L94.47,48h.73ZM109.09,0h-1.38L90.62,48H92ZM110,12V10.15L96.52,48h.71ZM102.7,0H102L84.87,48h.81ZM78.13,0H77.3L60.23,48h.83Zm28.42,0h-1.4L88.08,48h1.45ZM110,29.87V26.2L102.27,48h1.27Zm0,9V36.81L106,48h.73Zm0,4.24v-2L107.56,48h.71Zm0-7.48V33.57L104.86,48h.73Zm0-14.41V17.36L99.09,48h1.37ZM100.87,0H100L83,48h.83ZM110,15.09V13.17L97.65,48h.63ZM104,0h-.85L86,48h.83ZM89.73,0H89L71.91,48h.81Zm-3.1,0h-.85L68.7,48h.83Zm2,0h-.86l-17,48h.83ZM85.47,0h-.85L67.55,48h.83ZM80.75,0h-1L62.67,48h1.06Zm3.18,0H83.1l-17,48h.73ZM82.16,0h-.75L64.34,48h.81ZM92.4,0h-.85L74.48,48h.83ZM97,0h-.85L79.1,48h.83Zm1.16,0h-.85L80.25,48h.83Zm-7,0H90.4L73.32,48h.81Zm3.72,0h-.65L77.07,48h.78Zm4.75,0h-.86l-17,48h.83ZM93.71,0h-.64L75.91,48h.79Z\"/><path class=\"c\" d=\"M16.13,48H15.6L32.67,0h.54ZM37,0h-.54L19.35,48h.53Zm2.83,0h-.62l-17,48h.54ZM39,0h-.62l-17,48h.45ZM34,0h-.54L16.35,48h.53Zm1.92,0h-.46L18.35,48h.53Zm-.59,0h-.53L17.68,48h.54Zm2.42,0h-.54L20.1,48h.53Zm3.66,0h-.95L23.35,48h.95Zm5.17,0H46L28.93,48h.54Zm.67,0h-.54L29.6,48h.53ZM45.12,0h-.45L27.6,48h.45ZM42.46,0h-.62l-17,48h.45Zm1.91,0h-.45L26.85,48h.45ZM43.13,0h-.46L25.6,48h.53ZM0,48H.54L17.61,0h-.54ZM22.29,0h-.53L4.68,48h.54ZM23,0h-.62l-17,48h.45ZM21,0h-.54L3.35,48h.53Zm3.66,0h-.95L6.6,48h1ZM20.21,0h-.54L2.6,48h.53Zm-.92,0h-.53L1.68,48h.54ZM48.12,0h-.45L30.6,48h.45ZM28.46,0h-.54L10.85,48h.53Zm1.66,0h-.95L12.1,48h1ZM25.63,0h-.46L8.1,48h.53Zm5.74,0h-.45L13.85,48h.45Zm.84,0h-.54l-17,48h.45ZM26.79,0h-.53L9.18,48h.54Zm.92,0h-.54L10.1,48h.53ZM74.56,0h-.89L56.57,48h.9ZM70.4,0h-.48L52.82,48h.48ZM69.06,0h-.89L51.07,48H52Zm2.09,0h-.48L53.57,48h.48ZM65.73,0h-.56L48.1,48h.53ZM64.9,0h-.48L47.35,48h.53ZM63.73,0h-.56L46.1,48h.53ZM67.4,0h-.89L49.43,48h1Zm5,0H72L54.91,48h.47Zm6.25,0h-.48L61.07,48h.48Zm.92,0h-.4L62.07,48h.48Zm2.08,0h-.48L64.07,48h.48Zm-8.5,0h-.48l-17,48h.39ZM49,0h-.54L31.35,48h.53Zm27.6,0h-.89l-17,48h.81ZM77.9,0h-.48L60.32,48h.48ZM54.48,0h-.56L36.85,48h.53Zm1.25,0h-.56l-17,48h.54Zm-2,0h-.56L36.1,48h.53ZM51.57,0h-.48L34,48h.54Zm-.92,0H50L32.93,48h.7Zm5.83,0H56L38.93,48h.54ZM52.73,0h-.56l-17,48h.45ZM62.9,0h-.56l-17,48h.53ZM61.23,0h-.56L43.6,48h.53ZM59.82,0h-.4L42.27,48h.53ZM62,0h-.56L44.35,48h.53ZM57.4,0h-.48L39.85,48h.53Zm.83,0h-.56L40.6,48h.53Zm.84,0h-.4L41.52,48h.53Z\"/><path class=\"d\" d=\"M22.5,48H21.35L38.43,0h1.14ZM35.57,0h-.64L17.85,48h.65Zm1.1,0H36L19,48h.65Zm7.5,0h-.64L26.45,48h.65Zm-10,0h-.55L16.55,48h.64Zm9.09,0h-.64L25.55,48h.65Zm-1.2,0h-.63l-17,48H25Zm-1,0h-.54L23.45,48H24ZM6.35,48H7L24.07,0h-.64ZM27.67,0H27L10,48h.65Zm-1.1,0h-.64L8.85,48H9.5Zm4.49,0h-.72l-17,48h.56ZM33,0H31.83L14.75,48H15.9Zm-2.8,0h-.64L12.45,48h.65Zm-1.6,0h-.64L10.85,48h.65Zm9,0h-.64L19.85,48h.65Zm20,0H57L40,48h.55Zm1.7,0h-.64L41.55,48h.65Zm-2.6,0h-.54L39.05,48h.55ZM55.18,0h-.55L37.55,48h.64ZM45.77,0h-.64L28.05,48h.65Zm15.4,0h-.54L43.55,48h.55Zm-1.1,0h-.64L42.35,48H43Zm2.1,0h-.64L44.45,48h.65ZM47.77,0h-.64L30.05,48h.65Zm6.59,0h-.72l-17,48h.56ZM46.48,0h-.55L28.85,48h.64Zm2.19,0H48L31,48h.65Zm4.4,0H51.93L34.85,48H36Zm-1.9,0h-.73l-17,48h.66Zm-.91,0h-.72l-17,48h.56Z\"/><path class=\"e\" d=\"M58.19,48h-.63L74.72,0h.49ZM74.31,0h-.49L56.66,48h.63Zm-1,0h-.67L55.55,48h.65Zm4.49,0h-.66L60.05,48h.65ZM76.9,0h-.67L59.15,48h.65Zm2,0h-.67l-17,48h.65Zm-11,0h-.67L50.15,48h.65ZM46.35,48h.84l17-48h-.78ZM71.21,0h-.58L53.55,48h.64Zm-5.9,0h-.58L47.65,48h.64ZM66.7,0H66L49,48h.56Zm3.61,0h-.67l-17,48h.65ZM68.8,0h-.67L51.05,48h.65ZM79.9,0h-.67L62.15,48h.65ZM72.31,0h-.58L54.65,48h.64Zm9,0h-.58L63.65,48h.64ZM92.9,0H91.82L74.73,48H75.8Zm4,0h-.58L79.23,48h.57Zm.9,0h-.58L80.13,48h.57ZM91.2,0h-.57l-17,48h.48Zm10.2,0h-.58L83.73,48h.57ZM98.91,0h-.49L81.33,48h.56ZM95.3,0H94.23l-17,48h1Zm-11,0H83.23L66.15,48h1.14Zm6,0h-.49L72.73,48h.56Zm-4,0H85.22L68.13,48H69.2Zm-4,0h-.66L64.55,48h.65ZM88.8,0h-.58L71.13,48h.57Zm-.9,0h-.58L70.23,48h.57Z\"/></svg>');\n      background-position: 190px;\n      background-repeat: no-repeat;\n      display: flex;\n      align-items: center;\n    }\n\n    .wwpassLoginButton:hover,\n    .wwpassLoginButton:focus {\n      opacity: .9;\n    }\n\n    .wwpassLoginButton:active {\n      opacity: .7;\n    }\n\n    .wwpassQRButton {\n      width: 48px;\n      height: 48px;\n      background-color: #000F2C;\n      background-image: url('data:image/svg+xml;utf8,<svg width=\"32\" height=\"32\" viewBox=\"0 0 32 32\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M14 17V25H18\" stroke=\"white\" stroke-width=\"2\"/><rect x=\"3\" y=\"22\" width=\"7\" height=\"7\" stroke=\"white\" stroke-width=\"2\"/><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" stroke=\"white\" stroke-width=\"2\"/><rect x=\"22\" y=\"3\" width=\"7\" height=\"7\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M19 7H14V14H10V18H2\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M2 14H7\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M29 17V25H25V18H18V10\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M13 3H19\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M13 29H18\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M24 29H30\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M21 14H30\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M21 30V22H17\" stroke=\"white\" stroke-width=\"2\"/></svg>');\n      background-repeat: no-repeat;\n      background-position: center;\n      border: none;\n      font-size: 18px;\n      line-height: 24px;\n      content: \"\";\n      color: transparent;\n      margin-inline-start: 4px;\n      flex-shrink: 0;\n    }\n\n    .wwpassQRButton:hover,\n    .wwpassQRButton:focus {\n      opacity: .9;\n    }\n\n    .wwpassQRButton:active {\n      opacity: .7;\n    }";
+      style.innerHTML = "\n      @font-face {\n        font-family: \"Roboto\";\n        font-style: normal;\n        font-weight: 300;\n        src: local('Roboto Light'), local('Roboto-Light'), url('https://fonts.gstatic.com/s/roboto/v18/Hgo13k-tfSpn0qi1SFdUfVtXRa8TVwTICgirnJhmVJw.woff2') format('woff2');\n        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;\n        font-display: swap;\n      }\n\n      .wwpassButtonContainer {\n        min-width: 270px;\n        margin: 20px 10px;\n        display: flex;\n        justify-content: center;\n      }\n      .wwpassLoginButton {\n        min-width: 202px;\n        max-width: 260px;\n        width: 100%;\n        height: 48px;\n        text-align: left;\n        font-size: 18px;\n        line-height: 24px;\n        font-family: Roboto, Arial, Helvetica, sans-serif;\n        color: #FFFFFF;\n        padding-inline-start: 16px;\n        text-decoration: none;\n        border: none;\n        background-color: #000F2C;\n        background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"110\" height=\"48\" viewBox=\"0 0 110 48\"><defs><style>.a{fill:url(%23a);}.b{fill:url(%23b);}.c{fill:url(%23c);}.d{fill:url(%23d);}.e{fill:url(%23e);}%3C%2Fstyle%3E<linearGradient id=\"a\" x1=\"33.07\" y1=\"53.98\" x2=\"103.63\" y2=\"13.24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"%2300a3ff\"/><stop offset=\"0.66\" stop-color=\"%23007fff\"/><stop offset=\"1\" stop-color=\"%234200ff\"/></linearGradient><linearGradient id=\"b\" x1=\"31.75\" y1=\"45.12\" x2=\"109.11\" y2=\"0.46\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"%2300ff29\"/><stop offset=\"0.39\" stop-color=\"%2300a3ff\"/><stop offset=\"0.65\" stop-color=\"%23007fff\"/><stop offset=\"1\" stop-color=\"%234200ff\"/></linearGradient><linearGradient id=\"c\" x1=\"21.24\" y1=\"35.3\" x2=\"61.59\" y2=\"12\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"%2300ff29\"/><stop offset=\"1\" stop-color=\"%2300a3ff\"/></linearGradient><linearGradient id=\"d\" x1=\"26.02\" y1=\"28.76\" x2=\"58.35\" y2=\"10.09\" xlink:href=\"%23c\"/><linearGradient id=\"e\" x1=\"32.49\" y1=\"47.89\" x2=\"97.86\" y2=\"10.15\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"%2300ff29\"/><stop offset=\"0.36\" stop-color=\"%2300a3ff\"/><stop offset=\"0.61\" stop-color=\"%23007fff\"/><stop offset=\"1\" stop-color=\"%234200ff\"/></linearGradient></defs><polygon class=\"a\" points=\"60 0 110 0 110 48 43 48 60 0\"/><path class=\"b\" d=\"M45.68,48h-.74l17-48h.9ZM60.8,0H60L42.91,48h.82ZM59.65,0h-.82L41.75,48h.83ZM58,0h-.71L40.21,48H41ZM55,0h-.82L37.13,48H38ZM76.85,0h-.7L59.08,48h.69ZM64,0h-.93l-17,48h.85Zm10.4,0h-.83L56.51,48h.82ZM72.23,0h-.7L54.46,48h.69Zm3.2,0h-.82L57.54,48h.82ZM71.07,0h-.69L53.3,48H54Zm-3,0h-.91l-17,48h.74Zm1.07,0h-.72L51.38,48h.8ZM66.45,0H65L47.91,48h1.47ZM53.87,0h-.82L36,48h.82ZM35,0h-.83L17.11,48h.83Zm2.05,0h-.82L19.16,48H20Zm1.13,0h-.9l-17,48H21Zm2.47,0H39.19L22.12,48h1.46ZM32.44,0h-.82L14.54,48h.83Zm1.41,0H33L16,48h.82ZM11.34,48h.82L29.23,0h-.82ZM44,0h-.82L26.09,48h.83Zm2.57,0h-.83L28.66,48h.83ZM42.22,0H41.5L24.43,48h.8Zm8.83,0h-.7L33.28,48H34ZM49.13,0H47.66L30.59,48h1.46Zm3.2,0h-.8l-17,48h.72ZM45.4,0h-.82L27.51,48h.82ZM57.08,0h-.82L39.18,48H40ZM110,3.2V1.15L93.31,48H94Zm0,3.25V4.39L94.47,48h.73ZM109.09,0h-1.38L90.62,48H92ZM110,12V10.15L96.52,48h.71ZM102.7,0H102L84.87,48h.81ZM78.13,0H77.3L60.23,48h.83Zm28.42,0h-1.4L88.08,48h1.45ZM110,29.87V26.2L102.27,48h1.27Zm0,9V36.81L106,48h.73Zm0,4.24v-2L107.56,48h.71Zm0-7.48V33.57L104.86,48h.73Zm0-14.41V17.36L99.09,48h1.37ZM100.87,0H100L83,48h.83ZM110,15.09V13.17L97.65,48h.63ZM104,0h-.85L86,48h.83ZM89.73,0H89L71.91,48h.81Zm-3.1,0h-.85L68.7,48h.83Zm2,0h-.86l-17,48h.83ZM85.47,0h-.85L67.55,48h.83ZM80.75,0h-1L62.67,48h1.06Zm3.18,0H83.1l-17,48h.73ZM82.16,0h-.75L64.34,48h.81ZM92.4,0h-.85L74.48,48h.83ZM97,0h-.85L79.1,48h.83Zm1.16,0h-.85L80.25,48h.83Zm-7,0H90.4L73.32,48h.81Zm3.72,0h-.65L77.07,48h.78Zm4.75,0h-.86l-17,48h.83ZM93.71,0h-.64L75.91,48h.79Z\"/><path class=\"c\" d=\"M16.13,48H15.6L32.67,0h.54ZM37,0h-.54L19.35,48h.53Zm2.83,0h-.62l-17,48h.54ZM39,0h-.62l-17,48h.45ZM34,0h-.54L16.35,48h.53Zm1.92,0h-.46L18.35,48h.53Zm-.59,0h-.53L17.68,48h.54Zm2.42,0h-.54L20.1,48h.53Zm3.66,0h-.95L23.35,48h.95Zm5.17,0H46L28.93,48h.54Zm.67,0h-.54L29.6,48h.53ZM45.12,0h-.45L27.6,48h.45ZM42.46,0h-.62l-17,48h.45Zm1.91,0h-.45L26.85,48h.45ZM43.13,0h-.46L25.6,48h.53ZM0,48H.54L17.61,0h-.54ZM22.29,0h-.53L4.68,48h.54ZM23,0h-.62l-17,48h.45ZM21,0h-.54L3.35,48h.53Zm3.66,0h-.95L6.6,48h1ZM20.21,0h-.54L2.6,48h.53Zm-.92,0h-.53L1.68,48h.54ZM48.12,0h-.45L30.6,48h.45ZM28.46,0h-.54L10.85,48h.53Zm1.66,0h-.95L12.1,48h1ZM25.63,0h-.46L8.1,48h.53Zm5.74,0h-.45L13.85,48h.45Zm.84,0h-.54l-17,48h.45ZM26.79,0h-.53L9.18,48h.54Zm.92,0h-.54L10.1,48h.53ZM74.56,0h-.89L56.57,48h.9ZM70.4,0h-.48L52.82,48h.48ZM69.06,0h-.89L51.07,48H52Zm2.09,0h-.48L53.57,48h.48ZM65.73,0h-.56L48.1,48h.53ZM64.9,0h-.48L47.35,48h.53ZM63.73,0h-.56L46.1,48h.53ZM67.4,0h-.89L49.43,48h1Zm5,0H72L54.91,48h.47Zm6.25,0h-.48L61.07,48h.48Zm.92,0h-.4L62.07,48h.48Zm2.08,0h-.48L64.07,48h.48Zm-8.5,0h-.48l-17,48h.39ZM49,0h-.54L31.35,48h.53Zm27.6,0h-.89l-17,48h.81ZM77.9,0h-.48L60.32,48h.48ZM54.48,0h-.56L36.85,48h.53Zm1.25,0h-.56l-17,48h.54Zm-2,0h-.56L36.1,48h.53ZM51.57,0h-.48L34,48h.54Zm-.92,0H50L32.93,48h.7Zm5.83,0H56L38.93,48h.54ZM52.73,0h-.56l-17,48h.45ZM62.9,0h-.56l-17,48h.53ZM61.23,0h-.56L43.6,48h.53ZM59.82,0h-.4L42.27,48h.53ZM62,0h-.56L44.35,48h.53ZM57.4,0h-.48L39.85,48h.53Zm.83,0h-.56L40.6,48h.53Zm.84,0h-.4L41.52,48h.53Z\"/><path class=\"d\" d=\"M22.5,48H21.35L38.43,0h1.14ZM35.57,0h-.64L17.85,48h.65Zm1.1,0H36L19,48h.65Zm7.5,0h-.64L26.45,48h.65Zm-10,0h-.55L16.55,48h.64Zm9.09,0h-.64L25.55,48h.65Zm-1.2,0h-.63l-17,48H25Zm-1,0h-.54L23.45,48H24ZM6.35,48H7L24.07,0h-.64ZM27.67,0H27L10,48h.65Zm-1.1,0h-.64L8.85,48H9.5Zm4.49,0h-.72l-17,48h.56ZM33,0H31.83L14.75,48H15.9Zm-2.8,0h-.64L12.45,48h.65Zm-1.6,0h-.64L10.85,48h.65Zm9,0h-.64L19.85,48h.65Zm20,0H57L40,48h.55Zm1.7,0h-.64L41.55,48h.65Zm-2.6,0h-.54L39.05,48h.55ZM55.18,0h-.55L37.55,48h.64ZM45.77,0h-.64L28.05,48h.65Zm15.4,0h-.54L43.55,48h.55Zm-1.1,0h-.64L42.35,48H43Zm2.1,0h-.64L44.45,48h.65ZM47.77,0h-.64L30.05,48h.65Zm6.59,0h-.72l-17,48h.56ZM46.48,0h-.55L28.85,48h.64Zm2.19,0H48L31,48h.65Zm4.4,0H51.93L34.85,48H36Zm-1.9,0h-.73l-17,48h.66Zm-.91,0h-.72l-17,48h.56Z\"/><path class=\"e\" d=\"M58.19,48h-.63L74.72,0h.49ZM74.31,0h-.49L56.66,48h.63Zm-1,0h-.67L55.55,48h.65Zm4.49,0h-.66L60.05,48h.65ZM76.9,0h-.67L59.15,48h.65Zm2,0h-.67l-17,48h.65Zm-11,0h-.67L50.15,48h.65ZM46.35,48h.84l17-48h-.78ZM71.21,0h-.58L53.55,48h.64Zm-5.9,0h-.58L47.65,48h.64ZM66.7,0H66L49,48h.56Zm3.61,0h-.67l-17,48h.65ZM68.8,0h-.67L51.05,48h.65ZM79.9,0h-.67L62.15,48h.65ZM72.31,0h-.58L54.65,48h.64Zm9,0h-.58L63.65,48h.64ZM92.9,0H91.82L74.73,48H75.8Zm4,0h-.58L79.23,48h.57Zm.9,0h-.58L80.13,48h.57ZM91.2,0h-.57l-17,48h.48Zm10.2,0h-.58L83.73,48h.57ZM98.91,0h-.49L81.33,48h.56ZM95.3,0H94.23l-17,48h1Zm-11,0H83.23L66.15,48h1.14Zm6,0h-.49L72.73,48h.56Zm-4,0H85.22L68.13,48H69.2Zm-4,0h-.66L64.55,48h.65ZM88.8,0h-.58L71.13,48h.57Zm-.9,0h-.58L70.23,48h.57Z\"/></svg>');\n        background-position: 180px;\n        background-repeat: no-repeat;\n        display: flex;\n        align-items: center;\n    }\n\n    .wwpassLoginButton:hover, .wwpassLoginButton:focus  {\n        opacity: .9;\n        color: #FFFFFF;\n    }\n\n    .wwpassQRButton {\n      width: 48px;\n      height: 48px;\n      background-color: #000F2C;\n      background-image: url('data:image/svg+xml;utf8,<svg width=\"32\" height=\"32\" viewBox=\"0 0 32 32\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M14 17V25H18\" stroke=\"white\" stroke-width=\"2\"/><rect x=\"3\" y=\"22\" width=\"7\" height=\"7\" stroke=\"white\" stroke-width=\"2\"/><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" stroke=\"white\" stroke-width=\"2\"/><rect x=\"22\" y=\"3\" width=\"7\" height=\"7\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M19 7H14V14H10V18H2\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M2 14H7\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M29 17V25H25V18H18V10\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M13 3H19\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M13 29H18\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M24 29H30\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M21 14H30\" stroke=\"white\" stroke-width=\"2\"/><path d=\"M21 30V22H17\" stroke=\"white\" stroke-width=\"2\"/></svg>');\n      background-repeat: no-repeat;\n      background-position: center;\n      border: none;\n      font-size: 18px;\n      line-height: 24px;\n      content: \"\";\n      color: transparent;\n      margin-inline-start: 4px;\n      flex-shrink: 0;\n    }\n\n    .wwpassQRButton:hover,\n    .wwpassQRButton:focus {\n      opacity: .9;\n    }\n\n    .wwpassQRButton:active {\n      opacity: .7;\n    }";
       document.getElementsByTagName('head')[0].appendChild(style);
       haveStyleSheet = true;
     }
@@ -8477,29 +9244,34 @@
                 log: function log() {}
               };
               options = objectSpread({}, defaultOptions, initialOptions);
-              _context.next = 4;
+
+              if (options.passkeyButton) {
+                options.passkeyButton.style.display = 'none';
+              }
+
+              _context.next = 5;
               return sameDeviceLogin(options.qrcode);
 
-            case 4:
+            case 5:
               result = _context.sent;
 
               if (!result.away) {
-                _context.next = 18;
+                _context.next = 19;
                 break;
               }
 
-              _context.next = 8;
+              _context.next = 9;
               return getTicket(options.ticketURL);
 
-            case 8:
+            case 9:
               json = _context.sent;
               response = ticketAdapter(json);
               ticket = response.ticket;
               ttl = response.ttl;
-              _context.next = 14;
+              _context.next = 15;
               return getClientNonceWrapper(ticket, ttl);
 
-            case 14:
+            case 15:
               key = _context.sent;
               window.localStorage.setItem(METHOD_KEY_NAME, METHOD_SAME_DEVICE);
               result.linkElement.href = getUniversalURL({
@@ -8511,10 +9283,10 @@
               });
               result.linkElement.click();
 
-            case 18:
+            case 19:
               return _context.abrupt("return", result);
 
-            case 19:
+            case 20:
             case "end":
               return _context.stop();
           }
@@ -8641,7 +9413,7 @@
 
   var qrCodeAuthWrapper = function qrCodeAuthWrapper(options) {
     var websocketPool = new WebSocketPool(options);
-    return Promise.race([websocketPool.promise.then(function (result) {
+    var promises = [websocketPool.promise.then(function (result) {
       if (result.clientKey && options.catchClientKey) {
         options.catchClientKey(result.clientKey);
       }
@@ -8660,7 +9432,13 @@
         status: WWPASS_STATUS.INTERNAL_ERROR,
         reason: err
       };
-    }), qrCodeAuth(options, websocketPool)]).finally(function () {
+    }), qrCodeAuth(options, websocketPool)];
+
+    if (options.passkeyButton) {
+      promises.push(wwpassPasskeyAuth(options));
+    }
+
+    return Promise.race(promises).finally(function () {
       websocketPool.close();
     });
   };
@@ -8833,769 +9611,6 @@
     });
   };
 
-  // Works with __proto__ only. Old v8 can't work with null proto objects.
-  /* eslint-disable no-proto */
-
-
-  var check = function (O, proto) {
-    _anObject(O);
-    if (!_isObject(proto) && proto !== null) throw TypeError(proto + ": can't set as prototype!");
-  };
-  var _setProto = {
-    set: Object.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
-      function (test, buggy, set) {
-        try {
-          set = _ctx(Function.call, _objectGopd.f(Object.prototype, '__proto__').set, 2);
-          set(test, []);
-          buggy = !(test instanceof Array);
-        } catch (e) { buggy = true; }
-        return function setPrototypeOf(O, proto) {
-          check(O, proto);
-          if (buggy) O.__proto__ = proto;
-          else set(O, proto);
-          return O;
-        };
-      }({}, false) : undefined),
-    check: check
-  };
-
-  var setPrototypeOf$1 = _setProto.set;
-  var _inheritIfRequired = function (that, target, C) {
-    var S = target.constructor;
-    var P;
-    if (S !== C && typeof S == 'function' && (P = S.prototype) !== C.prototype && _isObject(P) && setPrototypeOf$1) {
-      setPrototypeOf$1(that, P);
-    } return that;
-  };
-
-  var dP$2 = _objectDp.f;
-  var gOPN = _objectGopn.f;
-
-
-  var $RegExp = _global.RegExp;
-  var Base = $RegExp;
-  var proto$1 = $RegExp.prototype;
-  var re1 = /a/g;
-  var re2 = /a/g;
-  // "new" creates a new object, old webkit buggy here
-  var CORRECT_NEW = new $RegExp(re1) !== re1;
-
-  if (_descriptors && (!CORRECT_NEW || _fails(function () {
-    re2[_wks('match')] = false;
-    // RegExp constructor can alter flags and IsRegExp works correct with @@match
-    return $RegExp(re1) != re1 || $RegExp(re2) == re2 || $RegExp(re1, 'i') != '/a/i';
-  }))) {
-    $RegExp = function RegExp(p, f) {
-      var tiRE = this instanceof $RegExp;
-      var piRE = _isRegexp(p);
-      var fiU = f === undefined;
-      return !tiRE && piRE && p.constructor === $RegExp && fiU ? p
-        : _inheritIfRequired(CORRECT_NEW
-          ? new Base(piRE && !fiU ? p.source : p, f)
-          : Base((piRE = p instanceof $RegExp) ? p.source : p, piRE && fiU ? _flags.call(p) : f)
-        , tiRE ? this : proto$1, $RegExp);
-    };
-    var proxy = function (key) {
-      key in $RegExp || dP$2($RegExp, key, {
-        configurable: true,
-        get: function () { return Base[key]; },
-        set: function (it) { Base[key] = it; }
-      });
-    };
-    for (var keys = gOPN(Base), i$2 = 0; keys.length > i$2;) proxy(keys[i$2++]);
-    proto$1.constructor = $RegExp;
-    $RegExp.prototype = proto$1;
-    _redefine(_global, 'RegExp', $RegExp);
-  }
-
-  _setSpecies('RegExp');
-
-  // @@search logic
-  _fixReWks('search', 1, function (defined, SEARCH, $search) {
-    // 21.1.3.15 String.prototype.search(regexp)
-    return [function search(regexp) {
-      var O = defined(this);
-      var fn = regexp == undefined ? undefined : regexp[SEARCH];
-      return fn !== undefined ? fn.call(regexp, O) : new RegExp(regexp)[SEARCH](String(O));
-    }, $search];
-  });
-
-  var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
-    '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
-
-  var space = '[' + _stringWs + ']';
-  var non = '\u200b\u0085';
-  var ltrim = RegExp('^' + space + space + '*');
-  var rtrim = RegExp(space + space + '*$');
-
-  var exporter = function (KEY, exec, ALIAS) {
-    var exp = {};
-    var FORCE = _fails(function () {
-      return !!_stringWs[KEY]() || non[KEY]() != non;
-    });
-    var fn = exp[KEY] = FORCE ? exec(trim) : _stringWs[KEY];
-    if (ALIAS) exp[ALIAS] = fn;
-    _export(_export.P + _export.F * FORCE, 'String', exp);
-  };
-
-  // 1 -> String#trimLeft
-  // 2 -> String#trimRight
-  // 3 -> String#trim
-  var trim = exporter.trim = function (string, TYPE) {
-    string = String(_defined(string));
-    if (TYPE & 1) string = string.replace(ltrim, '');
-    if (TYPE & 2) string = string.replace(rtrim, '');
-    return string;
-  };
-
-  var _stringTrim = exporter;
-
-  var gOPN$1 = _objectGopn.f;
-  var gOPD$1 = _objectGopd.f;
-  var dP$3 = _objectDp.f;
-  var $trim = _stringTrim.trim;
-  var NUMBER = 'Number';
-  var $Number = _global[NUMBER];
-  var Base$1 = $Number;
-  var proto$2 = $Number.prototype;
-  // Opera ~12 has broken Object#toString
-  var BROKEN_COF = _cof(_objectCreate(proto$2)) == NUMBER;
-  var TRIM = 'trim' in String.prototype;
-
-  // 7.1.3 ToNumber(argument)
-  var toNumber = function (argument) {
-    var it = _toPrimitive(argument, false);
-    if (typeof it == 'string' && it.length > 2) {
-      it = TRIM ? it.trim() : $trim(it, 3);
-      var first = it.charCodeAt(0);
-      var third, radix, maxCode;
-      if (first === 43 || first === 45) {
-        third = it.charCodeAt(2);
-        if (third === 88 || third === 120) return NaN; // Number('+0x1') should be NaN, old V8 fix
-      } else if (first === 48) {
-        switch (it.charCodeAt(1)) {
-          case 66: case 98: radix = 2; maxCode = 49; break; // fast equal /^0b[01]+$/i
-          case 79: case 111: radix = 8; maxCode = 55; break; // fast equal /^0o[0-7]+$/i
-          default: return +it;
-        }
-        for (var digits = it.slice(2), i = 0, l = digits.length, code; i < l; i++) {
-          code = digits.charCodeAt(i);
-          // parseInt parses a string to a first unavailable symbol
-          // but ToNumber should return NaN if a string contains unavailable symbols
-          if (code < 48 || code > maxCode) return NaN;
-        } return parseInt(digits, radix);
-      }
-    } return +it;
-  };
-
-  if (!$Number(' 0o1') || !$Number('0b1') || $Number('+0x1')) {
-    $Number = function Number(value) {
-      var it = arguments.length < 1 ? 0 : value;
-      var that = this;
-      return that instanceof $Number
-        // check on 1..constructor(foo) case
-        && (BROKEN_COF ? _fails(function () { proto$2.valueOf.call(that); }) : _cof(that) != NUMBER)
-          ? _inheritIfRequired(new Base$1(toNumber(it)), that, $Number) : toNumber(it);
-    };
-    for (var keys$1 = _descriptors ? gOPN$1(Base$1) : (
-      // ES3:
-      'MAX_VALUE,MIN_VALUE,NaN,NEGATIVE_INFINITY,POSITIVE_INFINITY,' +
-      // ES6 (in case, if modules with ES6 Number statics required before):
-      'EPSILON,isFinite,isInteger,isNaN,isSafeInteger,MAX_SAFE_INTEGER,' +
-      'MIN_SAFE_INTEGER,parseFloat,parseInt,isInteger'
-    ).split(','), j = 0, key$1; keys$1.length > j; j++) {
-      if (_has(Base$1, key$1 = keys$1[j]) && !_has($Number, key$1)) {
-        dP$3($Number, key$1, gOPD$1(Base$1, key$1));
-      }
-    }
-    $Number.prototype = proto$2;
-    proto$2.constructor = $Number;
-    _redefine(_global, NUMBER, $Number);
-  }
-
-  var prefix = window.location.protocol === 'https:' ? 'https:' : 'http:';
-  var CSS = "".concat(prefix, "//cdn.wwpass.com/packages/wwpass.js/2.4/wwpass.js.css");
-
-  var isNativeMessaging = function isNativeMessaging() {
-    var _navigator = navigator,
-        userAgent = _navigator.userAgent;
-    var re = /Firefox\/([0-9]+)\./;
-    var match = userAgent.match(re);
-
-    if (match && match.length > 1) {
-      var version = match[1];
-
-      if (Number(version) >= 51) {
-        return 'Firefox';
-      }
-    }
-
-    re = /Chrome\/([0-9]+)\./;
-    match = userAgent.match(re);
-
-    if (match && match.length > 1) {
-      var _version = match[1];
-
-      if (Number(_version) >= 45) {
-        return 'Chrome';
-      }
-    }
-
-    return false;
-  };
-
-  var wwpassPlatformName = function wwpassPlatformName() {
-    var _navigator2 = navigator,
-        userAgent = _navigator2.userAgent;
-    var knownPlatforms = ['Android', 'iPhone', 'iPad'];
-
-    for (var i = 0; i < knownPlatforms.length; i += 1) {
-      if (userAgent.search(new RegExp(knownPlatforms[i], 'i')) !== -1) {
-        return knownPlatforms[i];
-      }
-    }
-
-    return null;
-  };
-
-  var wwpassMessageForPlatform = function wwpassMessageForPlatform(platformName) {
-    return "".concat(WWPASS_UNSUPPORTED_PLATFORM_MSG_TMPL, " ").concat(platformName);
-  };
-
-  var wwpassShowError = function wwpassShowError(message, title, onCloseCallback) {
-    if (!document.getElementById('_wwpass_css')) {
-      var l = document.createElement('link');
-      l.id = '_wwpass_css';
-      l.rel = 'stylesheet';
-      l.href = CSS;
-      document.head.appendChild(l);
-    }
-
-    var dlg = document.createElement('div');
-    dlg.id = '_wwpass_err_dlg';
-    var dlgClose = document.createElement('span');
-    dlgClose.innerHTML = 'Close';
-    dlgClose.id = '_wwpass_err_close';
-    var header = document.createElement('h1');
-    header.innerHTML = title;
-    var text = document.createElement('div');
-    text.innerHTML = message;
-    dlg.appendChild(header);
-    dlg.appendChild(text);
-    dlg.appendChild(dlgClose);
-    document.body.appendChild(dlg);
-    document.getElementById('_wwpass_err_close').addEventListener('click', function () {
-      var elem = document.getElementById('_wwpass_err_dlg');
-      elem.parentNode.removeChild(elem);
-      onCloseCallback();
-      return false;
-    });
-    return true;
-  };
-
-  var wwpassNoSoftware = function wwpassNoSoftware(code, onclose) {
-    if (code === WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND) {
-      var client = isNativeMessaging();
-      var message = '';
-
-      if (client) {
-        if (client === 'Chrome') {
-          var returnURL = encodeURIComponent(window.location.href);
-          message = '<p>The WWPass Authentication extension for Chrome is not installed or is disabled in browser settings.';
-          message += '<p>Click the link below to install and enable the WWPass Authentication extension.';
-          message += "<p><a href=\"https://chrome.wwpass.com/?callbackURL=".concat(returnURL, "\">Install WWPass Authentication Extension</a>");
-        } else if (client === 'Firefox') {
-          // Firefox
-          var _returnURL = encodeURIComponent(window.location.href);
-
-          message = '<p>The WWPass Authentication extension for Firefox is not installed or is disabled in browser settings.';
-          message += '<p>Click the link below to install and enable the WWPass Authentication extension.';
-          message += "<p><a href=\"https://firefox.wwpass.com/?callbackURL=".concat(_returnURL, "\">Install WWPass Authentication Extension</a>");
-        }
-      } else {
-        message = '<p>No Security Pack is found on your computer or WWPass&nbsp;Browser&nbsp;Plugin is disabled.</p><p>To install Security Pack visit <a href="https://ks.wwpass.com/download/">Key Services</a> or check plugin settings of your browser to activate WWPass&nbsp;Browser&nbsp;Plugin.</p><p><a href="https://support.wwpass.com/?topic=604">Learn more...</a></p>';
-      }
-
-      wwpassShowError(message, 'WWPass &mdash; No Software Found', onclose);
-    } else if (code === WWPASS_STATUS.UNSUPPORTED_PLATFORM) {
-      wwpassShowError(wwpassMessageForPlatform(wwpassPlatformName()), 'WWPass &mdash; Unsupported Platform', onclose);
-    }
-  };
-
-  var renderPassKeyButton = function renderPassKeyButton() {
-    var button = document.createElement('button');
-    button.innerHTML = '<svg id="icon-button_logo" viewBox="0 0 34 20" style="fill: none; left: 28px; stroke-width: 2px; width: 35px; height: 25px; top: 5px; position: absolute;"><switch><g><title>button_logo</title><path fill="#FFF" d="M31.2 20h-28c-1.7 0-3-1.3-3-3V3c0-1.7 1.3-3 3-3h27.4C32.5 0 34 1.6 34 3.6c0 1.3-.8 2.5-1.9 3L34 16.8c.2 1.6-.9 3-2.5 3.1-.1.1-.2.1-.3.1zM27 6h-1c-1.1 0-2 .9-2 2v1h-8.3c-.8-2.8-3.8-4.4-6.5-3.5S4.8 9.2 5.6 12s3.8 4.4 6.5 3.5c1.7-.5 3-1.8 3.5-3.5H27V6zm-1 1c-.6 0-1 .4-1 1v2H12.1V8.3c0-.2-.1-.3-.2-.3h-.2l-3.6 2.3c-.1.1-.2.3-.1.4l.1.1 3.6 2.2c.1.1.3 0 .4-.1V11H26V7z"></path></g></switch></svg> Log in with PassKey';
-    button.setAttribute('style', 'color: white; background-color: #2277E6; font-weight: 400; font-size: 18px; line-height: 36px; font-family: "Arial", sans-serif; padding-right: 15px; cursor: pointer; height: 40px; width: 255px; border-radius: 3px; border: 1px solid #2277E6; padding-left: 60px; text-decoration: none; position: relative;');
-    return button;
-  };
-
-  var PLUGIN_OBJECT_ID = '_wwpass_plugin';
-  var PLUGIN_MIME_TYPE = 'application/x-wwauth';
-  var PLUGIN_TIMEOUT = 10000;
-  var REDUCED_PLUGIN_TIMEOUT = 1000;
-  var PLUGIN_AUTH_KEYTYPE_REVISION = 9701;
-  var PluginInfo = {};
-  var savedPluginInstance;
-  var pendingReqests = [];
-
-  var havePlugin = function havePlugin() {
-    return navigator.mimeTypes[PLUGIN_MIME_TYPE] !== undefined;
-  };
-
-  var wwpassPluginShowsErrors = function wwpassPluginShowsErrors(pluginVersionString) {
-    if (typeof pluginVersionString === 'string') {
-      var pluginVersion = pluginVersionString.split('.');
-
-      for (var i = 0; i < pluginVersion.length; i += 1) {
-        pluginVersion[i] = parseInt(pluginVersion[i], 10);
-      }
-
-      if (pluginVersion.length === 3) {
-        if (pluginVersion[0] > 2 || pluginVersion[0] === 2 && pluginVersion[1] > 4 || pluginVersion[0] === 2 && pluginVersion[1] === 4 && pluginVersion[2] >= 1305) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  };
-
-  var getPluginInstance = function getPluginInstance(log) {
-    return new Promise(function (resolve, reject) {
-      if (savedPluginInstance) {
-        if (window._wwpass_plugin_loaded !== undefined) {
-          // eslint-disable-line no-underscore-dangle
-          pendingReqests.push([resolve, reject]);
-        } else {
-          log('%s: plugin is already initialized', 'getPluginInstance');
-          resolve(savedPluginInstance);
-        }
-      } else {
-        var junkBrowser = navigator.mimeTypes.length === 0;
-        var pluginInstalled = havePlugin();
-        var timeout = junkBrowser ? REDUCED_PLUGIN_TIMEOUT : PLUGIN_TIMEOUT;
-
-        if (pluginInstalled || junkBrowser) {
-          log('%s: trying to create plugin instance(junkBrowser=%s, timeout=%d)', 'getPluginInstance', junkBrowser, timeout);
-          var pluginHtml = "<object id='".concat(PLUGIN_OBJECT_ID, "' width=0 height=0 type='").concat(PLUGIN_MIME_TYPE, "'><param name='onload' value='_wwpass_plugin_loaded'/></object>");
-          var pluginDiv = document.createElement('div');
-          pluginDiv.setAttribute('style', 'position: fixed; left: 0; top:0; width: 1px; height: 1px; z-index: -1; opacity: 0.01');
-          document.body.appendChild(pluginDiv);
-          pluginDiv.innerHTML += pluginHtml;
-          savedPluginInstance = document.getElementById(PLUGIN_OBJECT_ID);
-          var timer = setTimeout(function () {
-            delete window._wwpass_plugin_loaded; // eslint-disable-line no-underscore-dangle
-
-            savedPluginInstance = null;
-            log('%s: WWPass plugin loading timeout', 'getPluginInstance');
-            reject({
-              code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
-              message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
-            });
-
-            for (var i = 0; i < pendingReqests.length; i += 1) {
-              var pendingReject = pendingReqests[i][1];
-              pendingReject({
-                code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
-                message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
-              });
-            }
-          }, PLUGIN_TIMEOUT);
-
-          window._wwpass_plugin_loaded = function () {
-            // eslint-disable-line no-underscore-dangle
-            log('%s: plugin loaded', 'getPluginInstance');
-            delete window._wwpass_plugin_loaded; // eslint-disable-line no-underscore-dangle
-
-            clearTimeout(timer);
-
-            try {
-              PluginInfo.versionString = savedPluginInstance.version;
-              PluginInfo.revision = parseInt(savedPluginInstance.version.split('.')[2], 10);
-              PluginInfo.showsErrors = wwpassPluginShowsErrors(PluginInfo.versionString);
-            } catch (err) {
-              log('%s: error parsing plugin version: %s', 'getPluginInstance', err);
-            }
-
-            resolve(savedPluginInstance);
-
-            for (var i = 0; i < pendingReqests.length; i += 1) {
-              var pendingResolve = pendingReqests[i][0];
-              pendingResolve(savedPluginInstance);
-            }
-          };
-        } else {
-          log('%s: no suitable plugins installed', 'getPluginInstance');
-          reject({
-            code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
-            message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
-          });
-        }
-      }
-    });
-  };
-
-  var wrapCallback = function wrapCallback(callback) {
-    if (!PluginInfo.showsErrors) {
-      return function (code, ticketOrMessage) {
-        if (code !== WWPASS_STATUS.OK && code !== WWPASS_STATUS.USER_REJECT) {
-          var message = "<p><b>A error has occured:</b> ".concat(ticketOrMessage, "</p>") + "<p><a href=\"https://support.wwpass.com/?topic=".concat(code, "\">Learn more</a></p>");
-          wwpassShowError(message, 'WWPass Error', function () {
-            callback(code, ticketOrMessage);
-          });
-        } else {
-          callback(code, ticketOrMessage);
-        }
-      };
-    }
-
-    return callback;
-  };
-
-  var wwpassPluginExecute = function wwpassPluginExecute(inputRequest) {
-    return new Promise(function (resolve, reject) {
-      var defaultOptions = {
-        log: function log() {}
-      };
-
-      var request = objectSpread({}, defaultOptions, inputRequest);
-
-      request.log('%s: called, operation name is "%s"', 'wwpassPluginExecute', request.operation || null);
-      getPluginInstance(request.log).then(function (plugin) {
-        var wrappedCallback = wrapCallback(function (code, ticketOrMessage) {
-          if (code === WWPASS_STATUS.OK) {
-            resolve(ticketOrMessage);
-          } else {
-            reject({
-              code: code,
-              message: ticketOrMessage
-            });
-          }
-        });
-
-        if (plugin.execute !== undefined) {
-          request.callback = wrappedCallback;
-          plugin.execute(request);
-        } else if (request.operation === 'auth') {
-          if (PluginInfo.revision < PLUGIN_AUTH_KEYTYPE_REVISION) {
-            plugin.authenticate(request.ticket, wrappedCallback);
-          } else {
-            plugin.authenticate(request.ticket, wrappedCallback, request.firstKeyType || WWPASS_KEY_TYPE_DEFAULT);
-          }
-        } else {
-          plugin.do_operation(request.operation, wrappedCallback);
-        }
-      }).catch(reject);
-    });
-  };
-
-  var pluginWaitForRemoval = function pluginWaitForRemoval() {
-    var log = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-    return new Promise(function (resolve, reject) {
-      getPluginInstance(log).then(function (plugin) {
-        plugin.on_key_removed(resolve);
-      }).catch(reject);
-    });
-  };
-
-  var EXTENSION_POLL_TIMEOUT = 200;
-  var EXTENSION_POLL_ATTEMPTS = 15;
-  var extensionNotInstalled = false;
-
-  var timedPoll = function timedPoll(args) {
-    var condition = args.condition;
-
-    if (typeof condition === 'function') {
-      condition = condition();
-    }
-
-    if (condition) {
-      args.onCondition();
-    } else {
-      var attempts = args.attempts || 0;
-
-      if (attempts--) {
-        // eslint-disable-line no-plusplus
-        var timeout = args.timeout || 100;
-        setTimeout(function (p) {
-          return function () {
-            timedPoll(p);
-          };
-        }({
-          timeout: timeout,
-          attempts: attempts,
-          condition: args.condition,
-          onCondition: args.onCondition,
-          onTimeout: args.onTimeout
-        }), timeout);
-      } else {
-        args.onTimeout();
-      }
-    }
-  };
-
-  var isNativeMessagingExtensionReady = function isNativeMessagingExtensionReady() {
-    return (document.querySelector('meta[property="wwpass:extension:version"]') || document.getElementById('_WWAuth_Chrome_Installed_')) !== null;
-  };
-
-  var randomID = function randomID() {
-    return ((1 + Math.random()) * 0x100000000 | 0).toString(16).substring(1);
-  }; // eslint-disable-line no-bitwise,max-len
-
-
-  var wwpassNMCall = function wwpassNMCall(func, args) {
-    var log = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {};
-    return new Promise(function (resolve, reject) {
-      if (extensionNotInstalled) {
-        log('%s: chrome native messaging extension is not installed', 'wwpassNMExecute');
-        reject({
-          code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
-          message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
-        });
-        return;
-      }
-
-      timedPoll({
-        timeout: EXTENSION_POLL_TIMEOUT,
-        attempts: EXTENSION_POLL_ATTEMPTS,
-        condition: isNativeMessagingExtensionReady,
-        onCondition: function onCondition() {
-          var id = randomID();
-          window.postMessage({
-            type: '_WWAuth_Message',
-            src: 'client',
-            id: id,
-            func: func,
-            args: args ? JSON.parse(JSON.stringify(args)) : args
-          }, '*');
-          window.addEventListener('message', function onMessageCallee(event) {
-            if (event.data.type === '_WWAuth_Message' && event.data.src === 'plugin' && event.data.id === id) {
-              window.removeEventListener('message', onMessageCallee, false);
-
-              if (event.data.code === WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND) {
-                var message = '<p>No Security Pack is found on your computer or WWPass&nbsp;native&nbsp;host is not responding.</p><p>To install Security Pack visit <a href="https://ks.wwpass.com/download/">Key Services</a> </p><p><a href="https://support.wwpass.com/?topic=604">Learn more...</a></p>';
-                wwpassShowError(message, 'WWPass Error', function () {
-                  reject({
-                    code: event.data.code,
-                    message: event.data.ticketOrMessage
-                  });
-                });
-              } else if (event.data.code === WWPASS_STATUS.OK) {
-                resolve(event.data.ticketOrMessage);
-              } else {
-                reject({
-                  code: event.data.code,
-                  message: event.data.ticketOrMessage
-                });
-              }
-            }
-          }, false);
-        },
-        onTimeout: function onTimeout() {
-          extensionNotInstalled = true;
-          log('%s: chrome native messaging extension is not installed', 'wwpassNMExecute');
-          reject({
-            code: WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND,
-            message: WWPASS_NO_AUTH_INTERFACES_FOUND_MSG
-          });
-        }
-      });
-    });
-  };
-
-  var wwpassNMExecute = function wwpassNMExecute(inputRequest) {
-    var defaultOptions = {
-      log: function log() {}
-    };
-
-    var request = objectSpread({}, defaultOptions, inputRequest);
-
-    var log = request.log;
-    delete request.log;
-    log('%s: called', 'wwpassNMExecute');
-    request.uri = {
-      domain: window.location.hostname,
-      protocol: window.location.protocol
-    };
-    return wwpassNMCall('exec', [request], log);
-  };
-
-  var nmWaitForRemoval = function nmWaitForRemoval() {
-    var log = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
-    return wwpassNMCall('on_key_rm', undefined, log);
-  };
-
-  var pluginPresent = function pluginPresent() {
-    return havePlugin() || isNativeMessagingExtensionReady();
-  };
-
-  var wwpassPlatformName$1 = function wwpassPlatformName() {
-    var _navigator = navigator,
-        userAgent = _navigator.userAgent;
-    var knownPlatforms = ['Android', 'iPhone', 'iPad'];
-
-    for (var i = 0; i < knownPlatforms.length; i += 1) {
-      if (userAgent.search(new RegExp(knownPlatforms[i], 'i')) !== -1) {
-        return knownPlatforms[i];
-      }
-    }
-
-    return null;
-  }; // N.B. it call functions in REVERSE order
-
-
-  var chainedCall = function chainedCall(functions, request, resolve, reject) {
-    functions.pop()(request).then(resolve, function (e) {
-      if (e.code === WWPASS_STATUS.NO_AUTH_INTERFACES_FOUND) {
-        if (functions.length > 0) {
-          chainedCall(functions, request, resolve, reject);
-        } else {
-          wwpassNoSoftware(e.code, function () {});
-          reject(e);
-        }
-      } else {
-        reject(e);
-      }
-    });
-  };
-
-  var wwpassCall = function wwpassCall(nmFunc, pluginFunc, request) {
-    return new Promise(function (resolve, reject) {
-      var platformName = wwpassPlatformName$1();
-
-      if (platformName !== null) {
-        wwpassNoSoftware(WWPASS_STATUS.UNSUPPORTED_PLATFORM, function () {
-          reject({
-            code: WWPASS_STATUS.UNSUPPORTED_PLATFORM,
-            message: wwpassMessageForPlatform(platformName)
-          });
-        });
-        return;
-      }
-
-      if (havePlugin()) {
-        chainedCall([nmFunc, pluginFunc], request, resolve, reject);
-      } else {
-        chainedCall([pluginFunc, nmFunc], request, resolve, reject);
-      }
-    });
-  };
-
-  var wwpassAuth = function wwpassAuth(request) {
-    return wwpassCall(wwpassNMExecute, wwpassPluginExecute, objectSpread({}, request, {
-      operation: 'auth'
-    }));
-  };
-
-  var waitForRemoval = function waitForRemoval() {
-    return wwpassCall(nmWaitForRemoval, pluginWaitForRemoval);
-  };
-
-  var doWWPassPasskeyAuth = function doWWPassPasskeyAuth(options) {
-    return getTicket(options.ticketURL).then(function (json) {
-      var response = ticketAdapter(json);
-      var ticket = response.ticket;
-      return getClientNonceWrapper(ticket, response.ttl).then(function (key) {
-        return wwpassAuth({
-          ticket: ticket,
-          clientKeyNonce: key !== undefined ? abToB64(key) : undefined,
-          log: options.log
-        });
-      }).then(function () {
-        return ticket;
-      });
-      /* We may receive new ticket here but we need
-       * to keep the original one to find nonce */
-    });
-  };
-
-  var initPasskeyButton = function initPasskeyButton(options, resolve, reject) {
-    if (options.passkeyButton.innerHTML.length === 0) {
-      options.passkeyButton.appendChild(renderPassKeyButton());
-    }
-
-    var authUnderway = false;
-    options.passkeyButton.addEventListener('click', function (e) {
-      if (!authUnderway) {
-        authUnderway = true;
-        doWWPassPasskeyAuth(options).then(function (newTicket) {
-          authUnderway = false;
-          resolve({
-            ppx: options.ppx,
-            version: options.version,
-            code: WWPASS_STATUS.OK,
-            message: WWPASS_OK_MSG,
-            ticket: newTicket,
-            callbackURL: options.callbackURL,
-            hw: true
-          });
-        }, function (err) {
-          authUnderway = false;
-
-          if (!err.code) {
-            options.log('passKey error', err);
-          } else if (err.code === WWPASS_STATUS.INTERNAL_ERROR || options.returnErrors) {
-            reject({
-              ppx: options.ppx,
-              version: options.version,
-              code: err.code,
-              message: err.message,
-              callbackURL: options.callbackURL
-            });
-          }
-        });
-      }
-
-      e.preventDefault();
-    }, false);
-  };
-
-  var wwpassPasskeyAuth = function wwpassPasskeyAuth(initialOptions) {
-    return new Promise(function (resolve, reject) {
-      var defaultOptions = {
-        ticketURL: '',
-        callbackURL: '',
-        ppx: 'wwp_',
-        forcePasskeyButton: true,
-        log: function log() {}
-      };
-
-      var options = objectSpread({}, defaultOptions, initialOptions);
-
-      if (!options.passkeyButton) {
-        reject({
-          ppx: options.ppx,
-          version: options.version,
-          code: WWPASS_STATUS.INTERNAL_ERROR,
-          message: 'Cannot find passkey element',
-          callbackURL: options.callbackURL
-        });
-      }
-
-      if (options.forcePasskeyButton || pluginPresent()) {
-        if (options.passkeyButton.style.display === 'none') {
-          options.passkeyButton.style.display = null;
-        }
-
-        initPasskeyButton(options, resolve, reject);
-      } else {
-        var displayBackup = options.passkeyButton.style.display;
-        options.passkeyButton.style.display = 'none';
-        var observer = new MutationObserver(function (_mutationsList, _observer) {
-          if (pluginPresent()) {
-            _observer.disconnect();
-
-            options.passkeyButton.style.display = displayBackup === 'none' ? null : displayBackup;
-            initPasskeyButton(options, resolve, reject);
-          }
-        });
-        observer.observe(document.head, {
-          childList: true
-        });
-      }
-    }).then(navigateToCallback, navigateToCallback);
-  };
-
   var absolutePath = function absolutePath(href) {
     var link = document.createElement('a');
     link.href = href;
@@ -9620,17 +9635,10 @@
 
     options.passkeyButton = typeof options.passkey === 'string' ? document.querySelector(options.passkey) : options.passkey;
     options.qrcode = typeof options.qrcode === 'string' ? document.querySelector(options.qrcode) : options.qrcode;
-    var promises = [];
-
-    if (options.passkeyButton) {
-      promises.push(wwpassPasskeyAuth(options));
-    }
-
-    promises.push(wwpassMobileAuth(options));
-    return Promise.race(promises);
+    return wwpassMobileAuth(options);
   };
 
-  var version$1 = "3.0.3";
+  var version$1 = "3.0.4";
 
   if ('console' in window && window.console.log) {
     window.console.log("WWPass frontend library version ".concat(version$1));
