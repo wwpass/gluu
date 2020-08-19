@@ -23,19 +23,6 @@
             });
         };
     </script>
-    <script>
-    /* <![CDATA[ */
-      function isMobile() { return navigator && (
-        ('userAgent' in navigator && navigator.userAgent.match(/iPhone|iPod|iPad|Android/i))
-        || (navigator.maxTouchPoints > 1 && !navigator.userAgent.match(/Windows/i))
-      ) && !window.MSStream;};
-
-      if (isMobile()) {
-        var qrcode = document.querySelector(`#qrcode`);
-        qrcode.classList.add(`qrcode--tap`);
-      }
-    /* ]]> */
-    </script>
   </ui:define>
 
 </ui:composition>
