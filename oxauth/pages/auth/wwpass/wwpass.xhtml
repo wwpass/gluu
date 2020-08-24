@@ -19,8 +19,8 @@
 
     <ui:define name="content-major">
       <h:panelGroup rendered="#{sessionIdService.notSessionIdAuthenticated}">
-        <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Scan the QR code</h2>
-        <p class="text text--marginTop-0">
+        <h2 class="heading heading--h2 heading--light heading--marginBottom-0 qrcode-heading">Scan the QR code</h2>
+        <p class="text text--marginTop-0 qrcode-heading">
            with WWPass<sup class="text__sup">TM</sup><h:outputText value="&#160;" />Key<h:outputText value="&#160;" />app to<h:outputText value="&#160;" />log in<h:outputText value="&#160;" />
         </p>
         <div class="loginMain__code-qr qrtap" id="qrcode">
