@@ -82,7 +82,7 @@
       profile.style.display = `flex`;
     } else {
       let profileLayout = `
-      <h1 class="heading heading--h1 heading--center heading--marginBottom-15 heading--light">User Profile</h1>`;
+      <h1 class="heading heading--h1 heading--center heading--marginBottom-15 heading--light"><span class="profile__back"><span class="profile__backIcon"></span></span>User Profile</h1>`;
     
         for (const [key, value] of Object.entries(dictObj)) {
           if (typeof value === `number`) {
@@ -95,13 +95,17 @@
             profileLayout += profileStringHandler(key, value);
           }
         }  
-        profileLayout += `<button class="button button--common button--back">Back to Applications</button>`;
+        profileLayout += `<button class="button button--common button--marginBottom-0 button--back">Back to Applications</button>`;
     
       const profileElement = document.createElement(`div`);
       profileElement.classList.add(`profile`);
       profileElement.innerHTML = profileLayout;
       const backBtn = profileElement.querySelector(`.button--back`);
       backBtn.addEventListener(`click`, () => {
+        backBtnOnClick(profileElement);
+      });
+      const backIcon = profileElement.querySelector(`.profile__back`);
+      backIcon.addEventListener(`click`, () => {
         backBtnOnClick(profileElement);
       });
     

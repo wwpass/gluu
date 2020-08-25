@@ -508,7 +508,29 @@ body {
   -webkit-padding-before: 20px;
           padding-block-start: 20px;
   -webkit-padding-after: 20px;
-          padding-block-end: 20px; }
+          padding-block-end: 20px;
+  position: relative; }
+
+.profile__back {
+  display: block;
+  position: absolute;
+  content: "";
+  width: 10px;
+  height: 20px;
+  cursor: pointer;
+  padding: 5px 10px;
+  -webkit-margin-start: 10px;
+          margin-inline-start: 10px;
+  left: 0; }
+
+.profile__backIcon {
+  -webkit-transform: rotate(90deg);
+          transform: rotate(90deg);
+  width: 20px;
+  height: 20px;
+  background-image: url("../img/icon-drop.svg");
+  display: block;
+  background-repeat: no-repeat; }
 
 .profile__field {
   -webkit-padding-before: 5px;
@@ -518,6 +540,9 @@ body {
 
 .profile__name {
   font-weight: bold; }
+
+.profile__content {
+  font-weight: 400; }
 
 .profile__content--long {
   word-break: break-all; }
@@ -530,6 +555,9 @@ body {
   -webkit-padding-start: 0;
           padding-inline-start: 0;
   list-style: none; }
+
+.profile__item {
+  font-weight: 400; }
 
 .img--close {
   width: 20px;
@@ -758,6 +786,10 @@ body {
 .button--connect {
   -webkit-padding-before: 1px;
           padding-block-start: 1px; }
+
+.button--marginBottom-0 {
+  -webkit-margin-after: 0;
+          margin-block-end: 0; }
 
 .button__timer {
   display: inline-block;
@@ -999,12 +1031,12 @@ body {
       -webkit-padding-after: 5px;
               padding-block-end: 5px; }
     .profile__name {
-      width: 200px;
+      width: 160px;
       text-align: right;
       -webkit-padding-end: 20px;
               padding-inline-end: 20px; }
-  .profile__content {
-    width: 300px; }
+    .profile__content {
+      width: 340px; }
     .heading--narrow {
       max-width: 570px; }
     .button--wrapper {
@@ -1063,8 +1095,10 @@ body {
               padding-inline-start: 30px;
       -webkit-padding-end: 30px;
               padding-inline-end: 30px; }
-  .profile__content {
-    width: 320px; }
+    .profile__name {
+      width: 200px; }
+    .profile__content {
+      width: 360px; }
     .text--center-tablet {
       text-align: center; } }
 
@@ -1076,7 +1110,15 @@ body {
             margin-inline-start: 20px; }
     .apps__item {
       width: 22%;
-      padding: 15px; } }
+      padding: 15px; }
+    .profile {
+      max-width: 740px;
+      -webkit-padding-start: 30px;
+              padding-inline-start: 30px;
+      -webkit-padding-end: 30px;
+              padding-inline-end: 30px; }
+    .profile__content {
+      width: 100%; } }
 
 @media (min-width: 1110px) {
     .content {
