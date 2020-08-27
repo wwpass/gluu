@@ -64,7 +64,7 @@ sudo cp -rL oxtrust/* /opt/gluu-server/opt/gluu/jetty/identity/custom/
 ```
 
 Files in `idp` directory should be deployed to
-`/opt/gluu-server/opt/gluu/jetty/idp/custom/`
+`/opt/gluu-server/opt/gluu/jetty/idp/custom/` if you have installed Shibboleth IDP
 
 ```console
 sudo cp -rL idp/* /opt/gluu-server/opt/gluu/jetty/idp/custom/
@@ -125,7 +125,7 @@ chown root:gluu /opt/gluu/python/libs/wwpass.py
 Use your favorite console text editor to change Apache configuration
 
 ```console
-[vi|nano|joe|...] /opt/gluu-server/etc/apache2/sites-available/https_gluu.conf
+[vi|nano|joe|...] /etc/apache2/sites-available/https_gluu.conf
 ```
 
 Scroll down the file until you find the last `<Location>...</Location>` tag and
@@ -165,7 +165,7 @@ If your setup is correct, you will see output like this:
 
 ## Configure Gluu Server
 
-Log in as administrator and go to "Configuration -> Manage Custom scripts".
+Log in as administrator and go to "Configuration -> Person Authentication Scripts".
 ![Person Authentication](./images/custom_script1.png)
 
 In `Person Authentication` tab, click `Add custom script configuration` at the bottom of the page
@@ -216,7 +216,7 @@ Go to `Configuration -> JSON configuration -> OxAuth Configuration`, find
 `sessionIdUnauthenticatedUnusedLifetime` setting and set it to `600` or more.
 ![sessionIdUnauthenticatedUnusedLifetime](./images/sessionIdUnauthenticatedUnusedLifetime.png)
 
-Click `Update` to save settings.
+Click `Save Configuration` to save settings.
 
 ### Set up Authentication Method
 
@@ -245,7 +245,7 @@ email or username and password.
 
 If something does not work as expected, return to your main browser and revert
 `Configuration -> Manage Authentication -> Default Authentication Method` back
-to `auth_ldap_server` while you troubleshoot the problem.
+to `simple_password_auth` while you troubleshoot the problem.
 
 ## Troubleshooting
 
