@@ -9004,7 +9004,7 @@
     var loaderClass = "".concat(styles.prefix || 'wwp_', "qrcode_loader");
     var loader = document.createElement('div');
     loader.className = loaderClass;
-    loader.innerHTML = "<div class=\"".concat(loaderClass, "_blk\"></div>\n  <div class=\"").concat(loaderClass, "_blk ").concat(loaderClass, "_delay\"></div>\n  <div class=\"").concat(loaderClass, "_blk ").concat(loaderClass, "_delay\"></div>\n  <div class=\"").concat(loaderClass, "_blk\"></div>");
+    loader.innerHTML = "\n  <div style=\"width: 256px; height: 256px; margin-inline-start: auto; margin-inline-end: auto;\">\n    <div class=\"".concat(loaderClass, "\">\n      <div class=\"").concat(loaderClass, "_blk\"></div>\n      <div class=\"").concat(loaderClass, "_blk ").concat(loaderClass, "_delay\"></div>\n      <div class=\"").concat(loaderClass, "_blk ").concat(loaderClass, "_delay\"></div>\n      <div class=\"").concat(loaderClass, "_blk\"></div>\n    </div>\n  </div>");
 
     if (!haveStyleSheet) {
       var style = document.createElement('style');
@@ -9505,75 +9505,74 @@
 
             case 9:
               _context3.t0 = window.localStorage.getItem(METHOD_KEY_NAME);
-              _context3.next = _context3.t0 === METHOD_QRCODE ? 12 : _context3.t0 === METHOD_SAME_DEVICE ? 15 : 18;
+              _context3.next = _context3.t0 === METHOD_QRCODE ? 12 : _context3.t0 === METHOD_SAME_DEVICE ? 14 : 16;
               break;
 
             case 12:
               executor = qrCodeAuthWrapper;
-              if (options.uiCallback) options.uiCallback({
-                qrcode: true
-              });
-              return _context3.abrupt("break", 20);
+              return _context3.abrupt("break", 17);
 
-            case 15:
+            case 14:
               executor = appAuth;
-              if (options.uiCallback) options.uiCallback({
-                button: true
-              });
-              return _context3.abrupt("break", 20);
+              return _context3.abrupt("break", 17);
+
+            case 16:
+              executor = isMobile() ? appAuth : qrCodeAuthWrapper;
+
+            case 17:
+              if (options.uiCallback) {
+                options.uiCallback(executor === appAuth ? {
+                  button: true
+                } : {
+                  qrcode: true
+                });
+              } // Continue until an exception is thrown or qrcode element is removed from DOM
+
 
             case 18:
-              executor = isMobile() ? appAuth : qrCodeAuthWrapper;
-              if (options.uiCallback) options.uiCallback(isMobile() ? {
-                button: true
-              } : {
-                qrcode: true
-              });
-
-            case 20:
-              _context3.next = 22;
+              _context3.next = 20;
               return executor(options);
 
-            case 22:
+            case 20:
               result = _context3.sent;
               if (options.uiCallback) options.uiCallback(result);
 
               if (!result.button) {
-                _context3.next = 28;
+                _context3.next = 26;
                 break;
               }
 
               executor = appAuth;
-              _context3.next = 34;
+              _context3.next = 32;
               break;
 
-            case 28:
+            case 26:
               if (!result.qrcode) {
-                _context3.next = 32;
+                _context3.next = 30;
                 break;
               }
 
               executor = qrCodeAuthWrapper;
-              _context3.next = 34;
+              _context3.next = 32;
               break;
 
-            case 32:
+            case 30:
               navigateToCallback(result);
               return _context3.abrupt("return", result);
 
-            case 34:
+            case 32:
               if (document.documentElement.contains(options.qrcode)) {
-                _context3.next = 20;
+                _context3.next = 18;
                 break;
               }
 
-            case 35:
+            case 33:
               return _context3.abrupt("return", {
                 status: WWPASS_STATUS.TERMINAL_ERROR,
                 reason: 'QRCode element is not in DOM'
               });
 
-            case 36:
+            case 34:
             case "end":
               return _context3.stop();
           }
@@ -9650,7 +9649,7 @@
     return wwpassMobileAuth(options);
   };
 
-  var version$1 = "3.0.4";
+  var version$1 = "3.0.5";
 
   if ('console' in window && window.console.log) {
     window.console.log("WWPass frontend library version ".concat(version$1));
