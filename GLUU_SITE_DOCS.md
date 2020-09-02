@@ -10,12 +10,6 @@ starts with a smartphone app or a hardware token as the first authentication
 factor. Then additional authentication factors such as PIN or biometrics can be
 added to verify the user identity further.
 
-[Gluu Server](https://gluu.org/docs/gluu-server/4.1/) is a container
-distribution of free open source software (FOSS) for identity and access
-management (IAM). Gluu Server combines SAML 2.0, LDAP, OpenID Connect,
-and other authentication and authorization protocol implementations to create
-a platform for user authentication, identity information, and policy decisions.
-
 Combining WWPass strong multi-factor authentication with the versatility of
 Gluu Server helps to build secure IAM solutions that can be used for single
 sign-on (SSO), customer identity and access management (CIAM), and identity
@@ -27,7 +21,6 @@ This tutorial assumes that you have the following:
 
 - Gluu Server 4.2 installed on Ubuntu Server 20.04 or 18.04;
 - An administrative account on this Ubuntu Server;
-- An application certificate and private key for WWPass authentication;
 - WWPass Key app or hardware token;
 
 ### Obtain Application Certificate and Private Key From WWPass
@@ -37,102 +30,6 @@ To obtain an application certificate and private key go to
 account or **Log In** if you already have an account. Then follow the website
 instructions to register your application domain and issue the application
 certificate.
-
-### Install Gluu
-
-To install Gluu Server follow the
-[instructions on the Gluu website](https://gluu.org/docs/gluu-server/installation-guide/install-ubuntu/).
-
-Note, it is very difficult to change the Gluu domain name (FQDN) after setup.
-There is no configuration option for this in Gluu. Changing the domain name
-manually in configuration files causes lots of side effects. Be sure to choose
-the domain name before setting up Gluu Server.
-
-Do not forget to save the LDAP and oxTrust admin passwords. It is extremely
-difficult to reset these passwords in case they are lost or forgotten.
-We suggest using [PassHub](https://passhub.net) to store these passwords.
-
-When setting up Gluu with  ```setup.py```,  select "**Yes**" when asked
-to install the following components:
-
-- memcached
-- oxAuth OAuth2
-- oxTrust Admin UI
-- Apache HTTPD Server
-- Shibboleth SAML IDP
-- Gluu Radius
-
-Review the configuration settings and type "**Yes**".
-
-Configuration settings should look like this:
-
-```console
-hostname                                          iam.example.com
-orgName                                               Example inc.
-os                                                         ubuntu
-city                                                       Nashua
-state                                                          NH
-countryCode                                                    US
-Applications max ram                                         3072
-Install oxAuth                                               True
-Install oxTrust                                              True
-Backends                                                   wrends
-Java Type                                                     jre
-Install Apache 2 web server                                  True
-Install Shibboleth SAML IDP                                  True
-Install oxAuth RP                                           False
-Install Passport                                            False
-Install Casa                                                False
-Install Oxd                                                 False
-Install Gluu Radius                                          True
-```
-
-### Import Users to Gluu
-
-If you have an account management infrastructure (i.e. Active Directory,
-OpenLDAP, eDirectory), make sure to integrate them with Gluu. To import
-users to your Gluu server, refer to Gluu instruction videos
-[Part 1/3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-1/),
-[Part 2/3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-2/),
-[Part 3/3](https://www.gluu.org/gluu-server-cache-refresh-configuration-part-3/).
-
-There are also instructions on the Gluu website for
-[LDAP sync](https://gluu.org/docs/gluu-server/user-management/ldap-sync/),
-and [LDAP Authentication](https://gluu.org/docs/gluu-server/authn-guide/basic/).
-
-If you don’t have any account management infrastructure or plan to use local
-Gluu accounts, create users and groups before proceeding with WWPass integration.
-Refer to: [Gluu documentation](https://gluu.org/docs/gluu-server/user-management/local-user-management/#manage-people).
-
-We suggest creating a separate account in Gluu for each Gluu administrator.
-Create a new user and add it to the Gluu Manager group.
-See [Group management](https://gluu.org/docs/gluu-server/user-management/local-user-management/#manage-groups-in-oxtrust).
-
-![Add yourself to Gluu Manager group](./images/group_mgmt.png)
-
-### Gluu Container
-
-Gluu Server runs in an isolated container located at `/opt/gluu-server/`.
-To start a shell in the container use
-
-```console
-sudo gluu-serverd login
-```
-
-To check if you are inside a container, run
-
-```console
-systemd-detect-virt -c
-```
-
-If you are inside a Gluu container, the command prints `systemd-nspawn`.
-Otherwise, it prints `none`.
-
-To exit a Gluu container use
-
-```console
-exit
-```
 
 ## Prepare WWPass Integration Files
 
