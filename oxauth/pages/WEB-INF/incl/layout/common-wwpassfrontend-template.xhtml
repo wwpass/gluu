@@ -13,25 +13,26 @@
     <script type="text/javascript">
         window.onload = function () {
             <ui:insert name="bind-function" />
-
-            WWPass.authInit({
-                qrcode:'#qrcode',
-                passkey:'#passkey',
-                forcePasskeyButton: false,
-                callbackURL: window.location.protocol + '//' + window.location.hostname + '#{request.contextPath}/postlogin.htm',
-                ticketURL: '/wwpass/ticket.json?' + (#{identity.getWorkingParameter('use_pin')}?'p=1':''),
-                uiCallback: function(event) {
-                  /* <![CDATA[ */
-                  var headings = document.querySelectorAll(`.qrcode-heading`);
-                  if (headings) {
-                    for (i=0 ; i < headings.length ; i++) {
-                      if (event.button) headings[i].style.display = 'none';
-                      if (event.qrcode) headings[i].style.display = null;
+            if (document.getElementById('qrcode')) {
+              WWPass.authInit({
+                  qrcode:'#qrcode',
+                  passkey:'#passkey',
+                  forcePasskeyButton: false,
+                  callbackURL: window.location.protocol + '//' + window.location.hostname + '#{request.contextPath}/postlogin.htm',
+                  ticketURL: '/wwpass/ticket.json?' + (#{identity.getWorkingParameter('use_pin')}?'p=1':''),
+                  uiCallback: function(event) {
+                    /* <![CDATA[ */
+                    var headings = document.querySelectorAll(`.qrcode-heading`);
+                    if (headings) {
+                      for (i=0 ; i < headings.length ; i++) {
+                        if (event.button) headings[i].style.display = 'none';
+                        if (event.qrcode) headings[i].style.display = null;
+                      }
                     }
+                    /* ]]> */
                   }
-                  /* ]]> */
-                }
-            });
+              });
+            }
         };
     </script>
   </ui:define>
