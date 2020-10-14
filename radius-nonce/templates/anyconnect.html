@@ -38,19 +38,19 @@
             {% else %}
             <input type="hidden" id="profile_selector" name="profile" value="{{ available_profiles[0] }}">
             {% end %}
+            <a class="button button--action button--connect" href="#" id="connect">
+              <span class="button__timer">
+                60
+                <div class="button__timerAnimation"></div>
+              </span>
+              Connect VPN
+            </a>
           {% else %}
             <p class="text">
               You are not allowed to access VPN
             </p>
           {% end %}
 
-          <a class="button button--action button--connect" href="#" id="connect">
-            <span class="button__timer">
-              60
-              <div class="button__timerAnimation"></div>
-            </span>
-            Connect VPN
-          </a>
         </div>
         <div class="after_connect" style="display: none;">
           <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Connecting VPN</h2>
@@ -147,7 +147,7 @@
       setButtonTimer(delay);
     }, 1000);
     window.setTimeout(() => { clearInterval(delayUpdate) }, delay * 1000);
-    
+
     const timeoutConnectUpdate = setTimeout(() => {
       beforeConnect.style.display = `none`;
       timeoutConnect.style.display = `block`;
