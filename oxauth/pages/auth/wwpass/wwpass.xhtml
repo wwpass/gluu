@@ -18,24 +18,22 @@
     </ui:define>
 
     <ui:define name="content-major">
-      <h:panelGroup rendered="#{sessionIdService.notSessionIdAuthenticated}">
-        <h2 class="heading heading--h2 heading--light heading--marginBottom-0 qrcode-heading">Scan the QR code</h2>
-        <p class="text text--marginTop-0 qrcode-heading">
-           with WWPass<sup class="text__sup">TM</sup><h:outputText value="&#160;" />Key<h:outputText value="&#160;" />app to<h:outputText value="&#160;" />log in<h:outputText value="&#160;" />
-        </p>
-        <div class="loginMain__code-qr qrtap" id="qrcode">
-          <canvas width="256" height="256"></canvas>
-        </div>
-        <div id="passkey" style="display:none">
-          <button class="button button--action">Log in with WWPass Key</button>
-        </div>
+      <h2 class="heading heading--h2 heading--light heading--marginBottom-0 qrcode-heading">Scan the QR code</h2>
+      <p class="text text--marginTop-0 qrcode-heading">
+          with WWPass<sup class="text__sup">TM</sup><h:outputText value="&#160;" />Key<h:outputText value="&#160;" />app to<h:outputText value="&#160;" />log in<h:outputText value="&#160;" />
+      </p>
+      <div class="loginMain__code-qr qrtap" id="qrcode">
+        <canvas width="256" height="256"></canvas>
+      </div>
+      <div id="passkey" style="display:none">
+        <button class="button button--action">Log in with WWPass Key</button>
+      </div>
 
-        <div class="hr"></div>
-        <p class="text text--sm">Download WWPass<sup class="text__sup">TM</sup><h:outputText value="&#160;" />Key<h:outputText value="&#160;" />app from
-        </p>
-        <a class="button button--store button--store-ios" href="https://itunes.apple.com/us/app/wwpass-passkey-lite/id984532938">AppStore</a>
-        <a class="button button--store button--store-google" href="https://play.google.com/store/apps/details?id=com.wwpass.android.passkey">Google Play</a>
-      </h:panelGroup>
+      <div class="hr"></div>
+      <p class="text text--sm">Download WWPass<sup class="text__sup">TM</sup><h:outputText value="&#160;" />Key<h:outputText value="&#160;" />app from
+      </p>
+      <a class="button button--store button--store-ios" href="https://itunes.apple.com/us/app/wwpass-passkey-lite/id984532938">AppStore</a>
+      <a class="button button--store button--store-google" href="https://play.google.com/store/apps/details?id=com.wwpass.android.passkey">Google Play</a>
     </ui:define>
 
     <ui:define name="content-additional">
