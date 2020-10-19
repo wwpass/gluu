@@ -26,9 +26,23 @@ oauth2_secret = ''
 # VPN profiles and LDAP Group DNs that allow them
 
 profiles = {
-    'adminVPN': 'CN=VPNAdmin,OU=Security,OU=Groups,OU=Office,DC=example,DC=com',
-    'userVPN': 'inum=1a8337c6-2e31-433d-8aca-0c28ade3f945,ou=groups,o=gluu',
-    'commonVPN': '', # Available to all users
+    'adminVPN': {
+        'handler':'anyconnect',
+        'host':'asa.example.com',
+        'vpngroup': 'SSLVPN',
+        'groups_allowed':'CN=VPNAdmin,OU=Security,OU=Groups,OU=Office,DC=example,DC=com',
+        }
+    'userVPN': {
+        'handler':'anyconnect',
+        'host':'vpn.example.com',
+        'vpngroup': 'SSLVPN',
+        'groups_allowed':'inum=1a8337c6-2e31-433d-8aca-0c28ade3f945,ou=groups,o=gluu',
+    }
+    'commonVPN': {
+        'handler': 'openvpn',
+        'config_name': 'exapmlevpn',
+        'groups_allowed':'', # Available to all users
+    }
 }
 
 # default_username = 'wwpassuser'
