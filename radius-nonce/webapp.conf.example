@@ -41,6 +41,7 @@ profiles = {
     'commonVPN': {
         'handler': 'openvpn',
         'config_name': 'exapmlevpn',
+        'vpngroup': 'OpenVpn',
         'groups_allowed':'', # Available to all users
     }
 }
