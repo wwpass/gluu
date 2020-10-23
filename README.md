@@ -4,9 +4,7 @@ WWPass integration with GLUU IAM service
 
 ## TODO
  - If at all possible intergate getTicket in the oxAuth
- - Secure SP key file with better permissions/ownership
  - Properly fix WWPass SDK for it to work with Jython 2.7.1
- - Assert that registering the same user in parallel won't introduce vulnerability
  - Recover an account using email
 
 ## Installation
