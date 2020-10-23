@@ -61,7 +61,10 @@ class NonceCheck(BaseHandler): #pylint: disable=abstract-method
         if not userinfo:
             logging.debug(f"Bad nonce: {nonce}")
             raise tornado.web.HTTPError(403,"Invalid credentials")
-        if profile not in self.get_available_profiles(userinfo):
+        for p in self.get_available_profiles(userinfo).values():
+            if p['vpngroup'] == profile:
+                break
+        else:
             logging.debug(f"Bad profile value: {profile}")
             raise tornado.web.HTTPError(403,"Invalid credentials")
         self.write("OK")
@@ -72,7 +75,7 @@ class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
     Handler for AnyConnect login
     """
     def get_template_namespace(self) -> Dict[str, Any]:
-        ns = cast(Dict[str, Any], super().get_template_namespace())
+        ns = super().get_template_namespace()
         ns['options'] = self.settings['options']
         return ns
 
@@ -168,7 +171,7 @@ if __name__ == "__main__":
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": options.static_path}),
         (r"/api/v1/check/?", NonceCheck)
     ]
-    application = tornado.web.Application(urls, **settings)
+    application = tornado.web.Application(urls, **settings) #type: ignore[arg-type]
 
     logging.info('Starting server')
     server = tornado.httpserver.HTTPServer(application, xheaders=True)
