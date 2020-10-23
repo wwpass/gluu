@@ -59,3 +59,19 @@ authenticate {
 Note that this setup performs all the work in the "authorize" section. "authenticate" just authenticates all the users that were approved in "authorize".
 
 5. Restart your FREERADIUS and point Cisco ASA to use it for authentication.
+
+
+### OpenVPN Configuration
+
+On your OpenVPN server install opnevpn-radiusplugin.
+In your server config add the lines:
+```
+plugin /path/to/plugin/radiusplugin.so /etc/openvpn/radiusplugin.cnf
+client-cert-not-required # Use both these lines for compatibility with the plugin
+verify-client-cert none # If you want not to use clien certificates in addition to WWPass authentication
+username-as-common-name
+```
+Edit example `/etc/openvpn/radiusplugin.cnf` file to set the details for FREERADIUS server. Edit the `NAS-Identifier` parameter to match with the `vpngroup` parameter of OpenVPN profile in `webapp.conf`.
+
+Distribute the client configuration to your clients. You may omit `auth-user-pass` form it. It will be added automatically.
+Clients have to import it into OpenVPN GUI. The name of client configuration should match the `config_name` value in `webapp.conf`.
