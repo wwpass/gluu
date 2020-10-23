@@ -40,11 +40,11 @@ class NonceDB:
         return userinfo if time() < timeout else None
 
 class BaseHandler(tornado.web.RequestHandler):
-    def get_available_profiles(self, userinfo: Dict[str,Any]) -> Tuple[str, ...]:
+    def get_available_profiles(self, userinfo: Dict[str,Any]) -> Dict[str, Dict[str, Any]]:
         groups = cast(Sequence[str], userinfo.get("member_of", ()))
         logging.debug(f"Groups: {groups}")
-        logging.debug(f"Profiles: {tuple(profile for profile, group in self.settings['options'].profiles.items() if group in groups)}")
-        return tuple(profile for profile, group in self.settings['options'].profiles.items() if group in groups or group == '')
+        logging.debug(f"Profiles: {dict((name, profile) for name, profile in self.settings['options'].profiles.items() if profile['groups_allowed'] in groups)}")
+        return dict((name, profile) for name, profile in self.settings['options'].profiles.items() if profile['groups_allowed'] in groups)
 
 class NonceCheck(BaseHandler): #pylint: disable=abstract-method
     def post(self) -> None:
@@ -61,13 +61,16 @@ class NonceCheck(BaseHandler): #pylint: disable=abstract-method
         if not userinfo:
             logging.debug(f"Bad nonce: {nonce}")
             raise tornado.web.HTTPError(403,"Invalid credentials")
-        if profile not in self.get_available_profiles(userinfo):
+        for p in self.get_available_profiles(userinfo).values():
+            if p['vpngroup'] == profile:
+                break
+        else:
             logging.debug(f"Bad profile value: {profile}")
             raise tornado.web.HTTPError(403,"Invalid credentials")
         self.write("OK")
         self.finish()
 
-class AnyConnectHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
+class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
     """
     Handler for AnyConnect login
     """
@@ -76,36 +79,47 @@ class AnyConnectHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract
         ns['options'] = self.settings['options']
         return ns
 
+    def get_url(self, profile: Dict[str, Any], nonce: str) -> str:
+        if profile['handler'] == 'anyconnect':
+            return 'anyconnect://connect/?%s' % urllib.parse.urlencode({
+                    'host': profile['host'],
+                    'prefill_username': profile.get('username', self.settings['options'].default_username),
+                    'prefill_password': nonce,
+                    'prefill_group_list': profile['vpngroup']})
+        if profile['handler'] == 'openvpn':
+            return 'wwpovpn://connect/?%s' % urllib.parse.urlencode({
+                    'config': profile['config_name'],
+                    'u': profile.get('username', self.settings['options'].default_username),
+                    'nonce': nonce,
+            })
+        raise ValueError(f"Unknown VPN handler {profile['handler']}")
+
+
+    def get_profile_uris(self, userinfo: Dict[str, Any]) -> Dict[str, str]:
+        nonce = NonceDB.create_nonce(userinfo)
+        return dict((name, self.get_url(profile, nonce)) for name, profile in self.get_available_profiles(userinfo).items())
+
     async def get(self) -> None: #pylint: disable=arguments-differ
-        if not self.settings['options'].anyconnect_host:
-            self.render('error.html',reason='AnyConnect not configured on this instance')
-            return
         if self.get_argument('error', False): #type: ignore
             self.render('error.html',reason=self.get_argument('error'))
             return
         if self.get_argument('code', False): #type: ignore
             try:
                 access = await self.get_authenticated_user(
-                    redirect_uri=f'{self.settings["options"].base_url}/anyconnect/',
+                    redirect_uri=f'{self.settings["options"].base_url}/vpn/',
                     code=self.get_argument('code'))
                 user = await self.get_userinfo(access['access_token'])
             except Exception:
                 self.render('error.html',reason="Access denied")
                 return
             logging.debug(f"Got userinfo: {user}")
-            self.render('anyconnect.html',
+            self.render('vpn.html',
                 ticket='redirect',
-                cisco_link='https://%s/' % self.settings['options'].anyconnect_host,
-                anyconnect_url='anyconnect://connect/?%s' % urllib.parse.urlencode({
-                    'host': self.settings['options'].anyconnect_host,
-                    'prefill_username': self.settings['options'].default_username,
-                    'prefill_password': NonceDB.create_nonce(user)
-                }),
-                available_profiles = self.get_available_profiles(user),
+                available_profiles = self.get_profile_uris(user),
                 nonce_ttl = NonceDB.NONCE_TTL,)
         else:
             self.authorize_redirect(
-                redirect_uri=f'{self.settings["options"].base_url}/anyconnect/',
+                redirect_uri=f'{self.settings["options"].base_url}/vpn/',
                 scope=['openid', 'profile'],
                 response_type='code')
 
@@ -128,7 +142,6 @@ def define_options() -> None:
     define("oauth2_id", type=str)
     define("oauth2_secret", type=str)
 
-    define("anyconnect_host", type=str)
     define("wwpass_connector_link", type=str)
     define("default_username", type=str, default="wwpassuser")
     define("profiles", type=dict)
@@ -153,12 +166,12 @@ if __name__ == "__main__":
     }
 
     urls = [
-        (r"/", tornado.web.RedirectHandler, {"url": "/anyconnect"}),
-        (r"/anyconnect/?", AnyConnectHandler),
+        (r"/(anyconnect)?", tornado.web.RedirectHandler, {"url": "/vpn"}),
+        (r"/vpn/?", VPNHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": options.static_path}),
         (r"/api/v1/check/?", NonceCheck)
     ]
-    application = tornado.web.Application(urls, **settings) #type: ignore [arg-type]
+    application = tornado.web.Application(urls, **settings) #type: ignore[arg-type]
 
     logging.info('Starting server')
     server = tornado.httpserver.HTTPServer(application, xheaders=True)

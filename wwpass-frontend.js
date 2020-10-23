@@ -5131,13 +5131,6 @@
     }
   };
 
-  var renderPassKeyButton = function renderPassKeyButton() {
-    var button = document.createElement('button');
-    button.innerHTML = '<svg id="icon-button_logo" viewBox="0 0 34 20" style="fill: none; left: 28px; stroke-width: 2px; width: 35px; height: 25px; top: 5px; position: absolute;"><switch><g><title>button_logo</title><path fill="#FFF" d="M31.2 20h-28c-1.7 0-3-1.3-3-3V3c0-1.7 1.3-3 3-3h27.4C32.5 0 34 1.6 34 3.6c0 1.3-.8 2.5-1.9 3L34 16.8c.2 1.6-.9 3-2.5 3.1-.1.1-.2.1-.3.1zM27 6h-1c-1.1 0-2 .9-2 2v1h-8.3c-.8-2.8-3.8-4.4-6.5-3.5S4.8 9.2 5.6 12s3.8 4.4 6.5 3.5c1.7-.5 3-1.8 3.5-3.5H27V6zm-1 1c-.6 0-1 .4-1 1v2H12.1V8.3c0-.2-.1-.3-.2-.3h-.2l-3.6 2.3c-.1.1-.2.3-.1.4l.1.1 3.6 2.2c.1.1.3 0 .4-.1V11H26V7z"></path></g></switch></svg> Log in with PassKey';
-    button.setAttribute('style', 'color: white; background-color: #2277E6; font-weight: 400; font-size: 18px; line-height: 36px; font-family: "Arial", sans-serif; padding-right: 15px; cursor: pointer; height: 40px; width: 255px; border-radius: 3px; border: 1px solid #2277E6; padding-left: 60px; text-decoration: none; position: relative;');
-    return button;
-  };
-
   var PLUGIN_OBJECT_ID = '_wwpass_plugin';
   var PLUGIN_MIME_TYPE = 'application/x-wwauth';
   var PLUGIN_TIMEOUT = 10000;
@@ -5598,20 +5591,18 @@
     });
   };
 
-  var haveEventListener = false;
+  var PASSKEY_BUTTON_TIMEOUT = 1000;
+  var recentlyClicked = false;
 
-  var initPasskeyButton = function initPasskeyButton(options, resolve, reject) {
-    if (options.passkeyButton.innerHTML.length === 0) {
-      options.passkeyButton.appendChild(renderPassKeyButton());
-    }
-
-    var authUnderway = false;
-    if (haveEventListener) return;
-    options.passkeyButton.addEventListener('click', function (e) {
-      if (!authUnderway) {
-        authUnderway = true;
+  var onButtonClick = function onButtonClick(options) {
+    if (recentlyClicked === false) {
+      recentlyClicked = true;
+      var enableButtonTimer = setTimeout(function () {
+        recentlyClicked = false;
+        enableButtonTimer = false;
+      }, PASSKEY_BUTTON_TIMEOUT);
+      return new Promise(function (resolve, reject) {
         doWWPassPasskeyAuth(options).then(function (newTicket) {
-          authUnderway = false;
           resolve({
             ppx: options.ppx,
             version: options.version,
@@ -5621,9 +5612,7 @@
             callbackURL: options.callbackURL,
             hw: true
           });
-        }, function (err) {
-          authUnderway = false;
-
+        }).catch(function (err) {
           if (!err.code) {
             options.log('passKey error', err);
           } else if (err.code === WWPASS_STATUS.INTERNAL_ERROR || options.returnErrors) {
@@ -5635,59 +5624,56 @@
               callbackURL: options.callbackURL
             });
           }
-        });
-      }
-
-      e.preventDefault();
-    }, false);
-    haveEventListener = true;
-  };
-
-  var wwpassPasskeyAuth = function wwpassPasskeyAuth(initialOptions) {
-    return new Promise(function (resolve, reject) {
-      var defaultOptions = {
-        ticketURL: '',
-        callbackURL: '',
-        ppx: 'wwp_',
-        forcePasskeyButton: true,
-        log: function log() {}
-      };
-
-      var options = objectSpread({}, defaultOptions, initialOptions);
-
-      if (!options.passkeyButton) {
-        reject({
-          ppx: options.ppx,
-          version: options.version,
-          code: WWPASS_STATUS.INTERNAL_ERROR,
-          message: 'Cannot find passkey element',
-          callbackURL: options.callbackURL
-        });
-      }
-
-      if (options.forcePasskeyButton || pluginPresent()) {
-        if (options.passkeyButton.style.display === 'none') {
-          options.passkeyButton.style.display = null;
-        }
-
-        initPasskeyButton(options, resolve, reject);
-      } else {
-        var displayBackup = options.passkeyButton.style.display;
-        options.passkeyButton.style.display = 'none';
-        var observer = new MutationObserver(function (_mutationsList, _observer) {
-          if (pluginPresent()) {
-            _observer.disconnect();
-
-            options.passkeyButton.style.display = displayBackup === 'none' ? null : displayBackup;
-            initPasskeyButton(options, resolve, reject);
+        }).finally(function () {
+          if (enableButtonTimer !== false) {
+            clearTimeout(enableButtonTimer);
+            enableButtonTimer = false;
+            recentlyClicked = false;
           }
         });
-        observer.observe(document.head, {
-          childList: true
-        });
-      }
-    }).then(navigateToCallback, navigateToCallback);
+      });
+    }
+
+    return false;
   };
+
+  // helper for String#{startsWith, endsWith, includes}
+
+
+
+  var _stringContext = function (that, searchString, NAME) {
+    if (_isRegexp(searchString)) throw TypeError('String#' + NAME + " doesn't accept regex!");
+    return String(_defined(that));
+  };
+
+  var MATCH$1 = _wks('match');
+  var _failsIsRegexp = function (KEY) {
+    var re = /./;
+    try {
+      '/./'[KEY](re);
+    } catch (e) {
+      try {
+        re[MATCH$1] = false;
+        return !'/./'[KEY](re);
+      } catch (f) { /* empty */ }
+    } return true;
+  };
+
+  var ENDS_WITH = 'endsWith';
+  var $endsWith = ''[ENDS_WITH];
+
+  _export(_export.P + _export.F * _failsIsRegexp(ENDS_WITH), 'String', {
+    endsWith: function endsWith(searchString /* , endPosition = @length */) {
+      var that = _stringContext(this, searchString, ENDS_WITH);
+      var endPosition = arguments.length > 1 ? arguments[1] : undefined;
+      var len = _toLength(that.length);
+      var end = endPosition === undefined ? len : Math.min(_toLength(endPosition), len);
+      var search = String(searchString);
+      return $endsWith
+        ? $endsWith.call(that, search, end)
+        : that.slice(end - search.length, end) === search;
+    }
+  });
 
   var toString$1 = {}.toString;
 
@@ -9003,12 +8989,11 @@
   var setLoader = function setLoader(element, styles) {
     var loaderClass = "".concat(styles.prefix || 'wwp_', "qrcode_loader");
     var loader = document.createElement('div');
-    loader.className = loaderClass;
-    loader.innerHTML = "\n  <div style=\"width: 256px; height: 256px; margin-inline-start: auto; margin-inline-end: auto;\">\n    <div class=\"".concat(loaderClass, "\">\n      <div class=\"").concat(loaderClass, "_blk\"></div>\n      <div class=\"").concat(loaderClass, "_blk ").concat(loaderClass, "_delay\"></div>\n      <div class=\"").concat(loaderClass, "_blk ").concat(loaderClass, "_delay\"></div>\n      <div class=\"").concat(loaderClass, "_blk\"></div>\n    </div>\n  </div>");
+    loader.innerHTML = "<div style=\"width: 100%; height: 0; padding-block-end: 100%; position: relative;\">\n  <div class=\"".concat(loaderClass, "\">\n    <div class=\"").concat(loaderClass, "_blk\"></div>\n    <div class=\"").concat(loaderClass, "_blk ").concat(loaderClass, "_delay\"></div>\n    <div class=\"").concat(loaderClass, "_blk ").concat(loaderClass, "_delay\"></div>\n    <div class=\"").concat(loaderClass, "_blk\"></div>\n  </div>\n</div>");
 
     if (!haveStyleSheet) {
       var style = document.createElement('style');
-      style.innerHTML = "@keyframes ".concat(styles.prefix || 'wwp_', "pulse {\n      0%   { opacity: 1; }\n      100% { opacity: 0; }\n    }\n    .").concat(loaderClass, " {\n      display: flex;\n      flex-direction: row;\n      flex-wrap: wrap;\n      justify-content: space-around;\n      align-items: center;\n      width: 30%;\n      height: 30%;\n      margin-left: 35%;\n      padding-top: 35%;\n    }\n    .").concat(loaderClass, "_blk {\n      height: 35%;\n      width: 35%;\n      animation: ").concat(styles.prefix || 'wwp_', "pulse 0.75s ease-in infinite alternate;\n      background-color: #cccccc;\n    }\n    .").concat(loaderClass, "_delay {\n      animation-delay: 0.75s;\n    }");
+      style.innerHTML = "@keyframes ".concat(styles.prefix || 'wwp_', "pulse {\n      0%   { opacity: 1; }\n      100% { opacity: 0; }\n    }\n    .").concat(loaderClass, " {\n      display: flex;\n      flex-direction: row;\n      flex-wrap: wrap;\n      justify-content: space-around;\n      align-items: center;\n      width: 30%;\n      height: 30%;\n      margin-left: 35%;\n      padding-top: 35%;\n      position: absolute;\n    }\n    .").concat(loaderClass, "_blk {\n      height: 35%;\n      width: 35%;\n      animation: ").concat(styles.prefix || 'wwp_', "pulse 0.75s ease-in infinite alternate;\n      background-color: #cccccc;\n    }\n    .").concat(loaderClass, "_delay {\n      animation-delay: 0.75s;\n    }");
       document.getElementsByTagName('head')[0].appendChild(style);
       haveStyleSheet = true;
     }
@@ -9177,16 +9162,19 @@
       var qrCodeSwitchLink = document.createElement('a');
       qrCodeSwitchLink.href = '#';
       qrCodeSwitchLink.className = 'wwpassQRButton';
-      universalLinkElement.addEventListener('click', function () {
+      universalLinkElement.addEventListener('click', function (e) {
+        if (!universalLinkElement.href.endsWith('#')) return;
         resolve({
           away: true,
           linkElement: universalLinkElement
         });
+        e.preventDefault();
       });
-      qrCodeSwitchLink.addEventListener('click', function () {
+      qrCodeSwitchLink.addEventListener('click', function (e) {
         resolve({
           qrcode: true
         });
+        e.preventDefault();
       });
       var buttonContainer = document.createElement('div');
       buttonContainer.appendChild(universalLinkElement);
@@ -9211,11 +9199,14 @@
     return setLoader(parentElement, style);
   };
 
+  var downloadDialog = "<style type=\"text/css\" scoped>\n    .wwpass-store {\n    min-width: 125px;\n    padding: 0;\n    background-size: 100% 100%;\n    background-repeat: no-repeat;\n    background-position: center;\n    color: #0055cc;\n    -webkit-transition-property: all;\n    transition-property: all;\n    -webkit-transition-duration: 0.2s;\n    transition-duration: 0.2s;\n    display: flex;\n    min-width: 200px;\n    height: 40px;\n    margin: 0 auto;\n    line-height: 34px;\n    font-weight: 400;\n    text-decoration: none;\n    text-align: center;\n    border: 1px solid #0055cc;\n    border-radius: 4px;\n    -webkit-padding-start: 15px;\n            padding-inline-start: 15px;\n    -webkit-padding-end: 15px;\n            padding-inline-end: 15px;\n    display: inline-block;\n    -webkit-margin-before: 20px;\n            margin-block-start: 20px;\n    -webkit-margin-after: 30px;\n            margin-block-end: 30px;\n    cursor: pointer;\n    -webkit-box-sizing: border-box;\n            box-sizing: border-box;\n                         }\n\n  .wwpass-store:nth-of-type(2) {\n    -webkit-margin-start: 6px;\n            margin-inline-start: 6px; }\n  .wwpass-store:hover,\n  .wwpass-store:focus,\n  .wwpass-store:active {\n    color: #0077ff;\n    border-color: #0077ff; }\n  .wwpass-store-google {\n    background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"125\" height=\"40\" viewBox=\"0 0 125 40\"><path fill=\"%2305c\" d=\"M22.94,19.49l3-3c-1.62-1-12-6.67-12.67-7-.1-.1-.29-.1-.38-.19ZM12.08,9.3a1.28,1.28,0,0,0-.47,1.14v19a1.27,1.27,0,0,0,.47,1.14L22.46,19.87ZM22.94,20.44l-10,10.19c.1,0,.19-.1.29-.1.66-.38,7.61-4.29,12.57-7Zm7.81-1.34c-.29-.19-2-1.14-4.19-2.38L23.42,20l3,3.14c2.38-1.33,4.1-2.29,4.29-2.38.48-.28,1.05-1,0-1.62Zm14.16-7.74a2.43,2.43,0,0,1-.63,1.8,2.78,2.78,0,0,1-3.92,0,2.6,2.6,0,0,1-.8-2,2.75,2.75,0,0,1,2.76-2.79,4.89,4.89,0,0,1,1.07.18,2,2,0,0,1,.8.63l-.45.45A1.63,1.63,0,0,0,42.32,9a1.77,1.77,0,0,0-1.43.63,1.85,1.85,0,0,0-.63,1.53,1.86,1.86,0,0,0,.64,1.53,2.29,2.29,0,0,0,1.42.63,2,2,0,0,0,1.52-.63,1.5,1.5,0,0,0,.45-1.08h-2v-.72h2.59ZM49,9.11H46.61v1.71h2.23v.63H46.61v1.71H49v.63H45.9V8.39H49ZM52,13.79h-.71V9.11H49.73V8.48H53.4v.63H51.87v4.68Zm4.11,0V8.39h.71v5.4Zm3.75,0h-.71V9.11H57.59V8.48h3.66v.63H59.73v4.68Zm8.48-.72a2.79,2.79,0,0,1-3.93,0,2.68,2.68,0,0,1-.8-2,2.68,2.68,0,0,1,.8-2,2.79,2.79,0,0,1,3.93,0,2.68,2.68,0,0,1,.8,2,2.68,2.68,0,0,1-.8,2Zm-3.39-.45a2.09,2.09,0,0,0,1.43.63,1.79,1.79,0,0,0,1.43-.63,2.2,2.2,0,0,0,.63-1.53,1.85,1.85,0,0,0-.63-1.53,2.09,2.09,0,0,0-1.43-.63,1.79,1.79,0,0,0-1.43.63,2.19,2.19,0,0,0,0,3.06Zm5.18,1.17V8.39h.8l2.59,4.14h0v-4h.72v5.4h-.72L70.71,9.47h0v4.32Zm-6.61,7.83a3.78,3.78,0,1,0,3.84,3.78,3.86,3.86,0,0,0-3.84-3.78Zm0,6.12a2.22,2.22,0,0,1-2.14-2.31v0a2.23,2.23,0,0,1,2.11-2.34h0a2.18,2.18,0,0,1,2.15,2.2.71.71,0,0,1,0,.14,2.28,2.28,0,0,1-2.14,2.34Zm-8.39-6.12a3.78,3.78,0,1,0,.12,0Zm0,6.12a2.23,2.23,0,0,1-2.15-2.31v0a2.22,2.22,0,0,1,2.1-2.34h0a2.18,2.18,0,0,1,2.15,2.2.71.71,0,0,1,0,.14,2.23,2.23,0,0,1-2.11,2.34Zm-9.91-4.95v1.62H49a3.7,3.7,0,0,1-.9,2.07,3.9,3.9,0,0,1-2.94,1.17A4.18,4.18,0,0,1,41,23.5a1,1,0,0,1,0-.17A4.22,4.22,0,0,1,45.11,19h.07a4.4,4.4,0,0,1,2.94,1.17L49.28,19a5.67,5.67,0,0,0-4-1.62,5.94,5.94,0,1,0-.09,11.88,5.22,5.22,0,0,0,5.53-5.4,3.3,3.3,0,0,0-.09-1H45.18Zm40.53,1.26a3.53,3.53,0,0,0-6.87,1.35,3.68,3.68,0,0,0,3.57,3.78h.18a3.83,3.83,0,0,0,3.21-1.71l-1.34-.9a2.15,2.15,0,0,1-1.87,1.08,2,2,0,0,1-1.88-1.17l5.09-2.07Zm-5.18,1.26a2.18,2.18,0,0,1,2-2.25,1.55,1.55,0,0,1,1.42.81ZM76.43,29h1.7V17.84h-1.7Zm-2.77-6.57h0a2.9,2.9,0,0,0-2-.81A3.83,3.83,0,0,0,68,25.4a3.77,3.77,0,0,0,3.66,3.78,2.27,2.27,0,0,0,2-.9h.09v.54a2,2,0,0,1-3.93.9l-1.43.63a3.7,3.7,0,0,0,3.4,2.25c2,0,3.66-1.17,3.66-4V21.89H73.75v.54Zm-1.88,5.31a2.2,2.2,0,0,1-2.14-2.25,2.23,2.23,0,0,1,2.11-2.34h0a2.14,2.14,0,0,1,2.06,2.25v.09A2.25,2.25,0,0,1,71.78,27.74Zm21.79-9.9h-4V29h1.7V24.77h2.32A3.47,3.47,0,1,0,94,17.84a2.41,2.41,0,0,0-.38,0Zm.09,5.4H91.25V19.37h2.41a1.9,1.9,0,0,1,2,1.86v0A2,2,0,0,1,93.66,23.24Zm10.27-1.62a3,3,0,0,0-3,1.71l1.52.63a1.58,1.58,0,0,1,1.52-.81,1.62,1.62,0,0,1,1.78,1.44v.09a3.57,3.57,0,0,0-1.78-.45c-1.61,0-3.22.9-3.22,2.52a2.57,2.57,0,0,0,2.67,2.44h.1a2.37,2.37,0,0,0,2.14-1.08h.09V29h1.61V24.68C107.32,22.7,105.9,21.62,103.93,21.62Zm-.18,6.12c-.54,0-1.34-.27-1.34-1,0-.9,1-1.17,1.79-1.17a3.46,3.46,0,0,1,1.51.36,2,2,0,0,1-2,1.8Zm9.46-5.85-1.87,4.86h-.09l-2-4.86H107.5l2.94,6.75-1.7,3.78h1.79l4.55-10.53ZM98.21,29h1.7V17.84h-1.7Z\"/></svg>');\n    margin-left: 0;\n    font-size: 0; }\n  .wwpass-store-ios {\n    background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"125\" height=\"40\" viewBox=\"0 0 125 40\"><path fill=\"%2305c\" d=\"M28.87,19.8a5.21,5.21,0,0,1,2.47-4.37,5.31,5.31,0,0,0-4.18-2.28c-1.75-.18-3.46,1.06-4.35,1.06s-2.29-1-3.78-1a5.57,5.57,0,0,0-4.68,2.88c-2,3.53-.51,8.72,1.43,11.57,1,1.4,2.1,3,3.58,2.9s2-.93,3.75-.93,2.24.93,3.75.9,2.54-1.4,3.48-2.82a11.75,11.75,0,0,0,1.59-3.26,5,5,0,0,1-3.06-4.64ZM26,11.28A5.18,5.18,0,0,0,27.18,7.6a5.13,5.13,0,0,0-3.35,1.75,4.83,4.83,0,0,0-1.2,3.54A4.25,4.25,0,0,0,26,11.28ZM49.87,30.35h-2l-1.11-3.51H42.87l-1.06,3.51h-2l3.82-12H46l3.84,12Zm-3.47-5-1-3.13q-.16-.48-.6-2.25h0c-.18.75-.37,1.5-.56,2.25l-1,3.13Zm13.31.57a5,5,0,0,1-1.18,3.48,3.46,3.46,0,0,1-2.63,1.14,2.62,2.62,0,0,1-2.43-1.23h0v4.55h-1.9V24.56c0-.92,0-1.87-.07-2.84h1.67l.1,1.37h0a3.37,3.37,0,0,1,4.66-1,3.24,3.24,0,0,1,.76.67,4.8,4.8,0,0,1,1,3.18ZM57.77,26a3.58,3.58,0,0,0-.57-2.08,1.92,1.92,0,0,0-1.65-.85,2,2,0,0,0-1.28.47,2.17,2.17,0,0,0-.75,1.23,3,3,0,0,0-.09.59V26.8A2.32,2.32,0,0,0,54,28.39a1.9,1.9,0,0,0,1.49.65,2,2,0,0,0,1.68-.84A3.79,3.79,0,0,0,57.77,26Zm11.79-.07a4.91,4.91,0,0,1-1.18,3.48,3.46,3.46,0,0,1-2.63,1.14,2.61,2.61,0,0,1-2.43-1.23h0v4.55h-1.9V24.56c0-.92,0-1.87-.08-2.84H63l.1,1.37h0a3.37,3.37,0,0,1,4.66-1,3.45,3.45,0,0,1,.76.67,4.74,4.74,0,0,1,1,3.18ZM67.62,26a3.64,3.64,0,0,0-.56-2.08,1.93,1.93,0,0,0-1.66-.85,2,2,0,0,0-1.28.47,2.23,2.23,0,0,0-.75,1.23,2.39,2.39,0,0,0-.08.59V26.8a2.28,2.28,0,0,0,.57,1.59,1.88,1.88,0,0,0,1.49.65A2,2,0,0,0,67,28.2a3.65,3.65,0,0,0,.6-2.2Zm13,1a3.19,3.19,0,0,1-1.06,2.49,4.66,4.66,0,0,1-3.23,1.05,5.62,5.62,0,0,1-3.08-.75l.44-1.6A5.14,5.14,0,0,0,76.4,29a2.54,2.54,0,0,0,1.68-.49,1.6,1.6,0,0,0,.6-1.3,1.67,1.67,0,0,0-.5-1.23A4.45,4.45,0,0,0,76.54,25q-3.12-1.17-3.12-3.43a3.06,3.06,0,0,1,1.1-2.42,4.26,4.26,0,0,1,2.91-.95,5.74,5.74,0,0,1,2.7.57l-.48,1.56a4.73,4.73,0,0,0-2.27-.55,2.33,2.33,0,0,0-1.57.5,1.45,1.45,0,0,0-.48,1.09,1.49,1.49,0,0,0,.55,1.17,6,6,0,0,0,1.73.92,5.92,5.92,0,0,1,2.25,1.46A3.1,3.1,0,0,1,80.59,27Zm6.29-3.84h-2.1v4.19c0,1.07.37,1.6,1.11,1.6a3,3,0,0,0,.85-.09l0,1.46a4.35,4.35,0,0,1-1.48.21,2.28,2.28,0,0,1-1.76-.69,3.41,3.41,0,0,1-.63-2.33V23.15H81.66V21.71h1.25V20.13l1.87-.57v2.15h2.1v1.45ZM96.34,26a4.77,4.77,0,0,1-1.13,3.27,4,4,0,0,1-3.14,1.31,3.8,3.8,0,0,1-3-1.26A4.61,4.61,0,0,1,88,26.11a4.73,4.73,0,0,1,1.16-3.29,4,4,0,0,1,3.11-1.28,3.92,3.92,0,0,1,3,1.26A4.53,4.53,0,0,1,96.34,26Zm-2,.06A3.89,3.89,0,0,0,93.85,24a1.87,1.87,0,0,0-1.7-1,1.9,1.9,0,0,0-1.75,1,3.93,3.93,0,0,0-.51,2.09,3.85,3.85,0,0,0,.51,2,2,2,0,0,0,2.62.82,2,2,0,0,0,.82-.83A4,4,0,0,0,94.37,26Zm8.16-2.63a3,3,0,0,0-.6,0,1.78,1.78,0,0,0-1.55.76,2.88,2.88,0,0,0-.48,1.71v4.53H98l0-5.92c0-1,0-1.9-.07-2.72H99.6l.07,1.65h.06a3,3,0,0,1,1-1.36,2.3,2.3,0,0,1,1.38-.47,2.49,2.49,0,0,1,.47,0ZM111,25.62a4.26,4.26,0,0,1-.07.87h-5.71a2.52,2.52,0,0,0,.83,2,2.8,2.8,0,0,0,1.87.6,6.29,6.29,0,0,0,2.31-.41l.3,1.33a6.9,6.9,0,0,1-2.87.53,4.09,4.09,0,0,1-3.13-1.18,4.34,4.34,0,0,1-1.14-3.16,5,5,0,0,1,1.06-3.25,3.64,3.64,0,0,1,3-1.39,3.19,3.19,0,0,1,2.8,1.39,4.76,4.76,0,0,1,.75,2.72Zm-1.81-.5a2.69,2.69,0,0,0-.37-1.47,1.66,1.66,0,0,0-1.52-.8,1.81,1.81,0,0,0-1.52.78,2.86,2.86,0,0,0-.56,1.49ZM45.77,11a3,3,0,0,1-1,2.39,3.68,3.68,0,0,1-2.48.74A10.39,10.39,0,0,1,41,14.07V8.28a10.81,10.81,0,0,1,1.61-.12,3.46,3.46,0,0,1,2.31.67A2.73,2.73,0,0,1,45.77,11Zm-1,0a2.2,2.2,0,0,0-.54-1.58,2.13,2.13,0,0,0-1.58-.55A4.77,4.77,0,0,0,41.9,9v4.4a3.39,3.39,0,0,0,.64,0,2.19,2.19,0,0,0,1.65-.6A2.45,2.45,0,0,0,44.78,11Zm6.22.9a2.36,2.36,0,0,1-.56,1.61,2,2,0,0,1-1.54.65,1.93,1.93,0,0,1-1.48-.62A2.25,2.25,0,0,1,46.88,12a2.27,2.27,0,0,1,.56-1.61A2,2,0,0,1,49,9.76a2,2,0,0,1,1.49.62A2.26,2.26,0,0,1,51,11.93Zm-1,0a1.93,1.93,0,0,0-.25-1,.92.92,0,0,0-.84-.51.94.94,0,0,0-.86.51,1.91,1.91,0,0,0-.25,1,1.9,1.9,0,0,0,.25,1,1,1,0,0,0,1.69,0A1.92,1.92,0,0,0,50,12Zm8-2.12-1.32,4.25h-.85l-.55-1.85c-.13-.45-.25-.9-.34-1.37h0a10.16,10.16,0,0,1-.34,1.37L54,14.09h-.87L51.91,9.84h1l.47,2c.12.48.21.93.29,1.36h0A13.25,13.25,0,0,1,54,11.87l.6-2h.77l.57,2a13.39,13.39,0,0,1,.33,1.4h0a13.37,13.37,0,0,1,.29-1.4l.51-2Zm4.85,4.25h-.93V11.66c0-.75-.29-1.13-.85-1.13a.89.89,0,0,0-.68.31,1.14,1.14,0,0,0-.26.73v2.52h-.93v-3c0-.37,0-.78,0-1.22H60l0,.67h0a1.33,1.33,0,0,1,.49-.51,1.5,1.5,0,0,1,.85-.24,1.31,1.31,0,0,1,1,.38,1.87,1.87,0,0,1,.49,1.41v2.54Zm2.58,0h-.93V7.9h.93v6.19ZM71,11.93a2.31,2.31,0,0,1-.55,1.61,2,2,0,0,1-1.54.64,1.85,1.85,0,0,1-1.48-.62A2.28,2.28,0,0,1,66.83,12a2.3,2.3,0,0,1,.56-1.61,2.14,2.14,0,0,1,3,0A2.26,2.26,0,0,1,71,11.93Zm-1,0a2,2,0,0,0-.25-1A1,1,0,0,0,68,11a2,2,0,0,0-.25,1A1.93,1.93,0,0,0,68,13a.94.94,0,0,0,.85.51.93.93,0,0,0,.84-.52A1.88,1.88,0,0,0,70,12Zm5.5,2.13h-.84l-.07-.49h0a1.42,1.42,0,0,1-1.23.58,1.24,1.24,0,0,1-1-.38,1.19,1.19,0,0,1-.33-.86,1.33,1.33,0,0,1,.64-1.19,3.4,3.4,0,0,1,1.82-.4v-.08c0-.56-.29-.84-.88-.84a1.89,1.89,0,0,0-1.1.32l-.19-.62a2.64,2.64,0,0,1,1.45-.37c1.1,0,1.65.59,1.65,1.76v1.56a5.71,5.71,0,0,0,.06,1Zm-1-1.46V12c-1,0-1.55.26-1.55.85a.65.65,0,0,0,.18.5.71.71,0,0,0,.46.17,1,1,0,0,0,.57-.2.82.82,0,0,0,.34-.67Zm6.29,1.46H80l0-.68h0a1.39,1.39,0,0,1-1.35.77,1.57,1.57,0,0,1-1.27-.6,2.36,2.36,0,0,1-.5-1.56,2.49,2.49,0,0,1,.55-1.67,1.66,1.66,0,0,1,1.3-.59,1.24,1.24,0,0,1,1.18.58h0V7.9h.94v5c0,.42,0,.8,0,1.15Zm-1-1.79v-.71a1.08,1.08,0,0,0-.37-.87.93.93,0,0,0-.62-.23,1,1,0,0,0-.82.42,1.74,1.74,0,0,0-.3,1.08A1.68,1.68,0,0,0,78,13a1,1,0,0,0,.82.42,1,1,0,0,0,.74-.35,1.18,1.18,0,0,0,.27-.78Zm9-.37a2.36,2.36,0,0,1-.55,1.61,2,2,0,0,1-1.55.64,1.83,1.83,0,0,1-1.47-.62A2.23,2.23,0,0,1,84.68,12a2.26,2.26,0,0,1,.57-1.61,2.12,2.12,0,0,1,3,0,2.26,2.26,0,0,1,.54,1.55Zm-1,0a1.93,1.93,0,0,0-.25-1,.92.92,0,0,0-.84-.51,1,1,0,0,0-.86.51,2.19,2.19,0,0,0,0,2,1,1,0,0,0,1.29.39,1,1,0,0,0,.4-.4A1.92,1.92,0,0,0,87.83,12Zm6,2.13h-.94V11.66c0-.75-.28-1.12-.85-1.12a.82.82,0,0,0-.67.3,1.11,1.11,0,0,0-.26.73v2.52h-.94v-3c0-.37,0-.78,0-1.22H91l0,.67h0a1.31,1.31,0,0,1,.48-.51,1.52,1.52,0,0,1,.85-.24,1.32,1.32,0,0,1,1,.38,1.87,1.87,0,0,1,.49,1.41v2.54Zm6.3-3.54h-1v2.06c0,.53.18.79.55.79a1.84,1.84,0,0,0,.41,0l0,.71a2,2,0,0,1-.73.11,1.11,1.11,0,0,1-.86-.34,1.64,1.64,0,0,1-.32-1.15V10.55h-.61V9.84h.61V9.07l.92-.28V9.84h1v.71Zm5,3.54h-.93V11.68c0-.76-.29-1.14-.85-1.14a.88.88,0,0,0-.89.66,1.27,1.27,0,0,0,0,.34v2.55h-.93V7.9h.93v2.56h0a1.41,1.41,0,0,1,1.27-.7,1.29,1.29,0,0,1,1,.38,2,2,0,0,1,.47,1.42v2.53Zm5.11-2.32a2,2,0,0,1,0,.42h-2.81a1.23,1.23,0,0,0,.41,1,1.34,1.34,0,0,0,.92.3,2.9,2.9,0,0,0,1.13-.2l.15.66a3.6,3.6,0,0,1-1.41.26,2,2,0,0,1-1.54-.58,2.12,2.12,0,0,1-.56-1.56,2.46,2.46,0,0,1,.52-1.6,1.78,1.78,0,0,1,1.47-.68,1.57,1.57,0,0,1,1.38.68,2.29,2.29,0,0,1,.37,1.34Zm-.89-.25a1.31,1.31,0,0,0-.18-.72.83.83,0,0,0-.74-.4.9.9,0,0,0-.75.39,1.4,1.4,0,0,0-.28.73Z\"/></svg>');\n    margin-right: 0;\n    font-size: 0; }\n    </style>\n<a class=\"wwpass-store wwpass-store-ios\" href=\"https://itunes.apple.com/us/app/wwpass-passkey-lite/id984532938\">AppStore</a>\n<a class=\"wwpass-store wwpass-store-google\" href=\"https://play.google.com/store/apps/details?id=com.wwpass.android.passkey\">Google Play</a>\n";
+
   var METHOD_KEY_NAME = 'wwpass.auth.method';
   var METHOD_QRCODE = 'qrcode';
   var METHOD_SAME_DEVICE = 'appRedirect';
   var PROTOCOL_VERSION = 2;
   var WAIT_ON_ERROR = 500;
+  var ERROR_DIALOG_TIMEOUT = 4000;
 
   function wait(ms) {
     if (ms) return new Promise(function (r) {
@@ -9224,13 +9215,15 @@
     return null;
   }
 
+  var popupTimerSet = false;
+
   var appAuth =
   /*#__PURE__*/
   function () {
     var _ref = asyncToGenerator(
     /*#__PURE__*/
     regenerator.mark(function _callee(initialOptions) {
-      var defaultOptions, options, result, json, response, ticket, ttl, key;
+      var defaultOptions, options, result, json, response, ticket, ttl, key, showDownloadsPopup;
       return regenerator.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -9244,36 +9237,43 @@
                 log: function log() {}
               };
               options = objectSpread({}, defaultOptions, initialOptions);
-
-              if (options.passkeyButton) {
-                options.passkeyButton.style.display = 'none';
-              }
-
-              _context.next = 5;
+              _context.next = 4;
               return sameDeviceLogin(options.qrcode);
 
-            case 5:
+            case 4:
               result = _context.sent;
 
               if (!result.away) {
-                _context.next = 19;
+                _context.next = 24;
                 break;
               }
 
-              _context.next = 9;
+              _context.next = 8;
               return getTicket(options.ticketURL);
 
-            case 9:
+            case 8:
               json = _context.sent;
               response = ticketAdapter(json);
               ticket = response.ticket;
               ttl = response.ttl;
-              _context.next = 15;
+              _context.next = 14;
               return getClientNonceWrapper(ticket, ttl);
 
-            case 15:
+            case 14:
               key = _context.sent;
+
+              if (!pluginPresent()) {
+                _context.next = 19;
+                break;
+              }
+
               window.localStorage.setItem(METHOD_KEY_NAME, METHOD_SAME_DEVICE);
+              onButtonClick(options).then(navigateToCallback, navigateToCallback);
+              return _context.abrupt("return", {
+                refresh: true
+              });
+
+            case 19:
               result.linkElement.href = getUniversalURL({
                 ticket: ticket,
                 callbackURL: options.callbackURL,
@@ -9282,11 +9282,28 @@
                 version: PROTOCOL_VERSION
               });
               result.linkElement.click();
+              showDownloadsPopup = true;
+              document.addEventListener('visibilitychange', function (state) {
+                if (state !== 'visible') showDownloadsPopup = false;
+              });
 
-            case 19:
+              if (!popupTimerSet) {
+                popupTimerSet = true;
+                setTimeout(function () {
+                  popupTimerSet = false;
+
+                  if (showDownloadsPopup && document.visibilityState === 'visible') {
+                    wwpassShowError(downloadDialog, 'Download WWPass<sup>TM</sup>&nbsp;Key&nbsp;app from', function () {});
+                  } else {
+                    window.localStorage.setItem(METHOD_KEY_NAME, METHOD_SAME_DEVICE);
+                  }
+                }, ERROR_DIALOG_TIMEOUT);
+              }
+
+            case 24:
               return _context.abrupt("return", result);
 
-            case 20:
+            case 25:
             case "end":
               return _context.stop();
           }
@@ -9433,11 +9450,6 @@
         reason: err
       };
     }), qrCodeAuth(options, websocketPool)];
-
-    if (options.passkeyButton) {
-      promises.push(wwpassPasskeyAuth(options));
-    }
-
     return Promise.race(promises).finally(function () {
       websocketPool.close();
     });
@@ -9504,22 +9516,27 @@
               throw Error('Element not found');
 
             case 9:
+              // Always hide the button for backward compatibility, this auth will be handled by appAuth
+              if (options.passkeyButton) {
+                options.passkeyButton.style.display = 'none';
+              }
+
               _context3.t0 = window.localStorage.getItem(METHOD_KEY_NAME);
-              _context3.next = _context3.t0 === METHOD_QRCODE ? 12 : _context3.t0 === METHOD_SAME_DEVICE ? 14 : 16;
+              _context3.next = _context3.t0 === METHOD_QRCODE ? 13 : _context3.t0 === METHOD_SAME_DEVICE ? 15 : 17;
               break;
 
-            case 12:
+            case 13:
               executor = qrCodeAuthWrapper;
-              return _context3.abrupt("break", 17);
+              return _context3.abrupt("break", 18);
 
-            case 14:
+            case 15:
               executor = appAuth;
-              return _context3.abrupt("break", 17);
-
-            case 16:
-              executor = isMobile() ? appAuth : qrCodeAuthWrapper;
+              return _context3.abrupt("break", 18);
 
             case 17:
+              executor = isMobile() ? appAuth : qrCodeAuthWrapper;
+
+            case 18:
               if (options.uiCallback) {
                 options.uiCallback(executor === appAuth ? {
                   button: true
@@ -9529,50 +9546,49 @@
               } // Continue until an exception is thrown or qrcode element is removed from DOM
 
 
-            case 18:
-              _context3.next = 20;
+            case 19:
+              _context3.next = 21;
               return executor(options);
 
-            case 20:
+            case 21:
               result = _context3.sent;
               if (options.uiCallback) options.uiCallback(result);
 
-              if (!result.button) {
-                _context3.next = 26;
+              if (result.button) {
+                executor = appAuth;
+              } else if (result.qrcode) {
+                executor = qrCodeAuthWrapper;
+              }
+
+              if (result.ticket) {
+                navigateToCallback(result);
+              }
+
+              if (result.refresh) {
+                _context3.next = 28;
                 break;
               }
 
-              executor = appAuth;
-              _context3.next = 32;
-              break;
-
-            case 26:
-              if (!result.qrcode) {
-                _context3.next = 30;
+              if (!(options.once || result.status === WWPASS_STATUS.TERMINAL_ERROR)) {
+                _context3.next = 28;
                 break;
               }
 
-              executor = qrCodeAuthWrapper;
-              _context3.next = 32;
-              break;
-
-            case 30:
-              navigateToCallback(result);
               return _context3.abrupt("return", result);
 
-            case 32:
+            case 28:
               if (document.documentElement.contains(options.qrcode)) {
-                _context3.next = 18;
+                _context3.next = 19;
                 break;
               }
 
-            case 33:
+            case 29:
               return _context3.abrupt("return", {
                 status: WWPASS_STATUS.TERMINAL_ERROR,
                 reason: 'QRCode element is not in DOM'
               });
 
-            case 34:
+            case 30:
             case "end":
               return _context3.stop();
           }
@@ -9649,7 +9665,7 @@
     return wwpassMobileAuth(options);
   };
 
-  var version$1 = "3.0.5";
+  var version$1 = "3.0.7";
 
   if ('console' in window && window.console.log) {
     window.console.log("WWPass frontend library version ".concat(version$1));

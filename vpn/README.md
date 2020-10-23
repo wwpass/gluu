@@ -1,10 +1,10 @@
 # OpenID connect for Gluu RADIUS
 
-This software allows using OpenID connect to authenticate Cisco ASA in FREERADIUS. The web site authenticates in Gluu using OpenID Connect API and generates nonce. This is fed into Cisco AnyConnect by redirecting to `anyconnect://` URI with received nonce as password. Cisco ASA then authenticates the user in RADIUS where another custom script checks `password` field against saved nonce by makeing request to the same app and authenticates the request if the nonce matches.
+This software allows using OpenID connect to authenticate Cisco ASA or OpenVPN in FREERADIUS. The web site authenticates in Gluu using OpenID Connect API and generates nonce. This is fed into Cisco AnyConnect by redirecting to `anyconnect://` or ``wwpovpn://` URI with received nonce as password. VPN server then authenticates the user in RADIUS where another custom script checks `password` field against saved nonce by makeing request to the same app and authenticates the request if the nonce matches.
 
 ## Installation and configuration
 
-It's assumed that Gluu is running and Cisco ASA is configured to use FREERADIUS on the same server.
+It's assumed that Gluu is running and Cisco ASA and/or OpenVPN server is configured to use FREERADIUS on the server with Gluu.
 
 ### Gluu configuration
 1. Open `Configuration -> OpenID Connect -> Scopes`. Open scope `profile`. Add `memberOf` claim to that scope and click "Update" to save the changes.
@@ -59,3 +59,19 @@ authenticate {
 Note that this setup performs all the work in the "authorize" section. "authenticate" just authenticates all the users that were approved in "authorize".
 
 5. Restart your FREERADIUS and point Cisco ASA to use it for authentication.
+
+
+### OpenVPN Configuration
+
+On your OpenVPN server install opnevpn-radiusplugin.
+In your server config add the lines:
+```
+plugin /path/to/plugin/radiusplugin.so /etc/openvpn/radiusplugin.cnf
+client-cert-not-required # Use both these lines for compatibility with the plugin
+verify-client-cert none # If you want not to use clien certificates in addition to WWPass authentication
+username-as-common-name
+```
+Edit example `/etc/openvpn/radiusplugin.cnf` file to set the details for FREERADIUS server. Edit the `NAS-Identifier` parameter to match with the `vpngroup` parameter of OpenVPN profile in `webapp.conf`.
+
+Distribute the client configuration to your clients. You may omit `auth-user-pass` form it. It will be added automatically.
+Clients have to import it into OpenVPN GUI. The name of client configuration should match the `config_name` value in `webapp.conf`.

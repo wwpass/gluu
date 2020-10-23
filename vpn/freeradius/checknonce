@@ -6,5 +6,5 @@
 
 exec checknonce {
 	wait = yes
-	program = "/usr/local/bin/radius-check.sh %{User-Name} %{ASA-TunnelGroupName} %{User-Password} 9061"
+	program = "/usr/local/bin/radius-check.sh %{User-Name} %{ASA-TunnelGroupName} %{NAS-Identifier} %{User-Password} 9061"
 }

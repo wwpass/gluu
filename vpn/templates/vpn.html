@@ -28,15 +28,15 @@
             <div class="form">
               <label class="form__label form__label--big" for="profile_selector">Choose VPN profile:</label>
               <select class="form__input form__input--select" id="profile_selector" name="profile">
-                {% for profile in available_profiles %}
-                <option value="{{ profile }}">
-                  {{ profile }}
+                {% for name,url in available_profiles.items() %}
+                <option value="{{ name }}">
+                  {{ name }}
                 </option>
                 {% end %}
               </select>
             </div>
             {% else %}
-            <input type="hidden" id="profile_selector" name="profile" value="{{ available_profiles[0] }}">
+            <input type="hidden" id="profile_selector" name="profile" value="{{ next(iter(available_profiles.keys())) }}">
             {% end %}
             <a class="button button--action button--connect" href="#" id="connect">
               <span class="button__timer">
@@ -55,7 +55,7 @@
         <div class="after_connect" style="display: none;">
           <h2 class="heading heading--h2 heading--light heading--marginBottom-0">Connecting VPN</h2>
           <p class="text" id="connect_text">
-            Cisco AnyConnect will start automatically.
+            VPN client will start automatically.
           </p>
           <a class="button button--action" href="">Reconnect VPN</a>
         </div>
@@ -85,13 +85,7 @@
             <a class="text text--sm text--link" href="{{options.wwpass_connector_link}}">WWPass connector application for&nbsp;Windows</a>
           </p>
         </div>
-        <p class="text text--sm">
-          <a class="text text--sm text--link" href="{{cisco_link}}">Cisco WebVPN</a>
-        </p>
       </div>
-      <!-- <div class="content__element">
-        Anything you like here
-      </div> -->
     </div>
 
   </main>
@@ -117,6 +111,7 @@
     const profileSelector = content.querySelector(`#profile_selector`);
     const buttonConnect = content.querySelector(`#connect`);
     const buttonTimer = content.querySelector(`.button__timer`);
+    const profiles = JSON.parse('{{ json_encode(available_profiles) }}');
 
     document.addEventListener(`DOMContentLoaded`, () => {
       if (isMobile()) {
@@ -125,11 +120,8 @@
         desktop.style.display = `block`;
       }
       const last_profile = localStorage.getItem(`last_profile`);
-      if (last_profile != null) {
-        {% for profile in available_profiles %}
-          if (last_profile == "{{ profile }}")
-            profileSelector.value = last_profile;
-        {% end %}
+      if (last_profile != null && profiles[last_profile] != undefined) {
+          profileSelector.value = last_profile;
       }
     });
 
@@ -162,9 +154,9 @@
         return false;
       }
       localStorage.setItem(`last_profile`, profile);
-      const anyconnect_url = `{{anyconnect_url}}&prefill_group_list=${encodeURIComponent(profile)}`
-      console.log(`Redirect to: ${anyconnect_url}`);
-      window.open(anyconnect_url, `_blank`);
+      var vpn_url = profiles[profile];
+      console.log(`Redirect to: ${vpn_url}`);
+      window.open(vpn_url, `_blank`);
       beforeConnect.style.display = `none`;
       afterConnect.style.display = `block`;
       return false;

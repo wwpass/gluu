@@ -1,0 +1,49 @@
+logging = 'info'
+debug = False
+
+#user = 'www-data'
+#group = 'www-data'
+
+#static_path = './static/wwpass/'
+
+# Text in the page title
+# title = 'WWPass'
+
+
+bind = 'localhost'
+port = 9061
+base_url = 'https://vpn.example.com/'
+
+gluu_url= 'https://gluu.example.com/'
+
+anyconnect_host = 'asa.example.com'
+anyconnect_group = 'SSLVPN'
+wwpass_connector_link = '/downloads/WWPass%20Connector%20for%20Cisco%20AnyConnect.msi'
+
+oauth2_id = ''
+oauth2_secret = ''
+
+# VPN profiles and LDAP Group DNs that allow them
+
+profiles = {
+    'adminVPN': {
+        'handler':'anyconnect',
+        'host':'asa.example.com',
+        'vpngroup': 'SSLVPN',
+        'groups_allowed':'CN=VPNAdmin,OU=Security,OU=Groups,OU=Office,DC=example,DC=com',
+        }
+    'userVPN': {
+        'handler':'anyconnect',
+        'host':'vpn.example.com',
+        'vpngroup': 'SSLVPN',
+        'groups_allowed':'inum=1a8337c6-2e31-433d-8aca-0c28ade3f945,ou=groups,o=gluu',
+    }
+    'commonVPN': {
+        'handler': 'openvpn',
+        'config_name': 'exapmlevpn',
+        'vpngroup': 'OpenVpn',
+        'groups_allowed':'', # Available to all users
+    }
+}
+
+# default_username = 'wwpassuser'
