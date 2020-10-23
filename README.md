@@ -14,7 +14,7 @@ WWPass integration with GLUU IAM service
 To install WWPass supprot in Gluu server refer to [INSTALLATION.md](INSTALLATION.md).
 
 To install additional components refer to their README.md files:
- - [Cisco VPN with WWPass](radius-nonce/README.md)
+ - [VPN with WWPass](vpn/README.md)
  - [Discourse SSO](discourse-sso/README.md)
  - [API for user manipulation](api/README.md)
  - [SSO homepage](nomepage/README.md)
