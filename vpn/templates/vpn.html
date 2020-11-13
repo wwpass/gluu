@@ -24,6 +24,9 @@
             <p class="text">
               <b>Authentication successful</b>
             </p>
+            <p class="text">
+              Click the button below to connect to VPN.
+            </p>
             {% if len(available_profiles) > 1 %}
             <div class="form">
               <label class="form__label form__label--big" for="profile_selector">Choose VPN profile:</label>
@@ -127,7 +130,7 @@
 
     const setButtonTimer = (seconds) => {
       buttonTimer.innerHTML = `
-        ${seconds}
+        ${seconds} seconds left
         <div class="button__timerAnimation"></div>`;
     };
 
