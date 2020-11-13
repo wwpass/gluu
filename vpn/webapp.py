@@ -6,6 +6,7 @@ import urllib
 import urllib.parse
 from secrets import token_urlsafe
 from time import time
+from json import loads
 
 from typing import cast, Any, ClassVar, Dict, List, Optional, Tuple, Sequence
 
@@ -108,7 +109,14 @@ class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
                 access = await self.get_authenticated_user(
                     redirect_uri=f'{self.settings["options"].base_url}/vpn/',
                     code=self.get_argument('code'))
-                user = await self.get_userinfo(access['access_token'])
+                _state = self.get_argument('state','')
+                if _state:
+                    state = loads(_state)
+                    if 'downloads' in state:
+                        self.set_cookie('token', access["access_token"])
+                        self.redirect(f'/downloads/{state["downloads"]}')
+                        return
+                user = await self.get_userinfo(access['access_token'])                    
             except Exception:
                 self.render('error.html',reason="Access denied")
                 return
@@ -124,30 +132,28 @@ class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
                 response_type='code')
 
 class Downloads(tornado.web.StaticFileHandler, BaseHandler, GluuOAuth2MixIn):
-    async def get(self) -> None: #pylint: disable=arguments-differ
+    async def get(self, path: str, include_body: bool = True) -> None: #pylint: disable=arguments-differ
         if self.get_argument('error', False): #type: ignore
             self.render('error.html',reason=self.get_argument('error'))
             return
-        if self.get_argument('code', False): #type: ignore
+        token = self.get_cookie('token', '')
+        self.clear_cookie('token')
+        if token:
+            user = {}
             try:
-                access = await self.get_authenticated_user(
-                    redirect_uri=f'{self.settings["options"].base_url}/vpn/',
-                    code=self.get_argument('code'))
-                user = await self.get_userinfo(access['access_token'])
+                user = await self.get_userinfo(token)
             except Exception:
-                self.render('error.html',reason="Access denied")
-                return
-            logging.debug(f"Got userinfo: {user}")
-            self.render('vpn.html',
-                ticket='redirect',
-                available_profiles = self.get_profile_uris(user),
-                nonce_ttl = NonceDB.NONCE_TTL,)
-        else:
-            self.authorize_redirect(
-                redirect_uri=f'{self.settings["options"].base_url}/vpn/',
-                scope=['openid', 'profile'],
-                response_type='code',
-                state={'downloads': self.request.full_url)
+                pass
+            if user:
+                logging.debug(f"Got userinfo: {user}")
+                if not self.get_available_profiles(user):
+                    raise tornado.web.HTTPError(403)
+                return await tornado.web.StaticFileHandler.get(self, path, include_body)
+        self.authorize_redirect(
+            redirect_uri=f'{self.settings["options"].base_url}/vpn/',
+            scope=['openid', 'profile'],
+            response_type='code',
+            state={'downloads': path} )
 
 
 def define_options() -> None:
@@ -198,7 +204,7 @@ if __name__ == "__main__":
         (r"/(anyconnect)?", tornado.web.RedirectHandler, {"url": "/vpn"}),
         (r"/vpn/?", VPNHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": options.static_path}),
-        (r"/downloads/(.*)", tornado.web.StaticFileHandler, {"path": options.downloads_path}),
+        (r"/downloads/(.*)", Downloads, {"path": options.downloads_path}),
         (r"/api/v1/check/?", NonceCheck)
     ]
     application = tornado.web.Application(urls, **settings) #type: ignore[arg-type]

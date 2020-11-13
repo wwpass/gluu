@@ -5,6 +5,7 @@ debug = False
 #group = 'www-data'
 
 #static_path = './static/wwpass/'
+#dowloads_path = './downloads/'
 
 # Text in the page title
 # title = 'WWPass'
@@ -18,8 +19,10 @@ gluu_url= 'https://gluu.example.com/'
 
 anyconnect_host = 'asa.example.com'
 anyconnect_group = 'SSLVPN'
+
 wwpass_connector_link = '/downloads/WWPass%20Connector%20for%20VPN.msi'
 anyconnect_link = '/downloads/anyconnect-win-4.7.04056-core-vpn-predeploy-k9.msi'
+
 
 oauth2_id = ''
 oauth2_secret = ''
