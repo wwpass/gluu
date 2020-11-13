@@ -123,10 +123,38 @@ class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
                 scope=['openid', 'profile'],
                 response_type='code')
 
+class Downloads(tornado.web.StaticFileHandler, BaseHandler, GluuOAuth2MixIn):
+    async def get(self) -> None: #pylint: disable=arguments-differ
+        if self.get_argument('error', False): #type: ignore
+            self.render('error.html',reason=self.get_argument('error'))
+            return
+        if self.get_argument('code', False): #type: ignore
+            try:
+                access = await self.get_authenticated_user(
+                    redirect_uri=f'{self.settings["options"].base_url}/vpn/',
+                    code=self.get_argument('code'))
+                user = await self.get_userinfo(access['access_token'])
+            except Exception:
+                self.render('error.html',reason="Access denied")
+                return
+            logging.debug(f"Got userinfo: {user}")
+            self.render('vpn.html',
+                ticket='redirect',
+                available_profiles = self.get_profile_uris(user),
+                nonce_ttl = NonceDB.NONCE_TTL,)
+        else:
+            self.authorize_redirect(
+                redirect_uri=f'{self.settings["options"].base_url}/vpn/',
+                scope=['openid', 'profile'],
+                response_type='code',
+                state={'downloads': self.request.full_url)
+
+
 def define_options() -> None:
     define("config",default="/etc/wwpass/oauth2.conf")
     define("template_path",default=os.path.normpath(os.path.join(base_path, 'templates')))
     define("static_path",default=os.path.realpath(os.path.join(base_path, './static/wwpass')))
+    define("downloads_path",default=os.path.realpath(os.path.join(base_path, './downloads')))
 
     define("title", type=str, default='WWPass')
 
@@ -143,6 +171,7 @@ def define_options() -> None:
     define("oauth2_secret", type=str)
 
     define("wwpass_connector_link", type=str)
+    define("anyconnect_link", type=str)
     define("default_username", type=str, default="wwpassuser")
     define("profiles", type=dict)
 
@@ -169,6 +198,7 @@ if __name__ == "__main__":
         (r"/(anyconnect)?", tornado.web.RedirectHandler, {"url": "/vpn"}),
         (r"/vpn/?", VPNHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": options.static_path}),
+        (r"/downloads/(.*)", tornado.web.StaticFileHandler, {"path": options.downloads_path}),
         (r"/api/v1/check/?", NonceCheck)
     ]
     application = tornado.web.Application(urls, **settings) #type: ignore[arg-type]
