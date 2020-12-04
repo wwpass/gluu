@@ -24,9 +24,6 @@
             <p class="text">
               <b>Authentication successful</b>
             </p>
-            <p class="text">
-              Click the button below to connect to VPN.
-            </p>
             {% if len(available_profiles) > 1 %}
             <div class="form">
               <label class="form__label form__label--big" for="profile_selector">Choose VPN profile:</label>
@@ -85,8 +82,12 @@
             If Cisco AnyConnect does not start, make sure WWPass Connector app is installed.
           </p>
           <p class="text text--sm">
+            {% if options.anyconnect_link %}
             <a class="text text--sm text--link" href="{{ options.anyconnect_link }}">AnyConnect VPN client for&nbsp;Windows</a>
+            {% end %}
+            {% if options.wwpass_connector_link %}
             <a class="text text--sm text--link" href="{{ options.wwpass_connector_link }}">WWPass connector application for&nbsp;Windows</a>
+            {% end %}
           </p>
         </div>
       </div>
