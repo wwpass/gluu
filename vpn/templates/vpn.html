@@ -38,6 +38,7 @@
             {% else %}
             <input type="hidden" id="profile_selector" name="profile" value="{{ next(iter(available_profiles.keys())) }}">
             {% end %}
+            <p class="text">Press the button below to connect VPN. Your authentication is valid until the timer runs out.</p>
             <a class="button button--action button--connect" href="#" id="connect">
               <span class="button__timer">
                 60
