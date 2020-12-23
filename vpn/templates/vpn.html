@@ -19,12 +19,14 @@
 
         </div>
         <div class="hr"></div>
+
         <ul class="indicators"></ul>
+
         <div class="before_connect">
           {% if available_profiles %}
-            <p class="text">
+            <!-- <p class="text">
               <b>Authentication successful</b>
-            </p>
+            </p> -->
             {% if len(available_profiles) > 1 %}
             <div class="form">
               <label class="form__label form__label--big" for="profile_selector">Choose VPN profile:</label>
@@ -40,13 +42,16 @@
             <input type="hidden" id="profile_selector" name="profile" value="{{ next(iter(available_profiles.keys())) }}">
             {% end %}
             <p class="text">Press the button below to connect VPN. Your authentication is valid until the timer runs out.</p>
-            <a class="button button--action button--connect" href="#" id="connect">
-              <span class="button__timer">
-                60
-                <div class="button__timerAnimation"></div>
-              </span>
+            <button class="button button--action" id="connect">
               Connect VPN
-            </a>
+            </button>
+            <p class="text">
+              Authorization is valid for:<br>
+              <span class="button__timer">
+                <!-- 60
+                <div class="button__timerAnimation"></div> -->
+              </span>
+            </p>
           {% else %}
             <p class="text">
               You are not allowed to access VPN
@@ -135,14 +140,26 @@
         const profile = profiles[name];
         if (profile.check_url) {
           const indicator = document.createElement(`li`);
-          indicator.id = 'indicator_' + name;
-          indicator.innerText = name + ':';
-          const statusElement = document.createElement(`span`);
-          indicator.appendChild(statusElement);
-          indicators.appendChild(indicator);
+          indicator.id = `indicator_${name}`;
+          indicator.classList.add(`indicators__indicator`);
+
+          const statusElement = ``;
+          
           testConnection(profile.check_url, (status) => {
-            statusElement.innerText = status?"Connected":"Disconnected";
+            if (status) {
+              indicator.classList.add(`indicators__indicator--connected`);
+              statusElement = `
+              <span class="indicators__status indicators__status--connected">Connected</>`;
+            } else {
+              indicator.classList.add(`indicators__indicator--disconnected`);
+              statusElement = `
+              <span class="indicators__status indicators__status--disconnected">Disconnected</>`;
+            }
           });
+
+          indicator.innerHTML = `${name}: ${statusElement}`;
+
+          indicators.appendChild(indicator);
         }
       }
     });
@@ -150,7 +167,7 @@
     const setButtonTimer = (seconds) => {
       buttonTimer.innerHTML = `
         ${seconds}
-        <div class="button__timerAnimation"></div>`;
+        <span class="button__timerAnimation"></span>`;
     };
 
     let delay = {{ nonce_ttl }};

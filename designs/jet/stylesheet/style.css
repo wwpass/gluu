@@ -243,7 +243,7 @@ body {
   border-radius: 15px;
   min-width: 290px;
   width: calc(100% - 20px);
-  height: 170px;
+  min-height: 170px;
   left: 10px;
   top: 15px;
   display: none;
@@ -286,6 +286,7 @@ body {
   cursor: pointer; }
 
 .user__popup-profile,
+.user__popup-link,
 .user__popup-logout {
   display: block;
   -webkit-padding-start: 30px;
@@ -536,7 +537,8 @@ body {
   -webkit-padding-before: 5px;
           padding-block-start: 5px;
   -webkit-padding-after: 15px;
-          padding-block-end: 15px; }
+          padding-block-end: 15px;
+  position: relative; }
 
 .profile__name {
   font-weight: bold; }
@@ -559,6 +561,24 @@ body {
 .profile__item {
   font-weight: 400; }
 
+.profile__edit {
+  position: absolute;
+  top: -5px;
+  right: 0;
+  fill: #0E0E2B;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  padding: 5px;
+  content: ""; }
+
+.profile__edit:hover,
+.profile__edit:focus {
+  fill: #00C3FF; }
+
+.profile__edit:active {
+  opacity: .7; }
+
 .img--close {
   width: 20px;
   height: 20px; }
@@ -568,6 +588,26 @@ body {
   height: auto;
   width: auto;
   max-width: 50%; }
+
+.indicators {
+  list-style: none;
+  -webkit-margin-start: 15px;
+          margin-inline-start: 15px;
+  -webkit-margin-end: 15px;
+          margin-inline-end: 15px;
+  -webkit-padding-start: 0;
+          padding-inline-start: 0;
+  text-align: left; }
+
+.indicators__indicator {
+  position: relative;
+  min-height: 24px; }
+
+.indicators__status--connected {
+  color: #43F58B; }
+
+.indicators__status--disconnected {
+  color: #F56E43; }
 
 .heading {
   -webkit-margin-before: 15px;
@@ -795,7 +835,8 @@ body {
   display: inline-block;
   position: relative;
   width: 30px;
-  height: 30px; }
+  height: 30px;
+  margin-top: 10px; }
 
 .button__timerAnimation {
   -webkit-box-sizing: border-box;
@@ -804,13 +845,13 @@ body {
   position: absolute;
   width: 30px;
   height: 30px;
-  top: 2px;
+  top: -5px;
   left: 0;
-  border: 2px solid #EEF2FA;
+  border: 2px solid #0E0E2B;
   border-radius: 50%;
   -webkit-animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
           animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #EEF2FA transparent transparent transparent; }
+  border-color: #0E0E2B transparent transparent transparent; }
 
 .button__timer .button__timerAnimation:nth-child(1) {
   -webkit-animation-delay: -0.45s;
