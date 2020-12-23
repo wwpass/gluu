@@ -45,7 +45,7 @@
             <button class="button button--action" id="connect">
               Connect VPN
             </button>
-            <p class="text">
+            <p class="text text--marginTop-0">
               Authorization is valid for:<br>
               <span class="button__timer">
                 <!-- 60
@@ -143,21 +143,23 @@
           indicator.id = `indicator_${name}`;
           indicator.classList.add(`indicators__indicator`);
 
-          const statusElement = ``;
+          let statusElement = ``;
           
           testConnection(profile.check_url, (status) => {
+            console.log(status);
             if (status) {
               indicator.classList.add(`indicators__indicator--connected`);
               statusElement = `
-              <span class="indicators__status indicators__status--connected">Connected</>`;
+              <span class="indicators__status indicators__status--connected">Connected</span>`;
             } else {
               indicator.classList.add(`indicators__indicator--disconnected`);
               statusElement = `
-              <span class="indicators__status indicators__status--disconnected">Disconnected</>`;
+              <span class="indicators__status indicators__status--disconnected">Disconnected</span>`;
             }
+            indicator.innerHTML = `${name}: ${statusElement}`;
           });
 
-          indicator.innerHTML = `${name}: ${statusElement}`;
+          // indicator.innerHTML = `${name}: ${statusElement}`;
 
           indicators.appendChild(indicator);
         }
