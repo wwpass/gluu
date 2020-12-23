@@ -146,7 +146,6 @@
           let statusElement = ``;
           
           testConnection(profile.check_url, (status) => {
-            console.log(status);
             if (status) {
               indicator.classList.add(`indicators__indicator--connected`);
               statusElement = `
