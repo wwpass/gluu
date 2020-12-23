@@ -25,7 +25,7 @@ Save the secret and clientID values.
 ### Helper webapp
 1. Deploy `webapp.py`, `GluuOIDCClient.py`, `static` and `templates/` to a directory on a web server.
 2. Copy `webapp.conf.example` to the web server and rename it to `webapp.conf`
-3. Edit `webapp.conf`, filling values relevan to your system.
+3. Edit `webapp.conf`, filling values relevant for your system.
 4. Put downloadable installers into your "download_path" form `webapp.conf`. Your "wwpass_connector_link" and "anyconnect_link" should be "/downloads/<filename_relative_to_download_path>". By default just make `downloads` directory in the same directory with `webapp.py` and put the installers there and fill their names in "*_link". You may use alternative links if you have other place the users can download them from.
 5. Configure your web server to run `webapp.py --config=webapp.conf` as a demon.
 6. Install python modules for the webapp: "python3-tornado", "python3-jwt"

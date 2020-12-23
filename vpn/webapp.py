@@ -96,9 +96,9 @@ class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
         raise ValueError(f"Unknown VPN handler {profile['handler']}")
 
 
-    def get_profile_uris(self, userinfo: Dict[str, Any]) -> Dict[str, str]:
+    def get_profile_uris(self, userinfo: Dict[str, Any]) -> Dict[str, Dict[str,str]]:
         nonce = NonceDB.create_nonce(userinfo)
-        return dict((name, self.get_url(profile, nonce)) for name, profile in self.get_available_profiles(userinfo).items())
+        return dict((name, {'url':self.get_url(profile, nonce), 'check_url': profile.get('check_url', '')}) for name, profile in self.get_available_profiles(userinfo).items())
 
     async def get(self) -> None: #pylint: disable=arguments-differ
         if self.get_argument('error', False): #type: ignore
@@ -116,7 +116,7 @@ class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
                         self.set_cookie('token', access["access_token"])
                         self.redirect(f'/downloads/{state["downloads"]}')
                         return
-                user = await self.get_userinfo(access['access_token'])                    
+                user = await self.get_userinfo(access['access_token'])
             except Exception:
                 self.render('error.html',reason="Access denied")
                 return

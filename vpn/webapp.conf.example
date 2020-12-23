@@ -41,6 +41,7 @@ profiles = {
         'host':'vpn.example.com',
         'vpngroup': 'SSLVPN',
         'groups_allowed':'inum=1a8337c6-2e31-433d-8aca-0c28ade3f945,ou=groups,o=gluu',
+        'check_url':'https://internal.resource.int/' # Reacheability of this server will be checked in browser to display VPN status (connected or not)
     }
     'commonVPN': {
         'handler': 'openvpn',

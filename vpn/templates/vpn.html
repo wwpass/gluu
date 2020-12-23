@@ -19,6 +19,7 @@
 
         </div>
         <div class="hr"></div>
+        <ul class="indicators"></ul>
         <div class="before_connect">
           {% if available_profiles %}
             <p class="text">
@@ -28,7 +29,7 @@
             <div class="form">
               <label class="form__label form__label--big" for="profile_selector">Choose VPN profile:</label>
               <select class="form__input form__input--select" id="profile_selector" name="profile">
-                {% for name,url in available_profiles.items() %}
+                {% for name,profile in available_profiles.items() %}
                 <option value="{{ name }}">
                   {{ name }}
                 </option>
@@ -117,6 +118,7 @@
     const profileSelector = content.querySelector(`#profile_selector`);
     const buttonConnect = content.querySelector(`#connect`);
     const buttonTimer = content.querySelector(`.button__timer`);
+    const indicators = document.querySelector(`.indicators`);
     const profiles = JSON.parse('{{ json_encode(available_profiles) }}');
 
     document.addEventListener(`DOMContentLoaded`, () => {
@@ -128,6 +130,20 @@
       const last_profile = localStorage.getItem(`last_profile`);
       if (last_profile != null && profiles[last_profile] != undefined) {
           profileSelector.value = last_profile;
+      }
+      for (name in profiles) {
+        const profile = profiles[name];
+        if (profile.check_url) {
+          const indicator = document.createElement(`li`);
+          indicator.id = 'indicator_' + name;
+          indicator.innerText = name + ':';
+          const statusElement = document.createElement(`span`);
+          indicator.appendChild(statusElement);
+          indicators.appendChild(indicator);
+          testConnection(profile.check_url, (status) => {
+            statusElement.innerText = status?"Connected":"Disconnected";
+          });
+        }
       }
     });
 
@@ -160,7 +176,7 @@
         return false;
       }
       localStorage.setItem(`last_profile`, profile);
-      var vpn_url = profiles[profile];
+      var vpn_url = profiles[profile].url;
       console.log(`Redirect to: ${vpn_url}`);
       window.open(vpn_url, `_blank`);
       beforeConnect.style.display = `none`;
@@ -171,6 +187,35 @@
     buttonReload.addEventListener(`click`, () => {
       location.reload();
     });
+
+    const testConnection = (resource, callback) => {
+      let state  = 0; // Indeterminate state
+      let controller = null;
+      const tryFetch = () => {
+        if (controller !== null)
+          controller.abort()
+        controller = new AbortController();
+        fetch(resource, {
+          cache: 'no-store',
+          mode: 'no-cors',
+          referrerPolicy: 'no-referrer',
+          signal: controller.signal
+        }).then(() => {
+          if (state != 1) {
+            state = 1;
+            callback(true);
+          }
+        }, () => {
+          if (state != -1) {
+            state = -1;
+            callback(false);
+          }
+        })
+      };
+      tryFetch();
+      const id = setInterval(tryFetch, 1000);
+      return id;
+    }
   </script>
 </body>
 
