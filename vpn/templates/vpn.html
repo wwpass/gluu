@@ -191,6 +191,19 @@
     const testConnection = (resource, callback) => {
       let state  = 0; // Indeterminate state
       let controller = null;
+      const newStatus = (st) => {
+        if (st) {
+          if (state != 1) {
+              state = 1;
+              callback(true);
+            }
+        } else {
+          if (state != -1) {
+            state = -1;
+            callback(false);
+          }
+        }
+      }
       const tryFetch = () => {
         if (controller !== null)
           controller.abort()
@@ -200,16 +213,14 @@
           mode: 'no-cors',
           referrerPolicy: 'no-referrer',
           signal: controller.signal
-        }).then(() => {
-          if (state != 1) {
-            state = 1;
-            callback(true);
+        }).then((response) => {
+          if (response.status < 400) {
+            newStatus(true);
+          } else {
+            newStatus(false);
           }
         }, () => {
-          if (state != -1) {
-            state = -1;
-            callback(false);
-          }
+          newStatus(false);
         })
       };
       tryFetch();
