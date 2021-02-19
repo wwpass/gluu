@@ -88,12 +88,20 @@
           <p class="text text--sm">
             If Cisco AnyConnect does not start, make sure WWPass Connector app is installed.
           </p>
-          <p class="text text--sm">
-            {% if options.anyconnect_link %}
-            <a class="text text--sm text--link" href="{{ options.anyconnect_link }}">AnyConnect VPN client for&nbsp;Windows</a>
+            <p class="text text--sm">
+            {% if options.anyconnect_links %}
+            AnyConnect VPN client for:<br>
+              {% for name, link in options.anyconnect_links.items() %}
+                <a class="text text--sm text--link" href="{{ link }}">{{name}}&nbsp;</a>
+              {% end %}
             {% end %}
-            {% if options.wwpass_connector_link %}
-            <a class="text text--sm text--link" href="{{ options.wwpass_connector_link }}">WWPass connector application for&nbsp;Windows</a>
+            </p>
+            <p class="text text--sm">
+            {% if options.wwpass_connector_links %}
+            WWPass connector application for:<br>
+              {% for name, link in options.wwpass_connector_links.items() %}
+              <a class="text text--sm text--link" href="{{ link }}">{{name}}&nbsp;</a>
+              {% end %}
             {% end %}
           </p>
         </div>
@@ -144,7 +152,7 @@
           indicator.classList.add(`indicators__indicator`);
 
           let statusElement = ``;
-          
+
           testConnection(profile.check_url, (status) => {
             if (status) {
               indicator.classList.add(`indicators__indicator--connected`);

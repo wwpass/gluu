@@ -176,8 +176,8 @@ def define_options() -> None:
     define("oauth2_id", type=str)
     define("oauth2_secret", type=str)
 
-    define("wwpass_connector_link", type=str)
-    define("anyconnect_link", type=str)
+    define("wwpass_connector_links", type=dict)
+    define("anyconnect_links", type=dict)
     define("default_username", type=str, default="wwpassuser")
     define("profiles", type=dict)
 

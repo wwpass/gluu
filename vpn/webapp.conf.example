@@ -20,8 +20,14 @@ gluu_url= 'https://gluu.example.com/'
 anyconnect_host = 'asa.example.com'
 anyconnect_group = 'SSLVPN'
 
-wwpass_connector_link = '/downloads/WWPass%20Connector%20for%20VPN.msi'
-anyconnect_link = '/downloads/anyconnect-win-4.7.04056-core-vpn-predeploy-k9.msi'
+wwpass_connector_links = {
+    'Windows':'/downloads/WWPass%20Connector%20for%20VPN.msi',
+    'MacOS':'/downloads/WWPass%20Connector%20for%20VPN.pkg'
+}
+anyconnect_links = {
+    'Windows':'/downloads/anyconnect-win-4.7.04056-core-vpn-predeploy-k9.msi',
+    'MacOS':'/downloads/anyconnect-macos-4.7.04056-predeploy-k9.dmg'
+}
 
 
 oauth2_id = ''
