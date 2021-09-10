@@ -76,3 +76,9 @@ Edit example `/etc/openvpn/radiusplugin.cnf` file to set the details for FREERAD
 
 Distribute the client configuration to your clients. You may omit `auth-user-pass` form it. It will be added automatically.
 Clients have to import it into OpenVPN GUI. The name of client configuration should match the `config_name` value in `webapp.conf`.
+
+### Cisco ASA configuration
+
+Proper configuration of Cisco ASA is beyond scope of this readme. But it's important no note:
+
+ - As all WWPass users will be connecting with the same username, you have to permit more that 3 default simultaneous sessions. In "Group Policy" modify "simultaneous logins" to over an expected number of simultaneous connections for all WWPass users. Or add `vpn-simultaneous-logins <number of concurrent sessions` to your `group-policy` in command line.
