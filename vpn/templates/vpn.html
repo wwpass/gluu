@@ -151,9 +151,9 @@
           indicator.id = `indicator_${name}`;
           indicator.classList.add(`indicators__indicator`);
 
-          let statusElement = ``;
-
+          const n = name;
           testConnection(profile.check_url, (status) => {
+            let statusElement = ``;
             if (status) {
               indicator.classList.add(`indicators__indicator--connected`);
               statusElement = `
@@ -163,7 +163,7 @@
               statusElement = `
               <span class="indicators__status indicators__status--disconnected">Disconnected</span>`;
             }
-            indicator.innerHTML = `${name}: ${statusElement}`;
+            indicator.innerHTML = `${n}: ${statusElement}`;
           });
 
           // indicator.innerHTML = `${name}: ${statusElement}`;
