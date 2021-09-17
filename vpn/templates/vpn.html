@@ -144,12 +144,14 @@
       if (last_profile != null && profiles[last_profile] != undefined) {
           profileSelector.value = last_profile;
       }
+
       for (name in profiles) {
         const profile = profiles[name];
         if (profile.check_url) {
           const indicator = document.createElement(`li`);
-          indicator.id = `indicator_${name}`;
+          indicator.id = `indicator_${name.replace(/ /g,"_")}`;
           indicator.classList.add(`indicators__indicator`);
+          indicator.style.display = name==profileSelector.value?null:'none';
 
           const n = name;
           testConnection(profile.check_url, (status) => {
@@ -170,6 +172,14 @@
 
           indicators.appendChild(indicator);
         }
+      }
+    });
+
+    profileSelector.addEventListener(`change`, () => {
+      const profile = profileSelector.value;
+      for (name in profiles) {
+        const indicator = content.querySelector(`#indicator_${name.replace(/ /g,"_")}`);
+        indicator.style.display = name==profile?null:'none';
       }
     });
 
