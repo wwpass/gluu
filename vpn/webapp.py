@@ -47,7 +47,8 @@ class BaseHandler(tornado.web.RequestHandler):
         logging.debug(f"Profiles: {dict((name, profile) for name, profile in self.settings['options'].profiles.items() if profile['groups_allowed'] in groups)}")
         return dict((name, profile) for name, profile in self.settings['options'].profiles.items() if profile['groups_allowed'] in groups)
 
-class NonceCheck(BaseHandler): #pylint: disable=abstract-method
+
+class NonceCheck(BaseHandler):  # pylint: disable=abstract-method
     def post(self) -> None:
         if not self.request.remote_ip.startswith('127.'):
             logging.debug(f"API request from remote IP: {self.request.remote_ip}")
@@ -57,21 +58,22 @@ class NonceCheck(BaseHandler): #pylint: disable=abstract-method
         profile: str = self.get_argument("profile","")
         if username != self.settings['options'].default_username or not nonce or not profile:
             logging.debug(f"Bad parameters: {self.request.arguments}")
-            raise tornado.web.HTTPError(403,"Invalid credentials")
+            raise tornado.web.HTTPError(403, "Invalid credentials")
         userinfo = NonceDB.get_user(nonce)
         if not userinfo:
             logging.debug(f"Bad nonce: {nonce}")
-            raise tornado.web.HTTPError(403,"Invalid credentials")
+            raise tornado.web.HTTPError(403, "Invalid credentials")
         for p in self.get_available_profiles(userinfo).values():
             if p['vpngroup'] == profile:
                 break
         else:
             logging.debug(f"Bad profile value: {profile}")
-            raise tornado.web.HTTPError(403,"Invalid credentials")
+            raise tornado.web.HTTPError(403, "Invalid credentials")
         self.write("OK")
         self.finish()
 
-class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
+
+class VPNHandler(BaseHandler, GluuOAuth2MixIn):  # pylint: disable=abstract-method
     """
     Handler for AnyConnect login
     """
@@ -80,7 +82,7 @@ class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
         ns['options'] = self.settings['options']
         return ns
 
-    def get_url(self, profile: Dict[str, Any], nonce: str) -> str:
+    def get_url(self, profile: Dict[str, Any], nonce: str, name: str) -> str:
         if profile['handler'] == 'anyconnect':
             return 'anyconnect://connect/?%s' % urllib.parse.urlencode({
                     'host': profile['host'],
@@ -93,12 +95,20 @@ class VPNHandler(BaseHandler, GluuOAuth2MixIn): #pylint: disable=abstract-method
                     'u': profile.get('username', self.settings['options'].default_username),
                     'nonce': nonce,
             })
+        if profile['handler'] == 'l2tp':
+            return 'wwpl2tp://connect/?%s' % urllib.parse.urlencode({
+                    'name': name,
+                    'host': profile['host'],
+                    'hub': profile.get('hub_name', ''),
+                    'u': profile.get('username', self.settings['options'].default_username),
+                    'psk': profile['psk'],
+                    'nonce': nonce,
+            })
         raise ValueError(f"Unknown VPN handler {profile['handler']}")
 
-
-    def get_profile_uris(self, userinfo: Dict[str, Any]) -> Dict[str, Dict[str,str]]:
+    def get_profile_uris(self, userinfo: Dict[str, Any]) -> Dict[str, Dict[str, str]]:
         nonce = NonceDB.create_nonce(userinfo)
-        return dict((name, {'url':self.get_url(profile, nonce), 'check_url': profile.get('check_url', '')}) for name, profile in self.get_available_profiles(userinfo).items())
+        return dict((name, {'url': self.get_url(profile, nonce, name), 'check_url': profile.get('check_url', '')}) for name, profile in self.get_available_profiles(userinfo).items())
 
     async def get(self) -> None: #pylint: disable=arguments-differ
         if self.get_argument('error', False): #type: ignore
