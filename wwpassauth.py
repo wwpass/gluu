@@ -187,7 +187,7 @@ If you haven't requested this operation, you can safely disregard this email.
         puid = identity.getWorkingParameter("puid")
         if not puid:
             return False
-        nonce = requestParameters.get('code')[0] if 'code' in requestParameters else None
+        nonce = requestParameters.get('code')[0].strip() if 'code' in requestParameters else None
         email = identity.getWorkingParameter("email")
         proper_nonce = identity.getWorkingParameter("email_nonce")
         nonce_expiration = float(identity.getWorkingParameter("email_nonce_exp") or 0.0)
